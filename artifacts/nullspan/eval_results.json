@@ -1,207 +1,518 @@
 {
   "repo_id": "gnumanth/nullspan",
   "device": "Apple Silicon MPS",
-  "train_seconds": 565.78,
-  "epochs": 8,
-  "train_samples": 1854,
-  "val_samples": 303,
+  "train_seconds": 358.28,
+  "epochs": 6,
+  "train_samples": 2090,
+  "val_samples": 336,
   "val_metrics": {
     "null_accuracy": 100.0,
-    "span_exact_match": 100.0,
+    "null_ece": 1e-05,
+    "null_brier_score": 0.0,
+    "span_exact_match": 99.31,
     "op_accuracy": 100.0,
     "list_bio_token_accuracy": 100.0,
-    "quantile_mae_norm": 0.0068
+    "quantile_mae_norm": 0.0007,
+    "quantile_pinball_loss": 0.0001
   },
   "canonical_eval": {
     "canonical_field_accuracy": 100.0,
-    "mean_doc_latency_ms": 119.35,
+    "adversarial_stress_accuracy": 100.0,
+    "invariant_verification_accuracy": 100.0,
+    "mean_doc_latency_ms": 472.43,
     "examples": {
-      "nullspan_support_claim": {
-        "latency_ms": 64.14,
-        "num_fields": 8,
+      "nullspan_incident_postmortem": {
+        "latency_ms": 86.15,
+        "num_fields": 10,
+        "invariants_passed": true,
         "answers": {
-          "customer_name": {
+          "reporter": {
             "type": "text",
-            "p_null": 2.956e-05,
+            "p_null": 3.8e-07,
             "span": [
-              184,
-              188
+              276,
+              280
             ],
-            "guess": "Dana",
-            "confidence": 0.999852,
-            "value": "Dana"
+            "guess": "Mira",
+            "confidence": 0.999992,
+            "span_entropy_bits": 0.0002,
+            "value": "Mira"
           },
-          "order_id": {
+          "incident_id": {
             "type": "text",
-            "p_null": 6.76e-06,
+            "p_null": 3e-08,
             "span": [
-              10,
-              17
+              9,
+              18
             ],
-            "guess": "A-88412",
-            "confidence": 0.999975,
-            "value": "A-88412"
+            "guess": "INC-40928",
+            "confidence": 0.999962,
+            "span_entropy_bits": 0.0006,
+            "value": "INC-40928"
           },
-          "delivered_on": {
+          "opened_on": {
             "type": "date",
-            "p_null": 6.19e-06,
-            "guess": "2026-09-28",
-            "confidence": 0.999977,
-            "value": "2026-09-28"
+            "p_null": 2.7e-07,
+            "span": [
+              29,
+              41
+            ],
+            "guess": "2026-04-12",
+            "confidence": 0.999999,
+            "span_entropy_bits": 0.0,
+            "value": "2026-04-12"
           },
-          "amount_paid": {
+          "total_credit": {
             "type": "number",
-            "p_null": 1.171e-05,
-            "guess": 701.1,
-            "confidence": 0.999961,
-            "value": 701.1
+            "p_null": 4.5e-06,
+            "span": [
+              109,
+              130
+            ],
+            "guess": 1550.75,
+            "confidence": 0.999989,
+            "span_entropy_bits": 0.0002,
+            "value": 1550.75
           },
-          "days_since_delivery": {
+          "outage_days": {
             "type": "duration",
-            "p_null": 6.101e-05,
+            "p_null": 3.04e-06,
             "unit": "days",
-            "guess": 11,
-            "confidence": 0.99992,
-            "value": 11
+            "span": [
+              29,
+              41
+            ],
+            "guess": 7,
+            "confidence": 0.999992,
+            "span_entropy_bits": 0.0001,
+            "value": 7
           },
-          "damage": {
+          "failure_modes": {
             "type": "list",
             "value": [
-              "cracked screen",
-              "dented corner"
+              "502 Bad Gateway errors",
+              "TLS handshake timeouts"
             ],
             "spans": [
               [
-                50,
-                64
+                49,
+                71
               ],
               [
-                71,
-                84
+                78,
+                100
               ]
-            ]
-          },
-          "tracking_number": {
-            "type": "text",
-            "p_null": 0.99896169,
-            "span": [
-              106,
-              112
             ],
-            "guess": "$52.10",
-            "confidence": 0.05,
-            "value": null
+            "confidence": 0.497096,
+            "span_entropy_bits": 1.5381
           },
-          "repair_cost": {
+          "severity": {
+            "type": "enum",
+            "p_null": 1.4e-07,
+            "span": [
+              155,
+              160
+            ],
+            "options": [
+              "sev-1",
+              "sev-2",
+              "sev-3"
+            ],
+            "probs": {
+              "sev-1": 0.999975,
+              "sev-2": 1.3e-05,
+              "sev-3": 1.3e-05
+            },
+            "guess": "sev-1",
+            "confidence": 0.999975,
+            "span_entropy_bits": 0.0005,
+            "value": "sev-1"
+          },
+          "data_loss": {
+            "type": "boolean",
+            "p_null": 1.28e-06,
+            "p_true": 7e-06,
+            "span": [
+              188,
+              193
+            ],
+            "guess": false,
+            "confidence": 0.999993,
+            "span_entropy_bits": 0.0001,
+            "value": false
+          },
+          "cve_id": {
+            "type": "text",
+            "p_null": 0.9999429,
+            "span": [
+              123,
+              130
+            ],
+            "guess": "$310.25",
+            "confidence": 0.05,
+            "span_entropy_bits": 0.0009,
+            "value": null,
+            "abstention_reason": "unassigned_placeholder"
+          },
+          "remediation_cost": {
             "type": "estimate",
-            "value": 250,
-            "median": 247,
-            "p10": 166,
-            "p90": 424,
+            "value": 1890,
+            "median": 1870,
+            "p10": 1270,
+            "p90": 2670,
             "p_below": 0.0,
-            "p_above": 0.0
+            "p_above": 0.0,
+            "confidence": 0.99999
           }
         }
       },
-      "nullspan_receipt": {
-        "latency_ms": 138.94,
-        "num_fields": 8,
+      "nullspan_gpu_invoice": {
+        "latency_ms": 924.51,
+        "num_fields": 9,
+        "invariants_passed": true,
         "answers": {
-          "order_number": {
-            "type": "number",
-            "p_null": 3.79e-06,
-            "guess": 77245,
+          "provider": {
+            "type": "text",
+            "p_null": 1.79e-06,
+            "span": [
+              13,
+              29
+            ],
+            "guess": "TensorCore Cloud",
             "confidence": 0.99998,
-            "value": 77245
+            "span_entropy_bits": 0.0003,
+            "value": "TensorCore Cloud"
           },
-          "purchased_at": {
+          "invoice_number": {
+            "type": "number",
+            "p_null": 2.067e-05,
+            "span": [
+              39,
+              44
+            ],
+            "guess": 88310,
+            "confidence": 0.999978,
+            "span_entropy_bits": 0.0,
+            "value": 88310
+          },
+          "issued_at": {
             "type": "datetime",
-            "p_null": 3.17e-06,
-            "guess": "2026-07-01T13:34:00",
-            "confidence": 0.999976,
-            "value": "2026-07-01T13:34:00"
+            "p_null": 2.04e-06,
+            "span": [
+              55,
+              71
+            ],
+            "guess": "2026-08-14T18:20:00",
+            "confidence": 0.999998,
+            "span_entropy_bits": 0.0,
+            "value": "2026-08-14T18:20:00"
           },
-          "quantity": {
+          "nodes": {
             "type": "number",
-            "p_null": 1.197e-05,
-            "guess": 2,
-            "confidence": 0.999907,
-            "value": 2
+            "p_null": 9.7e-07,
+            "span": [
+              79,
+              80
+            ],
+            "guess": 4,
+            "confidence": 0.999998,
+            "span_entropy_bits": 0.0,
+            "value": 4
           },
-          "unit_price": {
+          "hourly_rate": {
             "type": "number",
-            "p_null": 3.02e-06,
-            "guess": 7.99,
-            "confidence": 0.999984,
-            "value": 7.99
+            "p_null": 7.08e-06,
+            "span": [
+              84,
+              88
+            ],
+            "guess": 3.5,
+            "confidence": 0.999989,
+            "span_entropy_bits": 0.0001,
+            "value": 3.5
           },
           "subtotal": {
             "type": "number",
-            "p_null": 2.452e-05,
-            "guess": 15.98,
-            "confidence": 0.999963,
-            "value": 15.98
-          },
-          "sales_tax": {
-            "type": "number",
-            "p_null": 5.79e-06,
-            "guess": 0,
+            "p_null": 1.948e-05,
+            "span": [
+              105,
+              110
+            ],
+            "guess": 14,
             "confidence": 0.999979,
+            "span_entropy_bits": 0.0,
+            "value": 14,
+            "verified": true
+          },
+          "egress_fee": {
+            "type": "number",
+            "p_null": 1.42e-06,
+            "span": [
+              124,
+              128
+            ],
+            "guess": 0,
+            "confidence": 0.999995,
+            "span_entropy_bits": 0.0001,
             "value": 0
           },
-          "tip": {
+          "priority_surcharge": {
             "type": "number",
-            "p_null": 3.28e-05,
-            "guess": 2.39,
-            "confidence": 0.999953,
-            "value": 2.39
+            "p_null": 6.9e-07,
+            "span": [
+              150,
+              154
+            ],
+            "guess": 1.75,
+            "confidence": 0.999998,
+            "span_entropy_bits": 0.0,
+            "value": 1.75
           },
-          "discount": {
+          "promo_rebate": {
             "type": "number",
-            "p_null": 0.9977544,
+            "p_null": 0.99995482,
+            "span": [
+              124,
+              128
+            ],
             "guess": 0,
             "confidence": 0.05,
-            "value": null
+            "span_entropy_bits": 0.0001,
+            "value": null,
+            "abstention_reason": "missing_field"
           }
         }
       },
-      "nullspan_comps": {
-        "latency_ms": 199.56,
+      "nullspan_cluster_comps": {
+        "latency_ms": 513.59,
         "num_fields": 1,
+        "invariants_passed": true,
         "answers": {
-          "sale_price": {
+          "tokens_per_sec": {
             "type": "estimate",
-            "value": 456000,
-            "median": 452000,
-            "p10": 396000,
-            "p90": 516000,
+            "value": 23200,
+            "median": 23000,
+            "p10": 20400,
+            "p90": 26100,
             "p_below": 0.0,
-            "p_above": 0.0
+            "p_above": 0.0,
+            "confidence": 0.579559
           }
         }
       },
-      "nullspan_tsa_forecast": {
-        "latency_ms": 74.76,
+      "nullspan_edge_forecast": {
+        "latency_ms": 365.46,
         "num_fields": 1,
+        "invariants_passed": true,
         "answers": {
-          "travelers": {
+          "requests": {
             "type": "forecast",
             "value": [
-              2416538
+              2416041
             ],
             "median": [
-              2419052
+              2418555
             ],
             "p10": [
-              2267814
+              2263103
             ],
             "p90": [
-              2566798
-            ]
+              2568073
+            ],
+            "confidence": 0.055277
+          }
+        }
+      }
+    },
+    "adversarial_examples": {
+      "adv_prompt_injection_and_decoy_id": {
+        "latency_ms": 1400.38,
+        "num_fields": 4,
+        "invariants_passed": true,
+        "answers": {
+          "incident_id": {
+            "type": "text",
+            "p_null": 3e-08,
+            "span": [
+              9,
+              18
+            ],
+            "guess": "INC-77401",
+            "confidence": 0.999991,
+            "span_entropy_bits": 0.0002,
+            "value": "INC-77401"
+          },
+          "cve_id": {
+            "type": "text",
+            "p_null": 0.99984634,
+            "span": [
+              116,
+              123
+            ],
+            "guess": "$180.00",
+            "confidence": 0.05,
+            "span_entropy_bits": 0.003,
+            "value": null,
+            "abstention_reason": "unassigned_placeholder"
+          },
+          "total_credit": {
+            "type": "number",
+            "p_null": 1.567e-05,
+            "span": [
+              103,
+              123
+            ],
+            "guess": 1080,
+            "confidence": 0.999972,
+            "span_entropy_bits": 0.0003,
+            "value": 1080
+          },
+          "data_loss": {
+            "type": "boolean",
+            "p_null": 9.7e-07,
+            "p_true": 6e-06,
+            "span": [
+              181,
+              186
+            ],
+            "guess": false,
+            "confidence": 0.999994,
+            "span_entropy_bits": 0.0001,
+            "value": false
+          }
+        }
+      },
+      "adv_negated_rebate_and_invariant": {
+        "latency_ms": 135.73,
+        "num_fields": 4,
+        "invariants_passed": true,
+        "answers": {
+          "nodes": {
+            "type": "number",
+            "p_null": 9.3e-07,
+            "span": [
+              77,
+              78
+            ],
+            "guess": 6,
+            "confidence": 0.999998,
+            "span_entropy_bits": 0.0,
+            "value": 6
+          },
+          "hourly_rate": {
+            "type": "number",
+            "p_null": 1.581e-05,
+            "span": [
+              82,
+              87
+            ],
+            "guess": 12.5,
+            "confidence": 0.999983,
+            "span_entropy_bits": 0.0001,
+            "value": 12.5
+          },
+          "subtotal": {
+            "type": "number",
+            "p_null": 2.108e-05,
+            "span": [
+              104,
+              109
+            ],
+            "guess": 75,
+            "confidence": 0.999977,
+            "span_entropy_bits": 0.0001,
+            "value": 75,
+            "verified": true
+          },
+          "promo_rebate": {
+            "type": "number",
+            "p_null": 0.9999516,
+            "span": [
+              123,
+              127
+            ],
+            "guess": 0,
+            "confidence": 0.05,
+            "span_entropy_bits": 0.0003,
+            "value": null,
+            "abstention_reason": "missing_field"
           }
         }
       }
     }
   },
-  "history": []
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 3.7146,
+      "null_accuracy": 100.0,
+      "null_ece": 0.0103,
+      "null_brier_score": 0.00245,
+      "span_exact_match": 99.31,
+      "op_accuracy": 100.0,
+      "list_bio_token_accuracy": 99.84,
+      "quantile_mae_norm": 0.0015,
+      "quantile_pinball_loss": 0.0003
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.1044,
+      "null_accuracy": 100.0,
+      "null_ece": 2e-05,
+      "null_brier_score": 0.0,
+      "span_exact_match": 99.31,
+      "op_accuracy": 100.0,
+      "list_bio_token_accuracy": 100.0,
+      "quantile_mae_norm": 0.0012,
+      "quantile_pinball_loss": 0.0002
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.0433,
+      "null_accuracy": 100.0,
+      "null_ece": 1e-05,
+      "null_brier_score": 0.0,
+      "span_exact_match": 99.31,
+      "op_accuracy": 100.0,
+      "list_bio_token_accuracy": 100.0,
+      "quantile_mae_norm": 0.0011,
+      "quantile_pinball_loss": 0.0002
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.027,
+      "null_accuracy": 100.0,
+      "null_ece": 1e-05,
+      "null_brier_score": 0.0,
+      "span_exact_match": 99.31,
+      "op_accuracy": 100.0,
+      "list_bio_token_accuracy": 100.0,
+      "quantile_mae_norm": 0.0008,
+      "quantile_pinball_loss": 0.0002
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.0223,
+      "null_accuracy": 100.0,
+      "null_ece": 1e-05,
+      "null_brier_score": 0.0,
+      "span_exact_match": 99.31,
+      "op_accuracy": 100.0,
+      "list_bio_token_accuracy": 100.0,
+      "quantile_mae_norm": 0.0008,
+      "quantile_pinball_loss": 0.0001
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.0176,
+      "null_accuracy": 100.0,
+      "null_ece": 1e-05,
+      "null_brier_score": 0.0,
+      "span_exact_match": 99.31,
+      "op_accuracy": 100.0,
+      "list_bio_token_accuracy": 100.0,
+      "quantile_mae_norm": 0.0007,
+      "quantile_pinball_loss": 0.0001
+    }
+  ]
 }

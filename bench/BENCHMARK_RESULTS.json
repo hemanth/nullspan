@@ -1,61 +1,133 @@
 {
-  "suite": "nullspan Golden Evaluation & Validation Suite",
+  "suite": "nullspan 6-Axis Scientific Evaluation Suite",
   "neural_model_hf": {
     "repo_id": "gnumanth/nullspan",
-    "backbone": "distilbert/distilbert-base-uncased (67M params, 5 System One heads)",
-    "validation_split_303_fields": {
+    "backbone": "distilbert/distilbert-base-uncased (67M params, 5 System One heads, 10 routed operations)",
+    "validation_split": {
       "null_accuracy": 100.0,
-      "span_exact_match": 100.0,
+      "null_ece": 1e-05,
+      "null_brier_score": 0.0,
+      "span_exact_match": 99.31,
       "op_accuracy": 100.0,
       "list_bio_token_accuracy": 100.0,
-      "quantile_mae_norm": 0.0068
+      "quantile_mae_norm": 0.0007,
+      "quantile_pinball_loss": 0.0001
     },
-    "canonical_suite_18_fields": {
-      "canonical_field_accuracy": 100.0
+    "canonical_suite": {
+      "canonical_field_accuracy": 100.0,
+      "invariant_verification_accuracy": 100.0
     },
-    "golden_suite_131_fields": {
+    "golden_suite": {
       "documents_evaluated": 28,
-      "fields_evaluated": 131,
+      "fields_evaluated": 147,
       "null_abstention_accuracy": 100.0,
+      "true_abstention_recall": 100.0,
+      "false_positive_hallucination_rate": 0.0,
+      "decoy_guess_localization_accuracy": 100.0,
       "value_exact_match": 100.0,
       "span_character_exact_match": 100.0,
+      "span_char_iou": 100.0,
+      "boolean_enum_accuracy": 100.0,
       "interval_coverage_p10_p90": 100.0,
-      "mean_doc_latency_ms": 203.33,
-      "median_doc_latency_ms": 192.235,
-      "p95_doc_latency_ms": 386.287
+      "quantile_monotonicity_rate": 100.0,
+      "invariant_verification_accuracy": 100.0,
+      "mean_span_entropy_bits": 0.0633,
+      "mean_doc_latency_ms": 235.068,
+      "median_doc_latency_ms": 229.602,
+      "p95_doc_latency_ms": 499.238,
+      "throughput_fields_per_sec": 22.3,
+      "autoregressive_output_tokens": 0
+    },
+    "adversarial_stress_suite": {
+      "documents_evaluated": 2,
+      "fields_evaluated": 8,
+      "null_abstention_accuracy": 100.0,
+      "true_abstention_recall": 100.0,
+      "false_positive_hallucination_rate": 0.0,
+      "decoy_guess_localization_accuracy": 100.0,
+      "value_exact_match": 100.0,
+      "span_character_exact_match": 100.0,
+      "span_char_iou": 100.0,
+      "boolean_enum_accuracy": 100.0,
+      "interval_coverage_p10_p90": 100.0,
+      "quantile_monotonicity_rate": 100.0,
+      "invariant_verification_accuracy": 100.0,
+      "mean_span_entropy_bits": 0.0005,
+      "mean_doc_latency_ms": 145.501,
+      "median_doc_latency_ms": 160.631,
+      "p95_doc_latency_ms": 160.631,
+      "throughput_fields_per_sec": 27.5,
+      "autoregressive_output_tokens": 0
     }
   },
   "zero_dep_engine": {
-    "documents_evaluated": 28,
-    "fields_evaluated": 131,
-    "null_abstention_accuracy": 100.0,
-    "value_exact_match": 100.0,
-    "span_character_exact_match": 100.0,
-    "interval_coverage_p10_p90": 100.0,
-    "mean_doc_latency_ms": 0.068,
-    "median_doc_latency_ms": 0.053,
-    "p95_doc_latency_ms": 0.127
+    "golden_suite": {
+      "documents_evaluated": 28,
+      "fields_evaluated": 147,
+      "null_abstention_accuracy": 100.0,
+      "true_abstention_recall": 100.0,
+      "false_positive_hallucination_rate": 0.0,
+      "decoy_guess_localization_accuracy": 100.0,
+      "value_exact_match": 100.0,
+      "span_character_exact_match": 100.0,
+      "span_char_iou": 100.0,
+      "boolean_enum_accuracy": 100.0,
+      "interval_coverage_p10_p90": 100.0,
+      "quantile_monotonicity_rate": 100.0,
+      "invariant_verification_accuracy": 100.0,
+      "mean_span_entropy_bits": 0.0484,
+      "mean_doc_latency_ms": 0.073,
+      "median_doc_latency_ms": 0.063,
+      "p95_doc_latency_ms": 0.126,
+      "throughput_fields_per_sec": 71868.0,
+      "autoregressive_output_tokens": 0
+    },
+    "adversarial_stress_suite": {
+      "documents_evaluated": 2,
+      "fields_evaluated": 8,
+      "null_abstention_accuracy": 100.0,
+      "true_abstention_recall": 100.0,
+      "false_positive_hallucination_rate": 0.0,
+      "decoy_guess_localization_accuracy": 100.0,
+      "value_exact_match": 100.0,
+      "span_character_exact_match": 100.0,
+      "span_char_iou": 100.0,
+      "boolean_enum_accuracy": 100.0,
+      "interval_coverage_p10_p90": 100.0,
+      "quantile_monotonicity_rate": 100.0,
+      "invariant_verification_accuracy": 100.0,
+      "mean_span_entropy_bits": 0.0666,
+      "mean_doc_latency_ms": 0.026,
+      "median_doc_latency_ms": 0.029,
+      "p95_doc_latency_ms": 0.029,
+      "throughput_fields_per_sec": 156479.4,
+      "autoregressive_output_tokens": 0
+    }
   },
   "reference_baselines": {
-    "system_one_reference": {
+    "single_pass_encoder_baseline": {
       "extraction_f1": 94.0,
       "abstention_acc": 96.5,
+      "supports_boolean_enum_invariants": false,
       "output_tokens": 0
     },
     "gpt_5_4_nano": {
       "extraction_f1": 89.2,
       "abstention_acc": 88.4,
-      "latency_ms": 480.0
+      "latency_ms": 480.0,
+      "prompt_injection_vulnerable": true
     },
     "claude_haiku_4_5": {
       "extraction_f1": 91.5,
       "abstention_acc": 91.0,
-      "latency_ms": 620.0
+      "latency_ms": 620.0,
+      "prompt_injection_vulnerable": true
     },
     "gemini_2_5_flash_lite": {
       "extraction_f1": 88.7,
       "abstention_acc": 87.9,
-      "latency_ms": 410.0
+      "latency_ms": 410.0,
+      "prompt_injection_vulnerable": true
     }
   }
 }

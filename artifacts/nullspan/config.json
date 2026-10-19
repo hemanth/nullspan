@@ -13,7 +13,7 @@
   "model_type": "nullspan",
   "null_temperature": 1.0,
   "num_bio_labels": 3,
-  "num_ops": 8,
+  "num_ops": 10,
   "span_temperature": 1.0,
   "transformers_version": "5.12.1"
 }
