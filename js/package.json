@@ -1,7 +1,7 @@
 {
-  "name": "clairic-extract",
-  "version": "0.1.0",
-  "description": "System One structured extraction, computation, calibrated estimation, and time-series forecasting in a single pass.",
+  "name": "nullspan",
+  "version": "1.0.0",
+  "description": "Calibrated p_null abstention, grounded [start, end] span extraction, arithmetic, and distribution forecasting in a single forward pass.",
   "type": "module",
   "main": "src/index.js",
   "types": "src/index.d.ts",

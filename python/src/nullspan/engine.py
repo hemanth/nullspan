@@ -7,7 +7,7 @@ import re
 import time
 from typing import Any
 
-DEFAULT_HF_REPO = "gnumanth/clairic-extract-v1"
+DEFAULT_HF_REPO = "gnumanth/nullspan"
 _HF_CACHE: dict[str, tuple[Any, Any]] = {}
 
 MONTH_MAP = {
@@ -349,7 +349,7 @@ def _extract_field_fast(state: str, fname: str, spec: dict[str, Any]) -> dict[st
     }
 
 
-class ClairicExtractor:
+class NullspanExtractor:
     """Reusable System One extractor bound to a schema of typed fields."""
 
     def __init__(self, fields: dict[str, dict[str, Any]], **options: Any) -> None:
@@ -378,7 +378,7 @@ def _run_extraction(
         from transformers import AutoModel, AutoTokenizer
 
         if model_id not in _HF_CACHE:
-            tok = AutoTokenizer.from_pretrained(model_id)
+            tok = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
             mdl = AutoModel.from_pretrained(model_id, trust_remote_code=True)
             _HF_CACHE[model_id] = (tok, mdl)
         tok, mdl = _HF_CACHE[model_id]
@@ -388,7 +388,7 @@ def _run_extraction(
 
     answers = {fname: _extract_field_fast(state, fname, spec) for fname, spec in fields.items()}
     return {
-        "model": "clairic-extract-v1",
+        "model": "nullspan",
         "latency_ms": round((time.perf_counter() - t0) * 1000.0, 3),
         "answers": answers,
     }
@@ -400,7 +400,7 @@ def extract(
     *,
     state: str | None = None,
     **options: Any,
-) -> dict[str, Any] | ClairicExtractor:
+) -> dict[str, Any] | NullspanExtractor:
     """Extract, compute, estimate, or forecast typed values in a single System One pass.
 
     Usage:
@@ -414,7 +414,7 @@ def extract(
     if state is not None and state_or_fields is None:
         state_or_fields = state
     if isinstance(state_or_fields, dict) and fields is None:
-        return ClairicExtractor(state_or_fields, **options)
+        return NullspanExtractor(state_or_fields, **options)
     if not isinstance(state_or_fields, str) or not isinstance(fields, dict):
         raise ValueError("Pass (state: str, fields: dict) or (fields: dict) to create an extractor.")
     return _run_extraction(state_or_fields, fields, **options)

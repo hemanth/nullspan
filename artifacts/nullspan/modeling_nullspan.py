@@ -1,4 +1,4 @@
-"""Clairic System One Extraction Model (Hugging Face PreTrainedModel).
+"""Nullspan System One Extraction Model (Hugging Face PreTrainedModel).
 
 Processes `state` + multiple typed `fields` in a single parallel encoder forward pass
 with 5 task heads:
@@ -21,8 +21,8 @@ import torch.nn.functional as F
 from transformers import AutoConfig, AutoModel, AutoTokenizer, PretrainedConfig, PreTrainedModel
 
 
-class ClairicConfig(PretrainedConfig):
-    model_type = "clairic_extraction"
+class NullspanConfig(PretrainedConfig):
+    model_type = "nullspan"
 
     def __init__(
         self,
@@ -184,10 +184,10 @@ def parse_dates_in_text(text: str) -> list[tuple[dt.datetime, tuple[int, int]]]:
     return results
 
 
-class ClairicForExtraction(PreTrainedModel):
-    config_class = ClairicConfig
+class NullspanForExtraction(PreTrainedModel):
+    config_class = NullspanConfig
 
-    def __init__(self, config: ClairicConfig, pretrained_backbone: bool = False) -> None:
+    def __init__(self, config: NullspanConfig, pretrained_backbone: bool = False) -> None:
         super().__init__(config)
         if pretrained_backbone:
             self.encoder = AutoModel.from_pretrained(config.backbone_name)
@@ -558,4 +558,4 @@ class ClairicForExtraction(PreTrainedModel):
                 "value": None if is_null else guess_str,
             }
 
-        return {"model": "clairic-extract-v1", "answers": answers}
+        return {"model": "nullspan", "answers": answers}

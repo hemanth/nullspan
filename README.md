@@ -1,16 +1,16 @@
-# clairic-extract
+# nullspan
 
-Extract grounded spans, compute numbers and durations, abstain on missing fields (`p_null`), and output calibrated probability distributions and forecasts in a single forward pass with zero output tokens.
+Extract grounded `[start, end]` character spans, compute numbers and durations, abstain on missing fields (`p_null`), and output calibrated `p10`/`median`/`p90` distributions and forecasts in a single forward pass with zero output tokens.
 
 ```bash
-npm install clairic-extract
-# or: pip install clairic-extract
+npm install nullspan
+# or: pip install nullspan
 ```
 
 ## Quick start
 
 ```js
-import { extract } from 'clairic-extract';
+import extract from 'nullspan';
 
 const email =
   "Hi, order A-88412 arrived on Sept 28, 2026 with a cracked screen and a dented corner. " +
@@ -28,14 +28,14 @@ const { answers } = extract(email, {
 });
 ```
 
-`extract(state, fields)` evaluates every field in parallel. `extract(fields)` returns a reusable schema extractor with `.run(state)` and `.batch(states)`. That's the whole API.
+`extract(state, fields)` resolves every field in parallel. `extract(fields)` returns a reusable schema extractor with `.run(state)` and `.batch(states)`. That's the whole API.
 
-## Fine-tuned Hugging Face model (`gnumanth/clairic-extract-v1`)
+## Fine-tuned Hugging Face model (`gnumanth/nullspan`)
 
 ```python
 from transformers import AutoModel, AutoTokenizer
 
-repo_id = "gnumanth/clairic-extract-v1"
+repo_id = "gnumanth/nullspan"
 tokenizer = AutoTokenizer.from_pretrained(repo_id)
 model = AutoModel.from_pretrained(repo_id, trust_remote_code=True)
 
@@ -50,12 +50,12 @@ result = model.extract(
 )
 ```
 
-`ClairicForExtraction` attaches five parallel System One heads (`null_head`, `span_head`, `bio_head`, `op_head`, `quantile_head`) to a 67M `distilbert-base-uncased` encoder so all fields resolve in one batched forward pass.
+`NullspanForExtraction` attaches five parallel System One heads (`null_head`, `span_head`, `bio_head`, `op_head`, `quantile_head`) to a 67M `distilbert-base-uncased` encoder so all fields resolve in one batched forward pass.
 
 ## Calibrated estimation & forecasting
 
 ```python
-from clairic_extract import extract
+from nullspan import extract
 
 comps = """Comparable sales:
 sqft,beds,year_built,neighborhood,sale_price
@@ -89,14 +89,14 @@ out = extract(comps, {
 python3 bench/run_bench.py
 ```
 
-| Metric / Split | `gnumanth/clairic-extract-v1` (67M Neural) | `clairic-extract` (Zero-Dep Engine) | `gpt-5.4-nano` (Ref) | `claude-haiku-4.5` (Ref) |
+| Metric / Split | `gnumanth/nullspan` (67M Neural) | `nullspan` (Zero-Dep Engine) | `gpt-5.4-nano` (Ref) | `claude-haiku-4.5` (Ref) |
 | :--- | ---: | ---: | ---: | ---: |
 | **Validation Null Abstention (`p_null`, 303 fields)** | **100.0%** | **100.0%** | 88.4% | 91.0% |
 | **Validation Character Span EM (`[s, e]`)** | **100.0%** | **100.0%** | — | — |
 | **Validation Op Router Accuracy (8-way)** | **100.0%** | **100.0%** | — | — |
 | **Validation Multi-Span List BIO Accuracy** | **100.0%** | **100.0%** | — | — |
 | **Validation Quantile MAE (`[0, 1]` norm)** | **0.0068** | **0.0051** | — | — |
-| **Canonical Cloudflare Blog Suite (18 fields)** | **100.0%** | **100.0%** | 89.2% | 91.5% |
+| **Canonical Evaluation Suite (18 fields)** | **100.0%** | **100.0%** | 89.2% | 91.5% |
 | **Golden Suite Value & Span EM (131 fields)** | **100.0%** | **100.0%** | — | — |
 | **Golden Suite `p10`–`p90` Coverage** | **100.0%** | **100.0%** | — | — |
 | **Mean Multi-Field Document Latency** | **45.3 ms** | **0.026 ms** | 480.0 ms | 620.0 ms |
@@ -104,10 +104,9 @@ python3 bench/run_bench.py
 
 ## Links
 
-- [Hugging Face Model (`gnumanth/clairic-extract-v1`)](https://huggingface.co/gnumanth/clairic-extract-v1)
-- [Hugging Face Dataset (`gnumanth/clairic-extraction-dataset`)](https://huggingface.co/datasets/gnumanth/clairic-extraction-dataset)
-- [Interactive Playground](https://hemanth.github.io/clairic-extract/)
-- [Cloudflare Clairic Blog Post](https://blog.cloudflare.com/clairic-extraction-model/)
+- [Hugging Face Model (`gnumanth/nullspan`)](https://huggingface.co/gnumanth/nullspan)
+- [Hugging Face Dataset (`gnumanth/nullspan-dataset`)](https://huggingface.co/datasets/gnumanth/nullspan-dataset)
+- [Interactive Playground](https://hemanth.github.io/nullspan/)
 
 ## License
 

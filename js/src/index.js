@@ -1,5 +1,5 @@
 /**
- * clairic-extract — System One structured extraction, computation, calibrated estimation, and forecasting.
+ * nullspan — Calibrated p_null abstention, grounded [start, end] span extraction, and distribution forecasting.
  */
 
 const MONTH_MAP = {
@@ -263,7 +263,7 @@ function runExtraction(state, fields) {
     answers[fname] = extractField(state, fname, spec);
   }
   return {
-    model: 'clairic-extract-v1',
+    model: 'nullspan',
     latency_ms: Number((performance.now() - t0).toFixed(3)),
     answers,
   };

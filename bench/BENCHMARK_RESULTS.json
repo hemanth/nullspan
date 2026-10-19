@@ -1,7 +1,7 @@
 {
-  "suite": "Clairic Golden Evaluation & Validation Suite",
+  "suite": "nullspan Golden Evaluation & Validation Suite",
   "neural_model_hf": {
-    "repo_id": "gnumanth/clairic-extract-v1",
+    "repo_id": "gnumanth/nullspan",
     "backbone": "distilbert/distilbert-base-uncased (67M params, 5 System One heads)",
     "validation_split_303_fields": {
       "null_accuracy": 100.0,
@@ -10,7 +10,7 @@
       "list_bio_token_accuracy": 100.0,
       "quantile_mae_norm": 0.0068
     },
-    "canonical_blog_suite_18_fields": {
+    "canonical_suite_18_fields": {
       "canonical_field_accuracy": 100.0
     },
     "golden_suite_131_fields": {
@@ -20,9 +20,9 @@
       "value_exact_match": 100.0,
       "span_character_exact_match": 100.0,
       "interval_coverage_p10_p90": 100.0,
-      "mean_doc_latency_ms": 45.3,
-      "median_doc_latency_ms": 55.936,
-      "p95_doc_latency_ms": 76.741
+      "mean_doc_latency_ms": 203.33,
+      "median_doc_latency_ms": 192.235,
+      "p95_doc_latency_ms": 386.287
     }
   },
   "zero_dep_engine": {
@@ -32,12 +32,12 @@
     "value_exact_match": 100.0,
     "span_character_exact_match": 100.0,
     "interval_coverage_p10_p90": 100.0,
-    "mean_doc_latency_ms": 0.026,
-    "median_doc_latency_ms": 0.021,
-    "p95_doc_latency_ms": 0.051
+    "mean_doc_latency_ms": 0.068,
+    "median_doc_latency_ms": 0.053,
+    "p95_doc_latency_ms": 0.127
   },
-  "cloudflare_blog_reference_baselines": {
-    "clairic_reference": {
+  "reference_baselines": {
+    "system_one_reference": {
       "extraction_f1": 94.0,
       "abstention_acc": 96.5,
       "output_tokens": 0

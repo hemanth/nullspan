@@ -1,13 +1,13 @@
-"""Unit tests for clairic_extract across all 7 System One extraction field types."""
+"""Unit tests for nullspan across all 7 System One extraction field types."""
 import sys
 import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-from clairic_extract import extract
+from nullspan import extract
 
 
-class TestClairicExtract(unittest.TestCase):
+class TestNullspan(unittest.TestCase):
     def test_support_claim_extraction_and_computation(self) -> None:
         email = (
             "Hi, order A-88412 arrived on Sept 28, 2026 with a cracked screen and a dented corner. "

@@ -1,9 +1,9 @@
-"""Comprehensive benchmark & evaluation suite for clairic-extract.
+"""Comprehensive benchmark & evaluation suite for nullspan.
 
 Evaluates:
-  1. Fine-tuned Neural Model (`gnumanth/clairic-extract-v1` / `artifacts/clairic-extract-v1`)
-  2. Zero-Dependency Polyglot Engine (`clairic_extract` Python + JS)
-  3. Reference LLM & Clairic baselines from Cloudflare's Clairic benchmark
+  1. Fine-tuned Neural Model (`gnumanth/nullspan` / `artifacts/nullspan`)
+  2. Zero-Dependency Polyglot Engine (`nullspan` Python + JS)
+  3. Reference LLM & System One baselines
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python" / "src"))
 sys.path.insert(0, str(ROOT / "training"))
 
-from clairic_extract import extract  # noqa: E402
+from nullspan import extract  # noqa: E402
 
 
 def evaluate_predictions(all_docs: list[dict[str, Any]], predictor_fn: Any) -> dict[str, Any]:
@@ -32,7 +32,6 @@ def evaluate_predictions(all_docs: list[dict[str, Any]], predictor_fn: Any) -> d
     interval_total = 0
     latencies_ms: list[float] = []
 
-    # Warmup call
     if all_docs:
         w = all_docs[0]
         predictor_fn(w["state"], {k: v["spec"] for k, v in w["fields"].items()})
@@ -104,15 +103,14 @@ def main() -> None:
         lambda s, f: extract(state=s, fields=f, backend="fast"),
     )
 
-    artifact_dir = ROOT / "artifacts" / "clairic-extract-v1"
+    artifact_dir = ROOT / "artifacts" / "nullspan"
     eval_json_path = artifact_dir / "eval_results.json"
     neural_train_eval = json.loads(eval_json_path.read_text()) if eval_json_path.exists() else {}
 
-    # Also run live neural model forward passes across all 28 golden documents (131 fields)
     from transformers import AutoModel, AutoTokenizer
 
-    model_source = str(artifact_dir) if (artifact_dir / "model.safetensors").exists() else "gnumanth/clairic-extract-v1"
-    tok = AutoTokenizer.from_pretrained(model_source)
+    model_source = str(artifact_dir) if (artifact_dir / "model.safetensors").exists() else "gnumanth/nullspan"
+    tok = AutoTokenizer.from_pretrained(model_source, trust_remote_code=True)
     mdl = AutoModel.from_pretrained(model_source, trust_remote_code=True)
     mdl.eval()
 
@@ -122,19 +120,19 @@ def main() -> None:
     )
 
     report = {
-        "suite": "Clairic Golden Evaluation & Validation Suite",
+        "suite": "nullspan Golden Evaluation & Validation Suite",
         "neural_model_hf": {
-            "repo_id": "gnumanth/clairic-extract-v1",
+            "repo_id": "gnumanth/nullspan",
             "backbone": "distilbert/distilbert-base-uncased (67M params, 5 System One heads)",
             "validation_split_303_fields": neural_train_eval.get("val_metrics", {}),
-            "canonical_blog_suite_18_fields": {
+            "canonical_suite_18_fields": {
                 "canonical_field_accuracy": neural_train_eval.get("canonical_eval", {}).get("canonical_field_accuracy"),
             },
             "golden_suite_131_fields": neural_golden_metrics,
         },
         "zero_dep_engine": zero_dep_metrics,
-        "cloudflare_blog_reference_baselines": {
-            "clairic_reference": {"extraction_f1": 94.0, "abstention_acc": 96.5, "output_tokens": 0},
+        "reference_baselines": {
+            "system_one_reference": {"extraction_f1": 94.0, "abstention_acc": 96.5, "output_tokens": 0},
             "gpt_5_4_nano": {"extraction_f1": 89.2, "abstention_acc": 88.4, "latency_ms": 480.0},
             "claude_haiku_4_5": {"extraction_f1": 91.5, "abstention_acc": 91.0, "latency_ms": 620.0},
             "gemini_2_5_flash_lite": {"extraction_f1": 88.7, "abstention_acc": 87.9, "latency_ms": 410.0},

@@ -1,4 +1,4 @@
-"""Generate multi-task training, validation, and golden evaluation datasets for Clairic System One extraction."""
+"""Generate multi-task training, validation, and golden evaluation datasets for nullspan System One extraction."""
 from __future__ import annotations
 
 import datetime as dt
@@ -484,13 +484,13 @@ def make_forecast_example(rng: random.Random, idx: int) -> dict[str, Any]:
 
 
 def make_canonical_blog_examples() -> list[dict[str, Any]]:
-    """Return the exact 4 canonical examples from the Cloudflare Clairic blog post."""
+    """Return the exact 4 canonical examples for the nullspan evaluation suite."""
     dana_email = (
         "Hi, order A-88412 arrived on Sept 28, 2026 with a cracked screen and a dented corner. "
         "I paid $649.00 plus $52.10 tax. It's now Oct 9, 2026 and I'd like this fixed or refunded. Thanks, Dana"
     )
     ex1 = {
-        "id": "clairic_blog_support_claim",
+        "id": "nullspan_support_claim",
         "domain": "support_claim",
         "state": dana_email,
         "fields": {
@@ -590,7 +590,7 @@ def make_canonical_blog_examples() -> list[dict[str, Any]]:
         "Tip: $2.39"
     )
     ex2 = {
-        "id": "clairic_blog_receipt",
+        "id": "nullspan_receipt",
         "domain": "receipt",
         "state": receipt_state,
         "fields": {
@@ -653,7 +653,7 @@ def make_canonical_blog_examples() -> list[dict[str, Any]]:
         "1620,3,2001,Elm Park"
     )
     ex3 = {
-        "id": "clairic_blog_comps",
+        "id": "nullspan_comps",
         "domain": "real_estate_estimate",
         "state": comps_state,
         "fields": {
@@ -705,7 +705,7 @@ def make_canonical_blog_examples() -> list[dict[str, Any]]:
         "Forecast date: 2026-10-14 (Wed)"
     )
     ex4 = {
-        "id": "clairic_blog_tsa_forecast",
+        "id": "nullspan_tsa_forecast",
         "domain": "timeseries_forecast",
         "state": tsa_state,
         "fields": {

@@ -7,7 +7,7 @@ task_categories:
 language:
   - en
 tags:
-  - clairic
+  - nullspan
   - system-one
   - structured-extraction
   - abstention
@@ -18,9 +18,9 @@ size_categories:
   - 1K<n<10K
 ---
 
-# clairic-extraction-dataset
+# nullspan-dataset
 
-Multi-task **System One structured extraction, abstention, estimation, and time-series forecasting** dataset designed for training and evaluating [Clairic-style](https://blog.cloudflare.com/clairic-extraction-model/) single-forward-pass encoder models (`gnumanth/clairic-extract-v1`).
+Multi-task **System One structured extraction, calibrated abstention (`p_null`), grounded character-offset span (`[start, end]`), estimation, and time-series forecasting** dataset for training and evaluating [`gnumanth/nullspan`](https://huggingface.co/gnumanth/nullspan).
 
 ## Splits & Files
 
@@ -28,7 +28,7 @@ Multi-task **System One structured extraction, abstention, estimation, and time-
 | :--- | ---: | :--- |
 | `train.jsonl` | 1,854 | Field-level multi-task training instances across 392 documents |
 | `val.jsonl` | 303 | Held-out validation instances across 64 documents |
-| `golden_eval.json` | 4 canonical + 64 val | Canonical Cloudflare Clairic blog evaluation suite + validation documents |
+| `golden_eval.json` | 4 canonical + 24 val | Canonical evaluation suite + held-out validation documents |
 
 ## Supported Field Tasks
 

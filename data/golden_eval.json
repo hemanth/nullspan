@@ -1,7 +1,7 @@
 {
   "canonical": [
     {
-      "id": "clairic_blog_support_claim",
+      "id": "nullspan_support_claim",
       "domain": "support_claim",
       "state": "Hi, order A-88412 arrived on Sept 28, 2026 with a cracked screen and a dented corner. I paid $649.00 plus $52.10 tax. It's now Oct 9, 2026 and I'd like this fixed or refunded. Thanks, Dana",
       "fields": {
@@ -156,7 +156,7 @@
       }
     },
     {
-      "id": "clairic_blog_receipt",
+      "id": "nullspan_receipt",
       "domain": "receipt",
       "state": "Receipt from Corner Cafe\nOrder #77245 | Date: 2026-07-01 13:34\nQty: 2 @ $7.99 each\nSubtotal: $15.98\nSales Tax: $0.00\nTip: $2.39",
       "fields": {
@@ -296,7 +296,7 @@
       }
     },
     {
-      "id": "clairic_blog_comps",
+      "id": "nullspan_comps",
       "domain": "real_estate_estimate",
       "state": "Comparable sales:\nsqft,beds,year_built,neighborhood,sale_price\n1450,3,1998,Elm Park,412000\n2100,4,2006,Elm Park,585000\n980,2,1975,Riverside,265000\n1600,3,2003,Elm Park,449000\n1300,3,1990,Riverside,318000\n\nSubject property:\nsqft,beds,year_built,neighborhood\n1620,3,2001,Elm Park",
       "fields": {
@@ -331,7 +331,7 @@
       }
     },
     {
-      "id": "clairic_blog_tsa_forecast",
+      "id": "nullspan_tsa_forecast",
       "domain": "timeseries_forecast",
       "state": "Daily number of people screened at TSA checkpoints at US airports.\ndate,weekday,travelers\n2026-09-30,Wed,2418910\n2026-10-01,Thu,2795400\n2026-10-02,Fri,2884120\n2026-10-03,Sat,2210450\n2026-10-04,Sun,2741890\n2026-10-05,Mon,2589320\n2026-10-06,Tue,2341180\n2026-10-07,Wed,2419650\n2026-10-08,Thu,2812300\n2026-10-09,Fri,2915600\n2026-10-10,Sat,2245900\n2026-10-11,Sun,2788400\n2026-10-12,Mon,2612400\n2026-10-13,Tue,2353356\nForecast date: 2026-10-14 (Wed)",
       "fields": {
@@ -376,7 +376,7 @@
   ],
   "val_docs": [
     {
-      "id": "clairic_blog_support_claim",
+      "id": "nullspan_support_claim",
       "domain": "support_claim",
       "state": "Hi, order A-88412 arrived on Sept 28, 2026 with a cracked screen and a dented corner. I paid $649.00 plus $52.10 tax. It's now Oct 9, 2026 and I'd like this fixed or refunded. Thanks, Dana",
       "fields": {
@@ -531,7 +531,7 @@
       }
     },
     {
-      "id": "clairic_blog_receipt",
+      "id": "nullspan_receipt",
       "domain": "receipt",
       "state": "Receipt from Corner Cafe\nOrder #77245 | Date: 2026-07-01 13:34\nQty: 2 @ $7.99 each\nSubtotal: $15.98\nSales Tax: $0.00\nTip: $2.39",
       "fields": {
@@ -671,7 +671,7 @@
       }
     },
     {
-      "id": "clairic_blog_comps",
+      "id": "nullspan_comps",
       "domain": "real_estate_estimate",
       "state": "Comparable sales:\nsqft,beds,year_built,neighborhood,sale_price\n1450,3,1998,Elm Park,412000\n2100,4,2006,Elm Park,585000\n980,2,1975,Riverside,265000\n1600,3,2003,Elm Park,449000\n1300,3,1990,Riverside,318000\n\nSubject property:\nsqft,beds,year_built,neighborhood\n1620,3,2001,Elm Park",
       "fields": {
@@ -706,7 +706,7 @@
       }
     },
     {
-      "id": "clairic_blog_tsa_forecast",
+      "id": "nullspan_tsa_forecast",
       "domain": "timeseries_forecast",
       "state": "Daily number of people screened at TSA checkpoints at US airports.\ndate,weekday,travelers\n2026-09-30,Wed,2418910\n2026-10-01,Thu,2795400\n2026-10-02,Fri,2884120\n2026-10-03,Sat,2210450\n2026-10-04,Sun,2741890\n2026-10-05,Mon,2589320\n2026-10-06,Tue,2341180\n2026-10-07,Wed,2419650\n2026-10-08,Thu,2812300\n2026-10-09,Fri,2915600\n2026-10-10,Sat,2245900\n2026-10-11,Sun,2788400\n2026-10-12,Mon,2612400\n2026-10-13,Tue,2353356\nForecast date: 2026-10-14 (Wed)",
       "fields": {

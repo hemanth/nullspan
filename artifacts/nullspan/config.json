@@ -1,16 +1,16 @@
 {
   "architectures": [
-    "ClairicForExtraction"
+    "NullspanForExtraction"
   ],
   "auto_map": {
-    "AutoConfig": "modeling_clairic.ClairicConfig",
-    "AutoModel": "modeling_clairic.ClairicForExtraction"
+    "AutoConfig": "modeling_nullspan.NullspanConfig",
+    "AutoModel": "modeling_nullspan.NullspanForExtraction"
   },
   "backbone_name": "distilbert/distilbert-base-uncased",
   "dropout": 0.1,
   "dtype": "float32",
   "hidden_size": 768,
-  "model_type": "clairic_extraction",
+  "model_type": "nullspan",
   "null_temperature": 1.0,
   "num_bio_labels": 3,
   "num_ops": 8,

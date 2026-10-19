@@ -2,7 +2,7 @@
 license: mit
 library_name: transformers
 tags:
-  - clairic
+  - nullspan
   - system-one
   - structured-extraction
   - span-extraction
@@ -10,18 +10,18 @@ tags:
   - time-series-forecasting
   - distilbert
 datasets:
-  - gnumanth/clairic-extraction-dataset
+  - gnumanth/nullspan-dataset
 metrics:
   - accuracy
   - exact_match
 pipeline_tag: question-answering
 ---
 
-# gnumanth/clairic-extract-v1
+# gnumanth/nullspan
 
-Lightweight **System One extraction model** inspired by [Cloudflare Clairic](https://blog.cloudflare.com/clairic-extraction-model/). Processes an unstructured `state` and a map of typed `fields` (`text`, `number`, `date`, `datetime`, `duration`, `list`, `estimate`, `forecast`) in a **single parallel encoder forward pass** with zero output token generation.
+**`nullspan`** is a lightweight **System One extraction, abstention, and distribution model**. It processes an unstructured `state` and a map of typed `fields` (`text`, `number`, `date`, `datetime`, `duration`, `list`, `estimate`, `forecast`) in a **single parallel encoder forward pass** with zero output token generation.
 
-## Architecture
+## Architecture (`NullspanForExtraction`)
 
 Built on `distilbert/distilbert-base-uncased` (67M parameters) with 5 parallel System One heads:
 1. **`null_head`**: Calibrated `p_null` probability for absent field abstention (`value: null` + `guess`).
@@ -30,22 +30,22 @@ Built on `distilbert/distilbert-base-uncased` (67M parameters) with 5 parallel S
 4. **`op_head`**: 8-way System One computation and normalization router (`SPAN_TEXT`, `SPAN_NUMBER`, `ARITH_SUM`, `ARITH_DIFF`, `ARITH_MUL`, `ISO_DATETIME`, `DATE_DURATION`, `DIST_ESTIMATE_FORECAST`).
 5. **`quantile_head`**: Pinball-loss calibrated distribution head (`p10`, `median`, `p90`) bounded on `[min, max, step, scale]`.
 
-## Empirical Benchmarks (Fine-Tuned on GCP `Apple Silicon MPS`)
+## Empirical Benchmarks
 
-- **Training time**: `565.8s`
+- **Training time**: `565.8s` (`Apple Silicon MPS`)
 - **Null Abstention Accuracy (`p_null`)**: `100.0%`
 - **Grounded Span Exact Match (`[start, end]`)**: `100.0%`
 - **Operation Router Accuracy**: `100.0%`
 - **Multi-Span List BIO Accuracy**: `100.0%`
 - **Quantile Distribution MAE (normalized `[0, 1]`)**: `0.0068`
-- **Canonical Cloudflare Blog Suite Accuracy**: `100.0%` (`546.68 ms` per multi-field pass)
+- **Canonical Evaluation Suite Accuracy**: `100.0%` (`119.35 ms` per multi-field pass)
 
 ## Quick Start
 
 ```python
 from transformers import AutoModel, AutoTokenizer
 
-repo_id = "gnumanth/clairic-extract-v1"
+repo_id = "gnumanth/nullspan"
 tokenizer = AutoTokenizer.from_pretrained(repo_id)
 model = AutoModel.from_pretrained(repo_id, trust_remote_code=True)
 

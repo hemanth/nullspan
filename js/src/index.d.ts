@@ -11,6 +11,7 @@ export interface FieldSpec {
   scale?: 'linear' | 'log';
   horizon?: number;
   interval?: string;
+  percentiles?: boolean;
 }
 
 export interface ExtractionResult {
@@ -19,12 +20,12 @@ export interface ExtractionResult {
   answers: Record<string, any>;
 }
 
-export interface ClairicSchemaExtractor {
+export interface NullspanSchemaExtractor {
   fields: Record<string, FieldSpec>;
   run(state: string): ExtractionResult;
   batch(states: string[]): ExtractionResult[];
 }
 
 export default function extract(state: string, fields: Record<string, FieldSpec>): ExtractionResult;
-export default function extract(fields: Record<string, FieldSpec>): ClairicSchemaExtractor;
+export default function extract(fields: Record<string, FieldSpec>): NullspanSchemaExtractor;
 export { extract };

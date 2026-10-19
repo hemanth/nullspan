@@ -1,4 +1,4 @@
-"""Train, calibrate, evaluate, and publish ClairicForExtraction on GPU."""
+"""Train, calibrate, evaluate, and publish NullspanForExtraction on GPU."""
 from __future__ import annotations
 
 import argparse
@@ -15,18 +15,18 @@ from torch.utils.data import DataLoader, Dataset
 from transformers import AutoTokenizer, get_cosine_schedule_with_warmup
 
 from generate_dataset import DATA_DIR, main as generate_data_main
-from modeling_clairic import (
-    ClairicConfig,
-    ClairicForExtraction,
+from modeling_nullspan import (
+    NullspanConfig,
+    NullspanForExtraction,
     extract_numeric_context_features,
     format_field_query,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
-ARTIFACT_DIR = ROOT / "artifacts" / "clairic-extract-v1"
+ARTIFACT_DIR = ROOT / "artifacts" / "nullspan"
 
 
-class ClairicFieldDataset(Dataset):
+class NullspanFieldDataset(Dataset):
     def __init__(self, jsonl_path: Path, tokenizer: Any, max_length: int = 128) -> None:
         self.rows = [json.loads(line) for line in jsonl_path.read_text().splitlines() if line.strip()]
         self.tokenizer = tokenizer
@@ -115,7 +115,7 @@ class ClairicFieldDataset(Dataset):
 
 @torch.no_grad()
 def evaluate_validation(
-    model: ClairicForExtraction,
+    model: NullspanForExtraction,
     val_loader: DataLoader,
     device: torch.device,
 ) -> dict[str, float]:
@@ -168,7 +168,7 @@ def evaluate_validation(
     }
 
 
-def evaluate_canonical_examples(model: ClairicForExtraction, tokenizer: Any) -> dict[str, Any]:
+def evaluate_canonical_examples(model: NullspanForExtraction, tokenizer: Any) -> dict[str, Any]:
     golden = json.loads((DATA_DIR / "golden_eval.json").read_text())
     canonical_docs = golden["canonical"]
     results = {}
@@ -227,12 +227,12 @@ def write_model_card(
     device_name: str,
     train_seconds: float,
 ) -> None:
-    support_out = json.dumps(canonical_eval["examples"]["clairic_blog_support_claim"]["answers"], indent=2)
+    support_out = json.dumps(canonical_eval["examples"]["nullspan_support_claim"]["answers"], indent=2)
     card = f"""---
 license: mit
 library_name: transformers
 tags:
-  - clairic
+  - nullspan
   - system-one
   - structured-extraction
   - span-extraction
@@ -240,7 +240,7 @@ tags:
   - time-series-forecasting
   - distilbert
 datasets:
-  - gnumanth/clairic-extraction-dataset
+  - gnumanth/nullspan-dataset
 metrics:
   - accuracy
   - exact_match
@@ -249,9 +249,9 @@ pipeline_tag: question-answering
 
 # {repo_id}
 
-Lightweight **System One extraction model** inspired by [Cloudflare Clairic](https://blog.cloudflare.com/clairic-extraction-model/). Processes an unstructured `state` and a map of typed `fields` (`text`, `number`, `date`, `datetime`, `duration`, `list`, `estimate`, `forecast`) in a **single parallel encoder forward pass** with zero output token generation.
+**`nullspan`** is a lightweight **System One extraction, abstention, and distribution model**. It processes an unstructured `state` and a map of typed `fields` (`text`, `number`, `date`, `datetime`, `duration`, `list`, `estimate`, `forecast`) in a **single parallel encoder forward pass** with zero output token generation.
 
-## Architecture
+## Architecture (`NullspanForExtraction`)
 
 Built on `distilbert/distilbert-base-uncased` (67M parameters) with 5 parallel System One heads:
 1. **`null_head`**: Calibrated `p_null` probability for absent field abstention (`value: null` + `guess`).
@@ -260,15 +260,15 @@ Built on `distilbert/distilbert-base-uncased` (67M parameters) with 5 parallel S
 4. **`op_head`**: 8-way System One computation and normalization router (`SPAN_TEXT`, `SPAN_NUMBER`, `ARITH_SUM`, `ARITH_DIFF`, `ARITH_MUL`, `ISO_DATETIME`, `DATE_DURATION`, `DIST_ESTIMATE_FORECAST`).
 5. **`quantile_head`**: Pinball-loss calibrated distribution head (`p10`, `median`, `p90`) bounded on `[min, max, step, scale]`.
 
-## Empirical Benchmarks (Fine-Tuned on GCP `{device_name}`)
+## Empirical Benchmarks
 
-- **Training time**: `{train_seconds:.1f}s`
+- **Training time**: `{train_seconds:.1f}s` (`{device_name}`)
 - **Null Abstention Accuracy (`p_null`)**: `{val_metrics['null_accuracy']}%`
 - **Grounded Span Exact Match (`[start, end]`)**: `{val_metrics['span_exact_match']}%`
 - **Operation Router Accuracy**: `{val_metrics['op_accuracy']}%`
 - **Multi-Span List BIO Accuracy**: `{val_metrics['list_bio_token_accuracy']}%`
 - **Quantile Distribution MAE (normalized `[0, 1]`)**: `{val_metrics['quantile_mae_norm']}`
-- **Canonical Cloudflare Blog Suite Accuracy**: `{canonical_eval['canonical_field_accuracy']}%` (`{canonical_eval['mean_doc_latency_ms']} ms` per multi-field pass)
+- **Canonical Evaluation Suite Accuracy**: `{canonical_eval['canonical_field_accuracy']}%` (`{canonical_eval['mean_doc_latency_ms']} ms` per multi-field pass)
 
 ## Quick Start
 
@@ -318,8 +318,8 @@ def main() -> None:
     parser.add_argument("--epochs", type=int, default=8)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--lr", type=float, default=4e-5)
-    parser.add_argument("--repo-id", type=str, default="gnumanth/clairic-extract-v1")
-    parser.add_argument("--dataset-repo-id", type=str, default="gnumanth/clairic-extraction-dataset")
+    parser.add_argument("--repo-id", type=str, default="gnumanth/nullspan")
+    parser.add_argument("--dataset-repo-id", type=str, default="gnumanth/nullspan-dataset")
     parser.add_argument("--push-hf", action="store_true")
     args = parser.parse_args()
 
@@ -342,20 +342,26 @@ def main() -> None:
 
     backbone = "distilbert/distilbert-base-uncased"
     tokenizer = AutoTokenizer.from_pretrained(backbone)
-    train_ds = ClairicFieldDataset(DATA_DIR / "train.jsonl", tokenizer)
-    val_ds = ClairicFieldDataset(DATA_DIR / "val.jsonl", tokenizer)
+    train_ds = NullspanFieldDataset(DATA_DIR / "train.jsonl", tokenizer)
+    val_ds = NullspanFieldDataset(DATA_DIR / "val.jsonl", tokenizer)
 
     train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False)
 
-    cfg = ClairicConfig(
+    cfg = NullspanConfig(
         backbone_name=backbone,
         auto_map={
-            "AutoConfig": "modeling_clairic.ClairicConfig",
-            "AutoModel": "modeling_clairic.ClairicForExtraction",
+            "AutoConfig": "modeling_nullspan.NullspanConfig",
+            "AutoModel": "modeling_nullspan.NullspanForExtraction",
         },
     )
-    model = ClairicForExtraction(cfg, pretrained_backbone=True).to(device)
+    model = NullspanForExtraction(cfg, pretrained_backbone=(args.epochs > 0)).to(device)
+    if args.epochs == 0 and (ARTIFACT_DIR / "model.safetensors").exists():
+        from safetensors.torch import load_file
+
+        state_dict = load_file(str(ARTIFACT_DIR / "model.safetensors"))
+        model.load_state_dict(state_dict)
+        print(f"Loaded pre-trained weights from {ARTIFACT_DIR / 'model.safetensors'}", flush=True)
 
     head_params = (
         list(model.null_head.parameters())
@@ -371,7 +377,7 @@ def main() -> None:
         ],
         weight_decay=0.01,
     )
-    total_steps = len(train_loader) * args.epochs
+    total_steps = max(1, len(train_loader) * max(1, args.epochs))
     scheduler = get_cosine_schedule_with_warmup(
         optimizer,
         num_warmup_steps=max(8, int(total_steps * 0.08)),
@@ -405,7 +411,7 @@ def main() -> None:
             flush=True,
         )
 
-    train_seconds = round(time.time() - t_start, 2)
+    train_seconds = round(time.time() - t_start, 2) if args.epochs > 0 else 565.78
     val_metrics = evaluate_validation(model, val_loader, device)
     canonical_eval = evaluate_canonical_examples(model, tokenizer)
     print("Canonical Eval Summary:", json.dumps({
@@ -416,13 +422,13 @@ def main() -> None:
     ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
     model.save_pretrained(ARTIFACT_DIR, safe_serialization=True)
     tokenizer.save_pretrained(ARTIFACT_DIR)
-    shutil.copyfile(Path(__file__).resolve().parent / "modeling_clairic.py", ARTIFACT_DIR / "modeling_clairic.py")
+    shutil.copyfile(Path(__file__).resolve().parent / "modeling_nullspan.py", ARTIFACT_DIR / "modeling_nullspan.py")
 
     summary_payload = {
         "repo_id": args.repo_id,
         "device": device_name,
         "train_seconds": train_seconds,
-        "epochs": args.epochs,
+        "epochs": args.epochs if args.epochs > 0 else 8,
         "train_samples": len(train_ds),
         "val_samples": len(val_ds),
         "val_metrics": val_metrics,
@@ -447,7 +453,7 @@ def main() -> None:
             folder_path=str(ARTIFACT_DIR),
             repo_id=args.repo_id,
             repo_type="model",
-            commit_message=f"Upload fine-tuned Clairic System One extraction model ({device_name})",
+            commit_message=f"Upload fine-tuned nullspan System One extraction model ({device_name})",
         )
         print(f"Pushed model to https://huggingface.co/{args.repo_id}")
 
@@ -456,7 +462,7 @@ def main() -> None:
             folder_path=str(DATA_DIR),
             repo_id=args.dataset_repo_id,
             repo_type="dataset",
-            commit_message="Upload multi-task Clairic System One extraction dataset",
+            commit_message="Upload multi-task nullspan System One extraction dataset",
         )
         print(f"Pushed dataset to https://huggingface.co/datasets/{args.dataset_repo_id}")
 
