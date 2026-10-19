@@ -1,0 +1,280 @@
+{
+  "repo_id": "gnumanth/clairic-extract-v1",
+  "device": "Apple Silicon MPS",
+  "train_seconds": 565.78,
+  "epochs": 8,
+  "train_samples": 1854,
+  "val_samples": 303,
+  "val_metrics": {
+    "null_accuracy": 100.0,
+    "span_exact_match": 100.0,
+    "op_accuracy": 100.0,
+    "list_bio_token_accuracy": 100.0,
+    "quantile_mae_norm": 0.0068
+  },
+  "canonical_eval": {
+    "canonical_field_accuracy": 100.0,
+    "mean_doc_latency_ms": 546.68,
+    "examples": {
+      "clairic_blog_support_claim": {
+        "latency_ms": 58.34,
+        "num_fields": 8,
+        "answers": {
+          "customer_name": {
+            "type": "text",
+            "p_null": 2.956e-05,
+            "span": [
+              184,
+              188
+            ],
+            "guess": "Dana",
+            "confidence": 0.999852,
+            "value": "Dana"
+          },
+          "order_id": {
+            "type": "text",
+            "p_null": 6.76e-06,
+            "span": [
+              10,
+              17
+            ],
+            "guess": "A-88412",
+            "confidence": 0.999975,
+            "value": "A-88412"
+          },
+          "delivered_on": {
+            "type": "date",
+            "p_null": 6.19e-06,
+            "guess": "2026-09-28",
+            "confidence": 0.999977,
+            "value": "2026-09-28"
+          },
+          "amount_paid": {
+            "type": "number",
+            "p_null": 1.171e-05,
+            "guess": 701.1,
+            "confidence": 0.999961,
+            "value": 701.1
+          },
+          "days_since_delivery": {
+            "type": "duration",
+            "p_null": 6.101e-05,
+            "unit": "days",
+            "guess": 11,
+            "confidence": 0.99992,
+            "value": 11
+          },
+          "damage": {
+            "type": "list",
+            "value": [
+              "cracked screen",
+              "dented corner"
+            ],
+            "spans": [
+              [
+                50,
+                64
+              ],
+              [
+                71,
+                84
+              ]
+            ]
+          },
+          "tracking_number": {
+            "type": "text",
+            "p_null": 0.99896169,
+            "span": [
+              106,
+              112
+            ],
+            "guess": "$52.10",
+            "confidence": 0.05,
+            "value": null
+          },
+          "repair_cost": {
+            "type": "estimate",
+            "value": 250,
+            "median": 247,
+            "p10": 166,
+            "p90": 424,
+            "p_below": 0.0,
+            "p_above": 0.0
+          }
+        }
+      },
+      "clairic_blog_receipt": {
+        "latency_ms": 403.43,
+        "num_fields": 8,
+        "answers": {
+          "order_number": {
+            "type": "number",
+            "p_null": 3.79e-06,
+            "guess": 77245,
+            "confidence": 0.99998,
+            "value": 77245
+          },
+          "purchased_at": {
+            "type": "datetime",
+            "p_null": 3.17e-06,
+            "guess": "2026-07-01T13:34:00",
+            "confidence": 0.999976,
+            "value": "2026-07-01T13:34:00"
+          },
+          "quantity": {
+            "type": "number",
+            "p_null": 1.197e-05,
+            "guess": 2,
+            "confidence": 0.999907,
+            "value": 2
+          },
+          "unit_price": {
+            "type": "number",
+            "p_null": 3.02e-06,
+            "guess": 7.99,
+            "confidence": 0.999984,
+            "value": 7.99
+          },
+          "subtotal": {
+            "type": "number",
+            "p_null": 2.452e-05,
+            "guess": 15.98,
+            "confidence": 0.999963,
+            "value": 15.98
+          },
+          "sales_tax": {
+            "type": "number",
+            "p_null": 5.79e-06,
+            "guess": 0,
+            "confidence": 0.999979,
+            "value": 0
+          },
+          "tip": {
+            "type": "number",
+            "p_null": 3.28e-05,
+            "guess": 2.39,
+            "confidence": 0.999953,
+            "value": 2.39
+          },
+          "discount": {
+            "type": "number",
+            "p_null": 0.9977544,
+            "guess": 0,
+            "confidence": 0.05,
+            "value": null
+          }
+        }
+      },
+      "clairic_blog_comps": {
+        "latency_ms": 1557.29,
+        "num_fields": 1,
+        "answers": {
+          "sale_price": {
+            "type": "estimate",
+            "value": 456000,
+            "median": 452000,
+            "p10": 396000,
+            "p90": 516000,
+            "p_below": 0.0,
+            "p_above": 0.0
+          }
+        }
+      },
+      "clairic_blog_tsa_forecast": {
+        "latency_ms": 167.65,
+        "num_fields": 1,
+        "answers": {
+          "travelers": {
+            "type": "forecast",
+            "value": [
+              2416538
+            ],
+            "median": [
+              2419052
+            ],
+            "p10": [
+              2267814
+            ],
+            "p90": [
+              2566798
+            ]
+          }
+        }
+      }
+    }
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 11.2154,
+      "null_accuracy": 93.4,
+      "span_exact_match": 84.5,
+      "op_accuracy": 60.73,
+      "list_bio_token_accuracy": 99.14,
+      "quantile_mae_norm": 0.0093
+    },
+    {
+      "epoch": 2,
+      "train_loss": 1.5126,
+      "null_accuracy": 96.04,
+      "span_exact_match": 100.0,
+      "op_accuracy": 100.0,
+      "list_bio_token_accuracy": 100.0,
+      "quantile_mae_norm": 0.013
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.1271,
+      "null_accuracy": 99.01,
+      "span_exact_match": 100.0,
+      "op_accuracy": 100.0,
+      "list_bio_token_accuracy": 100.0,
+      "quantile_mae_norm": 0.0077
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.026,
+      "null_accuracy": 100.0,
+      "span_exact_match": 100.0,
+      "op_accuracy": 100.0,
+      "list_bio_token_accuracy": 100.0,
+      "quantile_mae_norm": 0.0082
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.0073,
+      "null_accuracy": 100.0,
+      "span_exact_match": 100.0,
+      "op_accuracy": 100.0,
+      "list_bio_token_accuracy": 100.0,
+      "quantile_mae_norm": 0.0068
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.0085,
+      "null_accuracy": 100.0,
+      "span_exact_match": 100.0,
+      "op_accuracy": 100.0,
+      "list_bio_token_accuracy": 100.0,
+      "quantile_mae_norm": 0.0069
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.0042,
+      "null_accuracy": 100.0,
+      "span_exact_match": 100.0,
+      "op_accuracy": 100.0,
+      "list_bio_token_accuracy": 100.0,
+      "quantile_mae_norm": 0.0073
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.004,
+      "null_accuracy": 100.0,
+      "span_exact_match": 100.0,
+      "op_accuracy": 100.0,
+      "list_bio_token_accuracy": 100.0,
+      "quantile_mae_norm": 0.0068
+    }
+  ]
+}

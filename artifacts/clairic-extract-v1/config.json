@@ -1,0 +1,19 @@
+{
+  "architectures": [
+    "ClairicForExtraction"
+  ],
+  "auto_map": {
+    "AutoConfig": "modeling_clairic.ClairicConfig",
+    "AutoModel": "modeling_clairic.ClairicForExtraction"
+  },
+  "backbone_name": "distilbert/distilbert-base-uncased",
+  "dropout": 0.1,
+  "dtype": "float32",
+  "hidden_size": 768,
+  "model_type": "clairic_extraction",
+  "null_temperature": 1.0,
+  "num_bio_labels": 3,
+  "num_ops": 8,
+  "span_temperature": 1.0,
+  "transformers_version": "5.12.1"
+}

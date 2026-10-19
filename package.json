@@ -1,0 +1,45 @@
+{
+  "name": "clairic-extract",
+  "version": "1.0.0",
+  "description": "System One extraction, abstention, estimation & forecasting in a single forward pass — open-weight fine-tuned DistilBERT (67M) + zero-dependency JS/Python engine inspired by Cloudflare Clairic.",
+  "type": "module",
+  "main": "./js/src/index.js",
+  "types": "./js/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./js/src/index.d.ts",
+      "import": "./js/src/index.js"
+    }
+  },
+  "files": [
+    "js/src",
+    "python/src"
+  ],
+  "scripts": {
+    "test": "node --test js/test/index.test.js && python3 -m unittest discover -s python/tests -v",
+    "test:js": "node --test js/test/index.test.js",
+    "test:py": "python3 -m unittest discover -s python/tests -v",
+    "dataset": "python3 training/generate_dataset.py"
+  },
+  "keywords": [
+    "clairic",
+    "system-one",
+    "extraction",
+    "abstention",
+    "p-null",
+    "calibrated-probabilities",
+    "distilbert",
+    "forecast",
+    "estimate",
+    "structured-extraction"
+  ],
+  "author": "Hemanth HM <hemanth.hm@gmail.com> (https://h3manth.com)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hemanth/clairic-extract.git"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

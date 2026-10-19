@@ -1,0 +1,24 @@
+{
+  "name": "clairic-extract",
+  "version": "0.1.0",
+  "description": "System One structured extraction, computation, calibrated estimation, and time-series forecasting in a single pass.",
+  "type": "module",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/index.test.js"
+  },
+  "author": "Hemanth HM <hemanth@h3manth.com> (https://h3manth.com)",
+  "license": "MIT"
+}

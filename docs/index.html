@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>clairic-extract · System One Extraction, Abstention &amp; Forecasting Playground</title>
+  <style>
+    :root {
+      --bg: #FAF8F3;
+      --surface: #FFFFFF;
+      --muted-bg: #F2EFE7;
+      --ink: #111111;
+      --ink-muted: #52504A;
+      --border: #111111;
+      --border-subtle: #D8D3C6;
+      --accent-span: #FFE484;
+      --accent-list: #C8F0D4;
+      --accent-null: #F5D0CE;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.5;
+    }
+
+    header {
+      border-bottom: 1.5px solid var(--border);
+      background: var(--surface);
+      padding: 18px 28px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-family: var(--mono);
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .badge {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border: 1.2px solid var(--border);
+      background: var(--muted-bg);
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .links {
+      display: flex;
+      gap: 12px;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+    }
+
+    .links a {
+      color: var(--ink);
+      text-decoration: none;
+      padding: 5px 10px;
+      border: 1.2px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+      font-weight: 600;
+    }
+
+    .links a:hover {
+      background: var(--ink);
+      color: var(--bg);
+    }
+
+    main {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 24px 28px 60px;
+    }
+
+    .preset-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+    }
+
+    .preset-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    button.preset-btn, button.run-btn {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 7px 12px;
+      border: 1.2px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    button.preset-btn.active, button.run-btn {
+      background: var(--ink);
+      color: var(--bg);
+    }
+
+    .metrics-strip {
+      display: flex;
+      gap: 16px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 960px) {
+      .workspace { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-header {
+      background: var(--ink);
+      color: var(--bg);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 9px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-transform: uppercase;
+    }
+
+    .panel-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    label.section-label {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ink-muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    textarea {
+      width: 100%;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 1.5;
+      padding: 10px 12px;
+      border: 1.2px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--ink);
+      resize: vertical;
+    }
+
+    .grounded-view {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 1.65;
+      padding: 12px;
+      border: 1.2px solid var(--border);
+      border-radius: 4px;
+      background: var(--muted-bg);
+      white-space: pre-wrap;
+    }
+
+    mark.span-mark {
+      background: var(--accent-span);
+      color: var(--ink);
+      padding: 1px 4px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      font-weight: 700;
+    }
+
+    mark.span-mark.list-mark {
+      background: var(--accent-list);
+    }
+
+    .field-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .field-card {
+      border: 1.2px solid var(--border);
+      border-radius: 5px;
+      padding: 12px 14px;
+      background: var(--bg);
+    }
+
+    .field-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .field-name {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .field-type-pill {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      background: var(--surface);
+      text-transform: uppercase;
+    }
+
+    .field-value {
+      font-family: var(--mono);
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 6px 9px;
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      margin-bottom: 8px;
+      word-break: break-word;
+    }
+
+    .field-value.is-null {
+      background: var(--accent-null);
+      border-color: var(--border);
+    }
+
+    .field-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      font-family: var(--mono);
+      font-size: 0.73rem;
+      color: var(--ink-muted);
+    }
+
+    .dist-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 54px;
+      margin-top: 8px;
+      padding: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+    }
+
+    .dist-bar {
+      flex: 1;
+      background: var(--ink);
+      min-height: 2px;
+    }
+
+    pre.raw-json {
+      margin: 0;
+      padding: 12px;
+      background: var(--muted-bg);
+      border: 1.2px solid var(--border);
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      overflow-x: auto;
+      max-height: 320px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>clairic-extract</h1>
+      <span class="badge">System One · Single Forward Pass</span>
+      <span class="badge">Zero Output Tokens</span>
+    </div>
+    <nav class="links">
+      <a href="https://huggingface.co/gnumanth/clairic-extract-v1" target="_blank" rel="noopener">HF Model (67M)</a>
+      <a href="https://huggingface.co/datasets/gnumanth/clairic-extraction-dataset" target="_blank" rel="noopener">HF Dataset</a>
+      <a href="https://github.com/hemanth/clairic-extract" target="_blank" rel="noopener">GitHub Repo</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="preset-bar">
+      <div class="preset-buttons" id="preset-buttons">
+        <button class="preset-btn active" data-preset="claim">1. Support Claim (Span + Math + Abstention)</button>
+        <button class="preset-btn" data-preset="receipt">2. Cafe Receipt (Datetime + List + Null)</button>
+        <button class="preset-btn" data-preset="comps">3. Elm Park Comps (Distribution Estimate)</button>
+        <button class="preset-btn" data-preset="tsa">4. TSA Throughput (Horizon Forecast)</button>
+      </div>
+      <div class="metrics-strip">
+        <span id="metric-fields">Fields: 7</span>
+        <span id="metric-latency">Pass Latency: 0.8 ms</span>
+        <button class="run-btn" id="run-btn">Run Single Pass ↵</button>
+      </div>
+    </section>
+
+    <div class="workspace">
+      <div class="panel">
+        <div class="panel-header">
+          <span>Input State &amp; Field Schema</span>
+          <span>offset_mapping Grounded</span>
+        </div>
+        <div class="panel-body">
+          <div>
+            <label class="section-label" for="state-input">Unstructured State</label>
+            <textarea id="state-input" rows="5"></textarea>
+          </div>
+          <div>
+            <label class="section-label">Grounded Character Spans ([start, end])</label>
+            <div class="grounded-view" id="grounded-view"></div>
+          </div>
+          <div>
+            <label class="section-label" for="fields-input">Typed Fields Query Map (JSON)</label>
+            <textarea id="fields-input" rows="13"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <span>System One Calibrated Output</span>
+          <span>p_null · span · p10/p50/p90</span>
+        </div>
+        <div class="panel-body">
+          <div class="field-cards" id="field-cards"></div>
+          <div>
+            <label class="section-label">Raw Response Payload</label>
+            <pre class="raw-json" id="raw-json"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { extract } from '../js/src/index.js';
+
+    const PRESETS = {
+      claim: {
+        state: "Hi, order A-88412 arrived on Sept 28, 2026 with a cracked screen and a dented corner. I paid $649.00 plus $52.10 tax. It's now Oct 9, 2026 and I'd like this fixed or refunded. Thanks, Dana",
+        fields: {
+          customer_name: { type: "text", instructions: "Customer's first name" },
+          order_id: { type: "text", instructions: "Order number" },
+          delivered_on: { type: "date", instructions: "Delivery date" },
+          amount_paid: { type: "number", decimals: 2, unit: "USD", instructions: "Total paid including tax" },
+          days_since_delivery: { type: "duration", unit: "days", integer: true, instructions: "Days from delivery to the date the customer wrote" },
+          damage: { type: "list", items: "text", instructions: "Each kind of damage described" },
+          tracking_number: { type: "text", instructions: "Carrier tracking number" },
+          repair_cost: { type: "estimate", unit: "USD", min: 10, max: 5000, scale: "log", step: 1, instructions: "Cost to repair the damage described" }
+        }
+      },
+      receipt: {
+        state: "Receipt from Corner Cafe\nOrder #77245 | Date: 2026-07-01 13:34\nQty: 2 @ $7.99 each\nSubtotal: $15.98\nSales Tax: $0.00\nTip: $2.39",
+        fields: {
+          order_number: { type: "number", integer: true, instructions: "Order number on receipt" },
+          purchased_at: { type: "datetime", instructions: "Purchase timestamp" },
+          quantity: { type: "number", integer: true, instructions: "Item quantity" },
+          unit_price: { type: "number", decimals: 2, unit: "USD", instructions: "Price per unit" },
+          subtotal: { type: "number", decimals: 2, unit: "USD", instructions: "Subtotal before tax and tip" },
+          sales_tax: { type: "number", decimals: 2, unit: "USD", instructions: "Sales tax amount" },
+          tip: { type: "number", decimals: 2, unit: "USD", instructions: "Tip amount" },
+          discount: { type: "number", decimals: 2, unit: "USD", instructions: "Discount amount if present" }
+        }
+      },
+      comps: {
+        state: "Comparable sales:\nsqft,beds,year_built,neighborhood,sale_price\n1450,3,1998,Elm Park,412000\n2100,4,2006,Elm Park,585000\n980,2,1975,Riverside,265000\n1600,3,2003,Elm Park,449000\n1300,3,1990,Riverside,318000\n\nSubject property:\nsqft,beds,year_built,neighborhood\n1620,3,2001,Elm Park",
+        fields: {
+          sale_price: { type: "estimate", unit: "USD", min: 50000, max: 5000000, scale: "log", step: 1000, percentiles: true, instructions: "Estimated sale price of the subject property" }
+        }
+      },
+      tsa: {
+        state: "Daily number of people screened at TSA checkpoints at US airports.\ndate,weekday,travelers\n2026-09-30,Wed,2418910\n2026-10-07,Wed,2419650\n2026-10-13,Tue,2353356\nForecast date: 2026-10-14 (Wed)",
+        fields: {
+          travelers: { type: "forecast", horizon: 1, interval: "day", min: 500000, max: 4000000, scale: "log", instructions: "Number of people screened tomorrow" }
+        }
+      }
+    };
+
+    const stateInput = document.getElementById('state-input');
+    const fieldsInput = document.getElementById('fields-input');
+    const groundedView = document.getElementById('grounded-view');
+    const fieldCards = document.getElementById('field-cards');
+    const rawJson = document.getElementById('raw-json');
+    const metricFields = document.getElementById('metric-fields');
+    const metricLatency = document.getElementById('metric-latency');
+
+    function escapeHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function renderGroundedState(state, answers) {
+      const spans = [];
+      for (const [fname, ans] of Object.entries(answers)) {
+        if (Array.isArray(ans.span) && ans.span.length === 2) {
+          spans.push({ start: ans.span[0], end: ans.span[1], label: fname, kind: 'single' });
+        }
+        if (Array.isArray(ans.spans)) {
+          for (const sp of ans.spans) {
+            spans.push({ start: sp[0], end: sp[1], label: fname, kind: 'list' });
+          }
+        }
+      }
+      spans.sort((a, b) => a.start - b.start);
+      let cursor = 0;
+      let html = '';
+      for (const sp of spans) {
+        if (sp.start < cursor) continue;
+        html += escapeHtml(state.slice(cursor, sp.start));
+        const cls = sp.kind === 'list' ? 'span-mark list-mark' : 'span-mark';
+        html += `<mark class="${cls}" title="${sp.label} [${sp.start}, ${sp.end}]">${escapeHtml(state.slice(sp.start, sp.end))}</mark>`;
+        cursor = sp.end;
+      }
+      html += escapeHtml(state.slice(cursor));
+      groundedView.innerHTML = html;
+    }
+
+    function renderAnswers(answers, fieldsSpec) {
+      fieldCards.innerHTML = '';
+      for (const [fname, ans] of Object.entries(answers)) {
+        const spec = fieldsSpec[fname] || {};
+        const card = document.createElement('div');
+        card.className = 'field-card';
+        const isNull = ans.value === null;
+        let displayVal = JSON.stringify(ans.value);
+        if (spec.type === 'estimate') {
+          displayVal = `median: ${ans.median} (p10: ${ans.p10} · p90: ${ans.p90})`;
+        } else if (spec.type === 'forecast') {
+          displayVal = `median[${ans.median.length}]: [${ans.median.join(', ')}]`;
+        }
+
+        let extraChart = '';
+        if (spec.type === 'estimate' && Array.isArray(ans.value) && ans.value.length > 0) {
+          const maxP = Math.max(...ans.value, 0.001);
+          const bars = ans.value.slice(0, 48).map(p => {
+            const h = Math.max(4, Math.round((p / maxP) * 42));
+            return `<div class="dist-bar" style="height:${h}px"></div>`;
+          }).join('');
+          extraChart = `<div class="dist-bars" title="Calibrated step distribution">${bars}</div>`;
+        } else if (spec.type === 'forecast' && Array.isArray(ans.median)) {
+          const maxV = Math.max(...ans.p90, 0.001);
+          const minV = Math.min(...ans.p10) * 0.9;
+          const bars = ans.median.map((m, i) => {
+            const h = Math.max(6, Math.round(((m - minV) / (maxV - minV)) * 42));
+            return `<div class="dist-bar" style="height:${h}px" title="Day ${i+1}: ${m} [${ans.p10[i]}..${ans.p90[i]}]"></div>`;
+          }).join('');
+          extraChart = `<div class="dist-bars">${bars}</div>`;
+        }
+
+        const metaParts = [];
+        if (ans.p_null !== undefined) metaParts.push(`p_null: ${ans.p_null}`);
+        if (ans.confidence !== undefined) metaParts.push(`confidence: ${ans.confidence}`);
+        if (ans.span) metaParts.push(`span: [${ans.span[0]}, ${ans.span[1]}]`);
+        if (ans.spans) metaParts.push(`spans: ${ans.spans.length} grounded`);
+        if (ans.p_below !== undefined) metaParts.push(`p_below: ${ans.p_below} · p_above: ${ans.p_above}`);
+
+        card.innerHTML = `
+          <div class="field-card-top">
+            <span class="field-name">${fname}</span>
+            <span class="field-type-pill">${spec.type || 'field'}</span>
+          </div>
+          <div class="field-value ${isNull ? 'is-null' : ''}">${isNull ? 'null (Abstained — field absent in state)' : escapeHtml(displayVal)}</div>
+          <div class="field-meta">${metaParts.map(m => `<span>${m}</span>`).join('')}</div>
+          ${extraChart}
+        `;
+        fieldCards.appendChild(card);
+      }
+    }
+
+    function runExtraction() {
+      const state = stateInput.value;
+      let fields;
+      try {
+        fields = JSON.parse(fieldsInput.value);
+      } catch (err) {
+        rawJson.textContent = 'Invalid JSON in fields schema: ' + err.message;
+        return;
+      }
+      const t0 = performance.now();
+      const out = extract({ state, fields });
+      const dt = (performance.now() - t0).toFixed(2);
+      metricFields.textContent = `Fields: ${Object.keys(fields).length}`;
+      metricLatency.textContent = `Pass Latency: ${dt} ms`;
+      renderGroundedState(state, out.answers);
+      renderAnswers(out.answers, fields);
+      rawJson.textContent = JSON.stringify(out, null, 2);
+    }
+
+    function loadPreset(key) {
+      const p = PRESETS[key];
+      stateInput.value = p.state;
+      fieldsInput.value = JSON.stringify(p.fields, null, 2);
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.preset === key);
+      });
+      runExtraction();
+    }
+
+    document.getElementById('preset-buttons').addEventListener('click', (e) => {
+      const btn = e.target.closest('.preset-btn');
+      if (btn) loadPreset(btn.dataset.preset);
+    });
+    document.getElementById('run-btn').addEventListener('click', runExtraction);
+
+    loadPreset('claim');
+  </script>
+</body>
+</html>
