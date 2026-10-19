@@ -4,42 +4,47 @@ task_categories:
   - question-answering
   - token-classification
   - tabular-regression
+  - time-series-forecasting
 language:
   - en
 tags:
   - nullspan
   - system-one
   - structured-extraction
-  - abstention
-  - span-extraction
-  - calibrated-estimation
-  - time-series-forecasting
+  - calibrated-abstention
+  - prompt-injection-resistance
 size_categories:
   - 1K<n<10K
 ---
 
-# nullspan-dataset
+# `gnumanth/nullspan-dataset`
 
-Multi-task **System One structured extraction, calibrated abstention (`p_null`), grounded character-offset span (`[start, end]`), estimation, and time-series forecasting** dataset for training and evaluating [`gnumanth/nullspan`](https://huggingface.co/gnumanth/nullspan).
+Multi-task **System One structured extraction, calibrated abstention, boolean/enum judgment, cross-field invariant verification, and distributional quantile estimation** dataset for [`gnumanth/nullspan`](https://huggingface.co/gnumanth/nullspan).
 
-## Splits & Files
+## Splits & Composition
 
-| File | Instances | Description |
-| :--- | ---: | :--- |
-| `train.jsonl` | 1,854 | Field-level multi-task training instances across 392 documents |
-| `val.jsonl` | 303 | Held-out validation instances across 64 documents |
-| `golden_eval.json` | 4 canonical + 24 val | Canonical evaluation suite + held-out validation documents |
+- `train.jsonl`: `2,090` field-level training instances across `400` documents (`incident_report`, `compute_ledger`, `cluster_throughput_comps`, `edge_traffic_forecast`, `adversarial_stress`).
+- `val.jsonl`: `336` field-level validation instances across `64` documents.
+- `golden_eval.json`: `4` canonical multi-field scenarios + `2` adversarial prompt-injection & decoy stress scenarios + `24` held-out validation documents.
 
-## Supported Field Tasks
+## Supervision Targets per Instance
 
-1. **`text`**: Grounded character-offset span extraction (`span: [start, end]`) with calibrated null abstention (`is_null`).
-2. **`number`**: Direct numeric span extraction and 1–2 step arithmetic (`ARITH_SUM`, `ARITH_DIFF`, `ARITH_MUL`) honoring `decimals` and `integer`.
-3. **`date` / `datetime`**: Normalized ISO-8601 date and timestamp targets.
-4. **`duration`**: Date-delta calculation in requested units (`days`).
-5. **`list`**: Ordered multi-span sequence tagging (`spans: [[s1, e1], [s2, e2], ...]`).
-6. **`estimate`**: Calibrated quantile regression (`p10`, `median`, `p90`) over bounded linear/log grids (`[min, max, step]`).
-7. **`forecast`**: Multi-horizon time-series forecasting with `p10`, `median`, and `p90` intervals.
+1. **`is_null`**: Binary abstention label (`1` when requested field is absent, unassigned, or negated in `state`) paired with `abstention_reason` and nearest decoy `guess`.
+2. **`span`**: Exact character offsets `[start, end]` in `state`.
+3. **`spans`**: Multi-span list offsets `[[s1, e1], [s2, e2], ...]` for `type: "list"` (`B/I/O` token sequence tags).
+4. **`op`**: 10-way System One operation routing target:
+   - `0: SPAN_TEXT`
+   - `1: SPAN_NUMBER`
+   - `2: ARITH_SUM`
+   - `3: ARITH_DIFF`
+   - `4: ARITH_MUL`
+   - `5: ISO_DATETIME`
+   - `6: DATE_DURATION`
+   - `7: DIST_ESTIMATE_FORECAST`
+   - `8: BOOL_JUDGE`
+   - `9: ENUM_CLASSIFY`
+5. **`quantiles_norm`**: Log/linear normalized `[p10, median, p90]` targets in `[0, 1]` trained with multi-quantile pinball loss.
 
 ## License
 
-MIT © [Hemanth HM](https://h3manth.com)
+MIT © [Hemanth.HM](https://h3manth.com)

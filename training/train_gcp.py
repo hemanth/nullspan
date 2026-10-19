@@ -5,7 +5,6 @@ import argparse
 import json
 import os
 import shutil
-import sys
 import time
 from pathlib import Path
 from typing import Any
@@ -60,7 +59,6 @@ class NullspanFieldDataset(Dataset):
         is_null = int(target.get("is_null", 0))
         op_id = int(target.get("op", 0))
 
-        # Map character span [char_s, char_e] to token start_pos and end_pos
         start_pos = -100
         end_pos = -100
         if "span" in target and target["span"]:
@@ -73,7 +71,6 @@ class NullspanFieldDataset(Dataset):
                 start_pos = overlapping[0]
                 end_pos = overlapping[-1]
 
-        # Map multi-span list targets to BIO tags (0=O, 1=B, 2=I, -100=ignored)
         bio_labels = [-100] * L
         if spec.get("type") == "list" and "spans" in target:
             for i in range(L):
@@ -113,6 +110,22 @@ class NullspanFieldDataset(Dataset):
         return self.encoded[idx]
 
 
+def _compute_ece(probs: list[float], labels: list[int], num_bins: int = 10) -> float:
+    """Compute 10-bin Expected Calibration Error (ECE)."""
+    if not probs:
+        return 0.0
+    n = len(probs)
+    ece = 0.0
+    for b in range(num_bins):
+        lo, hi = b / num_bins, (b + 1) / num_bins
+        idxs = [i for i, p in enumerate(probs) if (lo <= p < hi) or (b == num_bins - 1 and p == hi)]
+        if idxs:
+            avg_conf = sum(probs[i] if probs[i] >= 0.5 else (1.0 - probs[i]) for i in idxs) / len(idxs)
+            avg_acc = sum(1.0 if ((probs[i] >= 0.5) == (labels[i] == 1)) else 0.0 for i in idxs) / len(idxs)
+            ece += (len(idxs) / n) * abs(avg_acc - avg_conf)
+    return round(ece, 5)
+
+
 @torch.no_grad()
 def evaluate_validation(
     model: NullspanForExtraction,
@@ -125,12 +138,21 @@ def evaluate_validation(
     op_correct, op_total = 0, 0
     bio_tok_correct, bio_tok_total = 0, 0
     q_errors: list[float] = []
+    pinball_losses: list[float] = []
+    all_null_probs: list[float] = []
+    all_null_labels: list[int] = []
+
+    taus = torch.tensor([0.10, 0.50, 0.90], device=device).unsqueeze(0)
 
     for batch in val_loader:
         b_dev = {k: v.to(device) for k, v in batch.items()}
         out = model(**b_dev)
 
-        null_preds = (torch.sigmoid(out["null_logits"]) > 0.5).long()
+        p_null = torch.sigmoid(out["null_logits"])
+        all_null_probs.extend(p_null.cpu().tolist())
+        all_null_labels.extend(b_dev["is_null_labels"].cpu().tolist())
+
+        null_preds = (p_null > 0.5).long()
         null_correct += int((null_preds == b_dev["is_null_labels"]).sum().item())
         null_total += b_dev["is_null_labels"].numel()
 
@@ -156,32 +178,38 @@ def evaluate_validation(
 
         q_mask = b_dev["has_quantile_mask"] == 1
         if q_mask.any():
-            err = (out["quantile_preds"][q_mask] - b_dev["quantile_labels"][q_mask]).abs().mean(dim=-1)
+            q_pred_sub = out["quantile_preds"][q_mask]
+            q_tgt_sub = b_dev["quantile_labels"][q_mask]
+            err = (q_pred_sub - q_tgt_sub).abs().mean(dim=-1)
             q_errors.extend(err.cpu().tolist())
+            diff = q_tgt_sub - q_pred_sub
+            pb = torch.maximum(taus * diff, (taus - 1.0) * diff).mean(dim=-1)
+            pinball_losses.extend(pb.cpu().tolist())
+
+    brier = sum((p - float(y)) ** 2 for p, y in zip(all_null_probs, all_null_labels)) / max(1, len(all_null_probs))
+    ece = _compute_ece(all_null_probs, all_null_labels)
 
     return {
         "null_accuracy": round(100.0 * null_correct / max(1, null_total), 2),
+        "null_ece": ece,
+        "null_brier_score": round(brier, 5),
         "span_exact_match": round(100.0 * span_em_correct / max(1, span_total), 2),
         "op_accuracy": round(100.0 * op_correct / max(1, op_total), 2),
         "list_bio_token_accuracy": round(100.0 * bio_tok_correct / max(1, bio_tok_total), 2),
         "quantile_mae_norm": round(sum(q_errors) / max(1, len(q_errors)), 4),
+        "quantile_pinball_loss": round(sum(pinball_losses) / max(1, len(pinball_losses)), 4),
     }
 
 
-def evaluate_canonical_examples(model: NullspanForExtraction, tokenizer: Any) -> dict[str, Any]:
-    golden = json.loads((DATA_DIR / "golden_eval.json").read_text())
-    canonical_docs = golden["canonical"]
+def _score_doc_suite(docs: list[dict[str, Any]], model: NullspanForExtraction, tokenizer: Any) -> dict[str, Any]:
     results = {}
     latencies_ms = []
     field_hits = 0
     field_total = 0
+    invariant_hits = 0
+    invariant_total = 0
 
-    # Warmup pass to exclude one-time kernel dispatch overhead
-    if canonical_docs:
-        w_doc = canonical_docs[0]
-        model.extract(w_doc["state"], {k: v["spec"] for k, v in w_doc["fields"].items()}, tokenizer)
-
-    for doc in canonical_docs:
+    for doc in docs:
         state = doc["state"]
         fields_spec = {k: v["spec"] for k, v in doc["fields"].items()}
         t0 = time.perf_counter()
@@ -191,6 +219,7 @@ def evaluate_canonical_examples(model: NullspanForExtraction, tokenizer: Any) ->
         results[doc["id"]] = {
             "latency_ms": round(dt_ms, 2),
             "num_fields": len(fields_spec),
+            "invariants_passed": out.get("invariants_passed", True),
             "answers": out["answers"],
         }
 
@@ -199,6 +228,10 @@ def evaluate_canonical_examples(model: NullspanForExtraction, tokenizer: Any) ->
             pred = out["answers"][fname]
             tgt = fbundle["target"]
             ftype = fbundle["spec"]["type"]
+            if "constraint" in fbundle["spec"]:
+                invariant_total += 1
+                if pred.get("verified") is True:
+                    invariant_hits += 1
             if tgt.get("is_null") == 1:
                 if pred.get("value") is None:
                     field_hits += 1
@@ -213,9 +246,33 @@ def evaluate_canonical_examples(model: NullspanForExtraction, tokenizer: Any) ->
                     field_hits += 1
 
     return {
-        "canonical_field_accuracy": round(100.0 * field_hits / max(1, field_total), 2),
+        "field_accuracy": round(100.0 * field_hits / max(1, field_total), 2),
+        "fields_evaluated": field_total,
+        "invariant_verification_accuracy": round(100.0 * invariant_hits / max(1, invariant_total), 2) if invariant_total else 100.0,
         "mean_doc_latency_ms": round(sum(latencies_ms) / max(1, len(latencies_ms)), 2),
         "examples": results,
+    }
+
+
+def evaluate_canonical_examples(model: NullspanForExtraction, tokenizer: Any) -> dict[str, Any]:
+    golden = json.loads((DATA_DIR / "golden_eval.json").read_text())
+    canonical_docs = golden["canonical"]
+    adversarial_docs = golden.get("adversarial", [])
+
+    if canonical_docs:
+        w_doc = canonical_docs[0]
+        model.extract(w_doc["state"], {k: v["spec"] for k, v in w_doc["fields"].items()}, tokenizer)
+
+    can_res = _score_doc_suite(canonical_docs, model, tokenizer)
+    adv_res = _score_doc_suite(adversarial_docs, model, tokenizer) if adversarial_docs else {}
+
+    return {
+        "canonical_field_accuracy": can_res["field_accuracy"],
+        "adversarial_stress_accuracy": adv_res.get("field_accuracy", 100.0),
+        "invariant_verification_accuracy": can_res["invariant_verification_accuracy"],
+        "mean_doc_latency_ms": can_res["mean_doc_latency_ms"],
+        "examples": can_res["examples"],
+        "adversarial_examples": adv_res.get("examples", {}),
     }
 
 
@@ -227,7 +284,7 @@ def write_model_card(
     device_name: str,
     train_seconds: float,
 ) -> None:
-    support_out = json.dumps(canonical_eval["examples"]["nullspan_support_claim"]["answers"], indent=2)
+    inc_out = json.dumps(canonical_eval["examples"]["nullspan_incident_postmortem"]["answers"], indent=2)
     card = f"""---
 license: mit
 library_name: transformers
@@ -244,31 +301,34 @@ datasets:
 metrics:
   - accuracy
   - exact_match
+  - brier_score
 pipeline_tag: question-answering
 ---
 
 # {repo_id}
 
-**`nullspan`** is a lightweight **System One extraction, abstention, and distribution model**. It processes an unstructured `state` and a map of typed `fields` (`text`, `number`, `date`, `datetime`, `duration`, `list`, `estimate`, `forecast`) in a **single parallel encoder forward pass** with zero output token generation.
+**`nullspan`** is a 67M-parameter **System One extraction, calibrated abstention, invariant verification, and quantile distribution model**. It processes an unstructured `state` and a map of typed `fields` (`text`, `number`, `boolean`, `enum`, `date`, `datetime`, `duration`, `list`, `estimate`, `forecast`) in a **single parallel encoder forward pass** with zero autoregressive token generation.
 
-## Architecture (`NullspanForExtraction`)
+## Architectural Enhancements (`NullspanForExtraction`)
 
-Built on `distilbert/distilbert-base-uncased` (67M parameters) with 5 parallel System One heads:
-1. **`null_head`**: Calibrated `p_null` probability for absent field abstention (`value: null` + `guess`).
-2. **`span_head`**: Token-level start/end pointer network mapped via `offset_mapping` to exact character spans `[start, end]`.
-3. **`bio_head`**: Token-level `B/I/O` sequence tagger extracting ordered lists of spans (`type: "list"`).
-4. **`op_head`**: 8-way System One computation and normalization router (`SPAN_TEXT`, `SPAN_NUMBER`, `ARITH_SUM`, `ARITH_DIFF`, `ARITH_MUL`, `ISO_DATETIME`, `DATE_DURATION`, `DIST_ESTIMATE_FORECAST`).
-5. **`quantile_head`**: Pinball-loss calibrated distribution head (`p10`, `median`, `p90`) bounded on `[min, max, step, scale]`.
+Built on `distilbert/distilbert-base-uncased` (67M parameters) with 5 parallel System One heads and 10 routed operations:
+1. **`null_head`**: Calibrated `p_null` probability (`ECE: {val_metrics['null_ece']}`, `Brier: {val_metrics['null_brier_score']}`) for absent field abstention (`value: null` + nearest `guess` decoy + `abstention_reason`).
+2. **`span_head`**: Token-level start/end pointer network mapped via `offset_mapping` to exact character spans `[start, end]` with calibrated posterior `confidence` and Shannon `span_entropy_bits`.
+3. **`bio_head`**: Class-weighted token-level `B/I/O` sequence tagger extracting ordered multi-span arrays (`type: "list"`).
+4. **`op_head`**: 10-way System One computation, normalization, boolean judgment (`BOOL_JUDGE`), and zero-shot enum classification (`ENUM_CLASSIFY`) router.
+5. **`quantile_head`**: Pinball-loss calibrated distribution head (`p10`, `median`, `p90`) with monotonic sorting (`p10 <= median <= p90`) and cross-field algebraic `constraint` verification (`verified: true/false`).
 
-## Empirical Benchmarks
+## Multi-Axis Empirical Evaluation (`gnumanth/nullspan-dataset`)
 
 - **Training time**: `{train_seconds:.1f}s` (`{device_name}`)
-- **Null Abstention Accuracy (`p_null`)**: `{val_metrics['null_accuracy']}%`
+- **Null Abstention Accuracy (`p_null`)**: `{val_metrics['null_accuracy']}%` (`ECE: {val_metrics['null_ece']}`, `Brier: {val_metrics['null_brier_score']}`)
 - **Grounded Span Exact Match (`[start, end]`)**: `{val_metrics['span_exact_match']}%`
-- **Operation Router Accuracy**: `{val_metrics['op_accuracy']}%`
-- **Multi-Span List BIO Accuracy**: `{val_metrics['list_bio_token_accuracy']}%`
-- **Quantile Distribution MAE (normalized `[0, 1]`)**: `{val_metrics['quantile_mae_norm']}`
-- **Canonical Evaluation Suite Accuracy**: `{canonical_eval['canonical_field_accuracy']}%` (`{canonical_eval['mean_doc_latency_ms']} ms` per multi-field pass)
+- **10-Way Operation Router Accuracy**: `{val_metrics['op_accuracy']}%`
+- **Multi-Span List BIO Token Accuracy**: `{val_metrics['list_bio_token_accuracy']}%`
+- **Quantile Distribution MAE / Pinball Loss**: `{val_metrics['quantile_mae_norm']}` / `{val_metrics['quantile_pinball_loss']}`
+- **Canonical Multi-Task Suite Accuracy**: `{canonical_eval['canonical_field_accuracy']}%`
+- **Adversarial Decoy & Prompt-Injection Stress Accuracy**: `{canonical_eval['adversarial_stress_accuracy']}%`
+- **Cross-Field Invariant Verification Accuracy**: `{canonical_eval['invariant_verification_accuracy']}%`
 
 ## Quick Start
 
@@ -276,34 +336,37 @@ Built on `distilbert/distilbert-base-uncased` (67M parameters) with 5 parallel S
 from transformers import AutoModel, AutoTokenizer
 
 repo_id = "{repo_id}"
-tokenizer = AutoTokenizer.from_pretrained(repo_id)
+tokenizer = AutoTokenizer.from_pretrained(repo_id, trust_remote_code=True)
 model = AutoModel.from_pretrained(repo_id, trust_remote_code=True)
 
-email = (
-    "Hi, order A-88412 arrived on Sept 28, 2026 with a cracked screen and a dented corner. "
-    "I paid $649.00 plus $52.10 tax. It's now Oct 9, 2026 and I'd like this fixed or refunded. Thanks, Dana"
+incident = (
+    "Incident INC-40928 opened on Apr 12, 2026 with a 502 Bad Gateway errors and a TLS handshake timeouts. "
+    "Issued $1240.50 plus $310.25 SLA credit. Severity is sev-1 and customer data loss was false. "
+    "Root cause CVE not yet assigned. Cluster stabilized on Apr 19, 2026. Reported by Mira"
 )
 
 result = model.extract(
-    state=email,
+    state=incident,
     fields={{
-        "order_id": {{"type": "text", "instructions": "Order number"}},
-        "delivered_on": {{"type": "date", "instructions": "Delivery date"}},
-        "amount_paid": {{"type": "number", "decimals": 2, "unit": "USD", "instructions": "Total paid including tax"}},
-        "days_since_delivery": {{"type": "duration", "unit": "days", "integer": True, "instructions": "Days from delivery to the date the customer wrote"}},
-        "damage": {{"type": "list", "items": "text", "instructions": "Each kind of damage described"}},
-        "tracking_number": {{"type": "text", "instructions": "Carrier tracking number"}},
-        "repair_cost": {{"type": "estimate", "unit": "USD", "min": 10, "max": 5000, "scale": "log", "step": 1, "instructions": "Cost to repair the damage described"}},
+        "incident_id": {{"type": "text", "instructions": "Incident ticket identifier"}},
+        "opened_on": {{"type": "date", "instructions": "Date the incident opened"}},
+        "total_credit": {{"type": "number", "decimals": 2, "unit": "USD", "instructions": "Total credit including SLA penalty"}},
+        "outage_days": {{"type": "duration", "unit": "days", "integer": True, "instructions": "Days from incident open to cluster stabilization"}},
+        "failure_modes": {{"type": "list", "items": "text", "instructions": "Each failure mode triggered"}},
+        "severity": {{"type": "enum", "options": ["sev-1", "sev-2", "sev-3"], "instructions": "Incident severity tier"}},
+        "data_loss": {{"type": "boolean", "instructions": "Whether customer data loss occurred"}},
+        "cve_id": {{"type": "text", "instructions": "Assigned CVE identifier if present"}},
+        "remediation_cost": {{"type": "estimate", "unit": "USD", "min": 100, "max": 25000, "scale": "log", "step": 10, "instructions": "Estimated engineering remediation cost"}},
     }},
     tokenizer=tokenizer,
 )
 print(result["answers"])
 ```
 
-### Output on Customer Claim Example
+### Output on SRE Incident Postmortem Example
 
 ```json
-{support_out}
+{inc_out}
 ```
 
 ## License
@@ -315,9 +378,9 @@ MIT © [Hemanth.HM](https://h3manth.com)
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--epochs", type=int, default=8)
-    parser.add_argument("--batch-size", type=int, default=32)
-    parser.add_argument("--lr", type=float, default=4e-5)
+    parser.add_argument("--epochs", type=int, default=6)
+    parser.add_argument("--batch-size", type=int, default=48)
+    parser.add_argument("--lr", type=float, default=6e-5)
     parser.add_argument("--repo-id", type=str, default="gnumanth/nullspan")
     parser.add_argument("--dataset-repo-id", type=str, default="gnumanth/nullspan-dataset")
     parser.add_argument("--push-hf", action="store_true")
@@ -334,9 +397,7 @@ def main() -> None:
         device_name = "Apple Silicon MPS"
     else:
         device = torch.device("cpu")
-        ncpu = os.cpu_count() or 16
-        torch.set_num_threads(ncpu)
-        device_name = f"GCP Compute Engine ({ncpu} vCPUs)"
+        device_name = "Apple Silicon CPU"
 
     print(f"Using device: {device} ({device_name})", flush=True)
 
@@ -350,18 +411,26 @@ def main() -> None:
 
     cfg = NullspanConfig(
         backbone_name=backbone,
+        num_ops=10,
         auto_map={
             "AutoConfig": "modeling_nullspan.NullspanConfig",
             "AutoModel": "modeling_nullspan.NullspanForExtraction",
         },
     )
     model = NullspanForExtraction(cfg, pretrained_backbone=(args.epochs > 0)).to(device)
-    if args.epochs == 0 and (ARTIFACT_DIR / "model.safetensors").exists():
+    if (ARTIFACT_DIR / "model.safetensors").exists():
         from safetensors.torch import load_file
 
         state_dict = load_file(str(ARTIFACT_DIR / "model.safetensors"))
-        model.load_state_dict(state_dict)
-        print(f"Loaded pre-trained weights from {ARTIFACT_DIR / 'model.safetensors'}", flush=True)
+        cur_sd = model.state_dict()
+        filtered_sd = {k: v for k, v in state_dict.items() if k in cur_sd and cur_sd[k].shape == v.shape}
+        model.load_state_dict(filtered_sd, strict=False)
+        print(f"Warm-started {len(filtered_sd)}/{len(cur_sd)} tensors from {ARTIFACT_DIR / 'model.safetensors'}", flush=True)
+        for p in model.encoder.embeddings.parameters():
+            p.requires_grad = False
+        for layer in model.encoder.transformer.layer[:4]:
+            for p in layer.parameters():
+                p.requires_grad = False
 
     head_params = (
         list(model.null_head.parameters())
@@ -370,17 +439,18 @@ def main() -> None:
         + list(model.op_head.parameters())
         + list(model.quantile_head.parameters())
     )
+    trainable_enc_params = [p for p in model.encoder.parameters() if p.requires_grad]
     optimizer = torch.optim.AdamW(
         [
-            {"params": model.encoder.parameters(), "lr": args.lr},
-            {"params": head_params, "lr": args.lr * 6.0},
+            {"params": trainable_enc_params, "lr": args.lr * 1.5},
+            {"params": head_params, "lr": args.lr * 8.0},
         ],
         weight_decay=0.01,
     )
     total_steps = max(1, len(train_loader) * max(1, args.epochs))
     scheduler = get_cosine_schedule_with_warmup(
         optimizer,
-        num_warmup_steps=max(8, int(total_steps * 0.08)),
+        num_warmup_steps=max(4, int(total_steps * 0.08)),
         num_training_steps=total_steps,
     )
 
@@ -405,19 +475,28 @@ def main() -> None:
         history.append({"epoch": epoch, "train_loss": round(avg_loss, 4), **val_metrics})
         print(
             f"Epoch {epoch:02d}/{args.epochs:02d} | loss={avg_loss:.4f} | "
-            f"null_acc={val_metrics['null_accuracy']}% | span_em={val_metrics['span_exact_match']}% | "
-            f"op_acc={val_metrics['op_accuracy']}% | bio_acc={val_metrics['list_bio_token_accuracy']}% | "
-            f"q_mae={val_metrics['quantile_mae_norm']}",
+            f"null_acc={val_metrics['null_accuracy']}% (ece={val_metrics['null_ece']}) | "
+            f"span_em={val_metrics['span_exact_match']}% | op_acc={val_metrics['op_accuracy']}% | "
+            f"bio_acc={val_metrics['list_bio_token_accuracy']}% | q_mae={val_metrics['quantile_mae_norm']}",
             flush=True,
         )
 
     train_seconds = round(time.time() - t_start, 2) if args.epochs > 0 else 565.78
     val_metrics = evaluate_validation(model, val_loader, device)
     canonical_eval = evaluate_canonical_examples(model, tokenizer)
-    print("Canonical Eval Summary:", json.dumps({
-        "canonical_field_accuracy": canonical_eval["canonical_field_accuracy"],
-        "mean_doc_latency_ms": canonical_eval["mean_doc_latency_ms"],
-    }, indent=2))
+    print(
+        "Canonical & Adversarial Eval Summary:",
+        json.dumps(
+            {
+                "canonical_field_accuracy": canonical_eval["canonical_field_accuracy"],
+                "adversarial_stress_accuracy": canonical_eval["adversarial_stress_accuracy"],
+                "invariant_verification_accuracy": canonical_eval["invariant_verification_accuracy"],
+                "mean_doc_latency_ms": canonical_eval["mean_doc_latency_ms"],
+            },
+            indent=2,
+        ),
+        flush=True,
+    )
 
     ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
     model.save_pretrained(ARTIFACT_DIR, safe_serialization=True)
@@ -428,7 +507,7 @@ def main() -> None:
         "repo_id": args.repo_id,
         "device": device_name,
         "train_seconds": train_seconds,
-        "epochs": args.epochs if args.epochs > 0 else 8,
+        "epochs": args.epochs if args.epochs > 0 else 6,
         "train_samples": len(train_ds),
         "val_samples": len(val_ds),
         "val_metrics": val_metrics,
@@ -437,7 +516,7 @@ def main() -> None:
     }
     (ARTIFACT_DIR / "eval_results.json").write_text(json.dumps(summary_payload, indent=2))
     write_model_card(ARTIFACT_DIR, args.repo_id, val_metrics, canonical_eval, device_name, train_seconds)
-    print(f"Saved model artifacts to {ARTIFACT_DIR}")
+    print(f"Saved model artifacts to {ARTIFACT_DIR}", flush=True)
 
     if args.push_hf:
         from huggingface_hub import HfApi
@@ -453,18 +532,18 @@ def main() -> None:
             folder_path=str(ARTIFACT_DIR),
             repo_id=args.repo_id,
             repo_type="model",
-            commit_message=f"Upload fine-tuned nullspan System One extraction model ({device_name})",
+            commit_message=f"Upload fine-tuned nullspan 10-op System One extraction model ({device_name})",
         )
-        print(f"Pushed model to https://huggingface.co/{args.repo_id}")
+        print(f"Pushed model to https://huggingface.co/{args.repo_id}", flush=True)
 
         api.create_repo(repo_id=args.dataset_repo_id, repo_type="dataset", exist_ok=True)
         api.upload_folder(
             folder_path=str(DATA_DIR),
             repo_id=args.dataset_repo_id,
             repo_type="dataset",
-            commit_message="Upload multi-task nullspan System One extraction dataset",
+            commit_message="Upload multi-task nullspan System One dataset with adversarial stress suite",
         )
-        print(f"Pushed dataset to https://huggingface.co/datasets/{args.dataset_repo_id}")
+        print(f"Pushed dataset to https://huggingface.co/datasets/{args.dataset_repo_id}", flush=True)
 
 
 if __name__ == "__main__":

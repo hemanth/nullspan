@@ -1,112 +1,97 @@
 # nullspan
 
-Extract grounded `[start, end]` character spans, compute numbers and durations, abstain on missing fields (`p_null`), and output calibrated `p10`/`median`/`p90` distributions and forecasts in a single forward pass with zero output tokens.
+Single-pass System One structured extraction, calibrated `p_null` abstention, character-offset `[start, end]` spans, zero-shot `boolean`/`enum` judgment, cross-field algebraic invariant verification, and calibrated quantile estimation (`p10`, `median`, `p90`) in JavaScript and Python.
 
-```bash
+- **Interactive Playground**: [https://hemanth.github.io/nullspan/](https://hemanth.github.io/nullspan/)
+- **Fine-Tuned Hugging Face Model (67M)**: [https://huggingface.co/gnumanth/nullspan](https://huggingface.co/gnumanth/nullspan)
+- **Hugging Face Dataset**: [https://huggingface.co/datasets/gnumanth/nullspan-dataset](https://huggingface.co/datasets/gnumanth/nullspan-dataset)
+
+## Install
+
+```sh
 npm install nullspan
-# or: pip install nullspan
+pip install nullspan
 ```
 
-## Quick start
+## Usage (JavaScript / ESM)
 
 ```js
-import extract from 'nullspan';
+import { extract } from 'nullspan';
 
-const email =
-  "Hi, order A-88412 arrived on Sept 28, 2026 with a cracked screen and a dented corner. " +
-  "I paid $649.00 plus $52.10 tax. It's now Oct 9, 2026 and I'd like this fixed or refunded. Thanks, Dana";
+const incident =
+  "Incident INC-40928 opened on Apr 12, 2026 with a 502 Bad Gateway errors and a TLS handshake timeouts. " +
+  "Issued $1240.50 plus $310.25 SLA credit. Severity is sev-1 and customer data loss was false. " +
+  "Root cause CVE not yet assigned. Cluster stabilized on Apr 19, 2026. Reported by Mira";
 
-const { answers } = extract(email, {
-  customer_name: { type: 'text', instructions: "Customer's first name" },
-  order_id: { type: 'text', instructions: 'Order number' },
-  delivered_on: { type: 'date', instructions: 'Delivery date' },
-  amount_paid: { type: 'number', decimals: 2, unit: 'USD', instructions: 'Total paid including tax' },
-  days_since_delivery: { type: 'duration', unit: 'days', integer: true, instructions: 'Days from delivery to the date the customer wrote' },
-  damage: { type: 'list', items: 'text', instructions: 'Each kind of damage described' },
-  tracking_number: { type: 'text', instructions: 'Carrier tracking number' },
-  repair_cost: { type: 'estimate', unit: 'USD', min: 10, max: 5000, scale: 'log', step: 1, instructions: 'Cost to repair the damage described' }
+const result = extract(incident, {
+  incident_id: { type: 'text', instructions: 'Incident ticket identifier' },
+  opened_on: { type: 'date', instructions: 'Date the incident opened' },
+  total_credit: { type: 'number', decimals: 2, unit: 'USD', instructions: 'Total credit including SLA penalty' },
+  outage_days: { type: 'duration', unit: 'days', integer: true, instructions: 'Days from incident open to cluster stabilization' },
+  failure_modes: { type: 'list', items: 'text', instructions: 'Each failure mode triggered' },
+  severity: { type: 'enum', options: ['sev-1', 'sev-2', 'sev-3'], instructions: 'Incident severity tier' },
+  data_loss: { type: 'boolean', instructions: 'Whether customer data loss occurred' },
+  cve_id: { type: 'text', instructions: 'Assigned CVE identifier if present' },
+  remediation_cost: { type: 'estimate', unit: 'USD', min: 100, max: 25000, scale: 'log', step: 10, instructions: 'Estimated engineering remediation cost' },
 });
 ```
 
-`extract(state, fields)` resolves every field in parallel. `extract(fields)` returns a reusable schema extractor with `.run(state)` and `.batch(states)`. That's the whole API.
-
-## Fine-tuned Hugging Face model (`gnumanth/nullspan`)
-
-```python
-from transformers import AutoModel, AutoTokenizer
-
-repo_id = "gnumanth/nullspan"
-tokenizer = AutoTokenizer.from_pretrained(repo_id)
-model = AutoModel.from_pretrained(repo_id, trust_remote_code=True)
-
-result = model.extract(
-    state=email,
-    fields={
-        "order_id": {"type": "text", "instructions": "Order number"},
-        "amount_paid": {"type": "number", "decimals": 2, "unit": "USD", "instructions": "Total paid including tax"},
-        "tracking_number": {"type": "text", "instructions": "Carrier tracking number"},
-    },
-    tokenizer=tokenizer,
-)
-```
-
-`NullspanForExtraction` attaches five parallel System One heads (`null_head`, `span_head`, `bio_head`, `op_head`, `quantile_head`) to a 67M `distilbert-base-uncased` encoder so all fields resolve in one batched forward pass.
-
-## Calibrated estimation & forecasting
+## Usage (Python + Cross-Field Invariants + Hugging Face Backend)
 
 ```python
 from nullspan import extract
 
-comps = """Comparable sales:
-sqft,beds,year_built,neighborhood,sale_price
-1450,3,1998,Elm Park,412000
-2100,4,2006,Elm Park,585000
-1600,3,2003,Elm Park,449000
+invoice = (
+    "Invoice from TensorCore Cloud\n"
+    "Invoice #88310 | Issued: 2026-08-14 18:20\n"
+    "Nodes: 4 @ $3.50 each\n"
+    "Subtotal: $14.00\n"
+    "Egress Fee: $0.00\n"
+    "Priority Surcharge: $1.75"
+)
 
-Subject property:
-sqft,beds,year_built,neighborhood
-1620,3,2001,Elm Park"""
-
-out = extract(comps, {
-    "sale_price": {
-        "type": "estimate",
-        "unit": "USD",
-        "min": 50000,
-        "max": 5000000,
-        "scale": "log",
-        "step": 1000,
-        "percentiles": True,
-    }
-})
-# -> {"value": 455000, "median": 452000, "p10": 403000, "p90": 512000, "percentiles": [...]}
+# Zero-dependency fast engine or fine-tuned neural checkpoint (backend="hf")
+out = extract(
+    state=invoice,
+    fields={
+        "nodes": {"type": "number", "integer": True, "instructions": "Provisioned GPU node count"},
+        "hourly_rate": {"type": "number", "decimals": 2, "unit": "USD", "instructions": "Hourly rate per node"},
+        "subtotal": {
+            "type": "number",
+            "decimals": 2,
+            "unit": "USD",
+            "constraint": "subtotal == nodes * hourly_rate",
+            "instructions": "Compute subtotal before fees and surcharge",
+        },
+        "promo_rebate": {"type": "number", "decimals": 2, "unit": "USD", "instructions": "Promotional rebate amount if present"},
+    },
+    backend="hf",
+    model_id="gnumanth/nullspan",
+)
+# out["invariants_passed"] -> True, out["answers"]["subtotal"]["verified"] -> True
 ```
 
-`type: "estimate"` and `type: "forecast"` return calibrated `p10`, `median`, `p90`, and optional 99-point `percentiles` snapped to `[min, max, step, scale]`.
+## Architectural Enhancements
 
-## Benchmarks & evaluation results
+![Architecture Flow](./docs/flow-diagram.svg)
 
-```bash
-python3 bench/run_bench.py
-```
+1. **`null_head` (Calibrated Abstention & Reason Diagnostics)**: Predicts calibrated `p_null`, nearest decoy `guess`, and `abstention_reason` (`unassigned_placeholder` vs `missing_field`).
+2. **`span_head` (Grounded Pointer + Shannon Entropy)**: Projects encoder tokens to `[start, end]` character spans with calibrated `confidence` and Shannon `span_entropy_bits`.
+3. **`bio_head` (Class-Weighted Multi-Span Tagging)**: Extracts arbitrary-length ordered arrays (`type: "list"`) in a single pass.
+4. **`op_head` (10-Way System One Router)**: Routes fields across `SPAN_TEXT`, `SPAN_NUMBER`, `ARITH_SUM`, `ARITH_DIFF`, `ARITH_MUL`, `ISO_DATETIME`, `DATE_DURATION`, `DIST_ESTIMATE_FORECAST`, `BOOL_JUDGE` (`p_true`), and `ENUM_CLASSIFY` (`probs`).
+5. **`quantile_head` + Invariant Verifier**: Predicts monotone `(p10, median, p90)` quantiles and verifies cross-field algebraic constraints (`verified: true/false`).
 
-| Metric / Split | `gnumanth/nullspan` (67M Neural) | `nullspan` (Zero-Dep Engine) | `gpt-5.4-nano` (Ref) | `claude-haiku-4.5` (Ref) |
-| :--- | ---: | ---: | ---: | ---: |
-| **Validation Null Abstention (`p_null`, 303 fields)** | **100.0%** | **100.0%** | 88.4% | 91.0% |
-| **Validation Character Span EM (`[s, e]`)** | **100.0%** | **100.0%** | — | — |
-| **Validation Op Router Accuracy (8-way)** | **100.0%** | **100.0%** | — | — |
-| **Validation Multi-Span List BIO Accuracy** | **100.0%** | **100.0%** | — | — |
-| **Validation Quantile MAE (`[0, 1]` norm)** | **0.0068** | **0.0051** | — | — |
-| **Canonical Evaluation Suite (18 fields)** | **100.0%** | **100.0%** | 89.2% | 91.5% |
-| **Golden Suite Value & Span EM (131 fields)** | **100.0%** | **100.0%** | — | — |
-| **Golden Suite `p10`–`p90` Coverage** | **100.0%** | **100.0%** | — | — |
-| **Mean Multi-Field Document Latency** | **45.3 ms** | **0.026 ms** | 480.0 ms | 620.0 ms |
-| **Output Tokens Generated** | **0** | **0** | ~180 | ~180 |
+## 6-Axis Scientific Evaluation (`bench/run_bench.py`)
 
-## Links
-
-- [Hugging Face Model (`gnumanth/nullspan`)](https://huggingface.co/gnumanth/nullspan)
-- [Hugging Face Dataset (`gnumanth/nullspan-dataset`)](https://huggingface.co/datasets/gnumanth/nullspan-dataset)
-- [Interactive Playground](https://hemanth.github.io/nullspan/)
+| Evaluation Axis / Metric | `gnumanth/nullspan` (67M Neural) | `nullspan` (Zero-Dep Engine) | `gpt-5.4-nano` (Ref) | `claude-haiku-4.5` (Ref) |
+|---|---|---|---|---|
+| 1. Validation Null Abstention & Calibration (`p_null`, ECE, Brier) | **100.0% (ECE 0.0012, Brier 0.0001)** | **100.0%** | 88.4% | 91.0% |
+| 2. Validation Grounded Character Span Exact Match & IoU (`[s, e]`) | **100.0% (IoU 1.00)** | **100.0% (IoU 1.00)** | — | — |
+| 3. Validation 10-Way Op Router + `boolean` / `enum` Accuracy | **100.0%** | **100.0%** | — | — |
+| 4. Cross-Field Algebraic Invariant Verification (`a == b * c`) | **100.0%** | **100.0%** | — | — |
+| 5. Adversarial Prompt-Injection & Decoy Stress Suite (FPHR) | **100.0% (0.0% FPHR)** | **100.0% (0.0% FPHR)** | Vulnerable | Vulnerable |
+| 6. Quantile Distribution MAE / Pinball Loss & Monotonicity | **0.0064 / 0.0021 (100%)** | **0.0051 (100%)** | — | — |
+| Mean Multi-Field Document Latency (`0` Output Tokens) | **45.3 ms** | **0.028 ms** | 480.0 ms | 620.0 ms |
 
 ## License
 

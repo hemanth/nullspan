@@ -1,113 +1,59 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 360" width="980" height="360" role="img" aria-label="nullspan System One Single-Pass Extraction Architecture">
-  <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 8 5 L 0 9 z" fill="#000000"/>
-    </marker>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 260" width="100%" height="auto" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif">
+  <rect width="980" height="260" fill="#ffffff"/>
 
-  <!-- Monochrome Blueprint Canvas (#ffffff background, #000000 1.2px strokes) -->
-  <rect width="980" height="360" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.2"/>
+  <!-- Stage 1: Input State + Typed Field Schema -->
+  <rect x="20" y="36" width="210" height="188" rx="6" fill="#ffffff" stroke="#000000" stroke-width="1.2"/>
+  <rect x="34" y="50" width="88" height="20" rx="2" fill="#ffffff" stroke="#000000" stroke-width="1.2"/>
+  <text x="78" y="64" font-family="'Geist Mono', monospace" font-size="10" font-weight="700" text-anchor="middle" fill="#000000">[ INPUT ]</text>
+  <text x="34" y="94" font-size="14" font-weight="700" fill="#000000">State + Field Specs</text>
+  <text x="34" y="116" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">• Unstructured text / CSV</text>
+  <text x="34" y="136" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">• text | number | list</text>
+  <text x="34" y="156" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">• boolean | enum | date</text>
+  <text x="34" y="176" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">• estimate | forecast</text>
+  <text x="34" y="198" font-family="'Geist Mono', monospace" font-size="10" fill="#555555">constraint: a == b * c</text>
 
-  <!-- Section Header -->
-  <text x="32" y="36" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="700" fill="#000000" letter-spacing="2.2">NULLSPAN ARCHITECTURE · SINGLE FORWARD PASS · ZERO OUTPUT TOKENS</text>
-  <line x1="32" y1="48" x2="948" y2="48" stroke="#000000" stroke-width="1.2"/>
+  <!-- Arrow 1 -> 2 -->
+  <line x1="230" y1="130" x2="268" y2="130" stroke="#000000" stroke-width="1.2"/>
+  <polygon points="268,126 276,130 268,134" fill="#000000"/>
 
-  <!-- Left Cluster: Input State & Field Queries -->
-  <rect x="32" y="72" width="212" height="256" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.2"/>
-  <text x="46" y="94" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" font-weight="700" fill="#000000" letter-spacing="1.5">INPUT PAYLOAD</text>
-  <line x1="32" y1="104" x2="244" y2="104" stroke="#000000" stroke-width="1.2"/>
+  <!-- Stage 2: Shared Encoder (Focal Inverted Black Card) -->
+  <rect x="276" y="36" width="224" height="188" rx="6" fill="#000000" stroke="#000000" stroke-width="1.2"/>
+  <rect x="290" y="50" width="114" height="20" rx="2" fill="#000000" stroke="#ffffff" stroke-width="1.2"/>
+  <text x="347" y="64" font-family="'Geist Mono', monospace" font-size="10" font-weight="700" text-anchor="middle" fill="#ffffff">[ SYSTEM ONE ]</text>
+  <text x="290" y="94" font-size="14" font-weight="700" fill="#ffffff">NullspanForExtraction</text>
+  <text x="290" y="116" font-family="'Geist Mono', monospace" font-size="11" fill="#e5e5e5">• 67M DistilBERT Encoder</text>
+  <text x="290" y="136" font-family="'Geist Mono', monospace" font-size="11" fill="#e5e5e5">• Single Batched Pass</text>
+  <text x="290" y="156" font-family="'Geist Mono', monospace" font-size="11" fill="#e5e5e5">• 0 Output Tokens</text>
+  <text x="290" y="176" font-family="'Geist Mono', monospace" font-size="11" fill="#e5e5e5">• Injection-Immune Spans</text>
+  <text x="290" y="198" font-family="'Geist Mono', monospace" font-size="10" fill="#bbbbbb">gnumanth/nullspan</text>
 
-  <rect x="46" y="118" width="184" height="88" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.2"/>
-  <text x="56" y="136" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" font-weight="700" fill="#000000">state (Raw Document)</text>
-  <text x="56" y="154" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" fill="#000000">"Order A-88412 arrived</text>
-  <text x="56" y="169" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" fill="#000000">Sept 28, 2026. Paid</text>
-  <text x="56" y="184" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" fill="#000000">$649.00 + $52.10 tax..."</text>
+  <!-- Arrow 2 -> 3 -->
+  <line x1="500" y1="130" x2="538" y2="130" stroke="#000000" stroke-width="1.2"/>
+  <polygon points="538,126 546,130 538,134" fill="#000000"/>
 
-  <rect x="46" y="218" width="184" height="94" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.2"/>
-  <text x="56" y="236" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" font-weight="700" fill="#000000">fields (Typed Schema)</text>
-  <text x="56" y="254" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" fill="#000000">• order_id (text)</text>
-  <text x="56" y="268" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" fill="#000000">• amount_paid (number)</text>
-  <text x="56" y="282" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" fill="#000000">• tracking_no (p_null?)</text>
-  <text x="56" y="296" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" fill="#000000">• repair_cost (estimate)</text>
+  <!-- Stage 3: 5 Parallel Neural Heads & 10 Ops -->
+  <rect x="546" y="36" width="206" height="188" rx="6" fill="#ffffff" stroke="#000000" stroke-width="1.2"/>
+  <rect x="560" y="50" width="106" height="20" rx="2" fill="#ffffff" stroke="#000000" stroke-width="1.2"/>
+  <text x="613" y="64" font-family="'Geist Mono', monospace" font-size="10" font-weight="700" text-anchor="middle" fill="#000000">[ 5 HEADS · 10 OPS ]</text>
+  <text x="560" y="94" font-size="14" font-weight="700" fill="#000000">Parallel Projections</text>
+  <text x="560" y="116" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">1. null_head (p_null, ECE)</text>
+  <text x="560" y="136" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">2. span_head ([s,e], H_bits)</text>
+  <text x="560" y="156" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">3. bio_head  (list B/I/O)</text>
+  <text x="560" y="176" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">4. op_head   (10-way router)</text>
+  <text x="560" y="196" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">5. quantile  (p10, p50, p90)</text>
 
-  <!-- Orthogonal Connection 1 -->
-  <path d="M 244 200 L 290 200" fill="none" stroke="#000000" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <!-- Arrow 3 -> 4 -->
+  <line x1="752" y1="130" x2="788" y2="130" stroke="#000000" stroke-width="1.2"/>
+  <polygon points="788,126 796,130 788,134" fill="#000000"/>
 
-  <!-- Center Signature Inverted Focal Node (#000000 fill, #ffffff text) -->
-  <rect x="294" y="92" width="198" height="216" rx="6" fill="#000000" stroke="#000000" stroke-width="1.2"/>
-  <text x="310" y="116" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" font-weight="700" fill="#FFFFFF" letter-spacing="1.6">NULLSPAN CORE</text>
-  <line x1="294" y1="126" x2="492" y2="126" stroke="#FFFFFF" stroke-width="1"/>
-
-  <text x="310" y="150" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" font-weight="700" fill="#FFFFFF">NullspanForExtraction</text>
-  <text x="310" y="166" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" fill="#FFFFFF">67M DistilBERT Encoder</text>
-
-  <rect x="310" y="180" width="166" height="58" rx="4" fill="#000000" stroke="#FFFFFF" stroke-width="1.2"/>
-  <text x="320" y="198" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" font-weight="700" fill="#FFFFFF">[CLS] field | type | spec</text>
-  <text x="320" y="213" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" fill="#FFFFFF">[SEP] state tokens [SEP]</text>
-  <text x="320" y="228" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" fill="#FFFFFF">offset_mapping [s, e]</text>
-
-  <text x="310" y="262" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" font-weight="700" fill="#FFFFFF">O(1) Batched Forward Pass</text>
-  <text x="310" y="278" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" fill="#FFFFFF">All fields resolved in</text>
-  <text x="310" y="292" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" fill="#FFFFFF">parallel (0 output tokens)</text>
-
-  <!-- Orthogonal Fan-Out to 5 Parallel Heads -->
-  <path d="M 492 200 L 516 200 L 516 96 L 542 96" fill="none" stroke="#000000" stroke-width="1.2" marker-end="url(#arrow)"/>
-  <path d="M 492 200 L 516 200 L 516 148 L 542 148" fill="none" stroke="#000000" stroke-width="1.2" marker-end="url(#arrow)"/>
-  <path d="M 492 200 L 542 200" fill="none" stroke="#000000" stroke-width="1.2" marker-end="url(#arrow)"/>
-  <path d="M 492 200 L 516 200 L 516 252 L 542 252" fill="none" stroke="#000000" stroke-width="1.2" marker-end="url(#arrow)"/>
-  <path d="M 492 200 L 516 200 L 516 304 L 542 304" fill="none" stroke="#000000" stroke-width="1.2" marker-end="url(#arrow)"/>
-
-  <!-- 5 Parallel System One Heads -->
-  <rect x="546" y="74" width="184" height="42" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.2"/>
-  <text x="556" y="92" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" font-weight="700" fill="#000000">H1 · null_head (p_null)</text>
-  <text x="556" y="107" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" fill="#000000">Abstains when field absent</text>
-
-  <rect x="546" y="126" width="184" height="42" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.2"/>
-  <text x="556" y="144" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" font-weight="700" fill="#000000">H2 · span_head ([s, e])</text>
-  <text x="556" y="159" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" fill="#000000">Exact char-offset pointers</text>
-
-  <rect x="546" y="178" width="184" height="42" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.2"/>
-  <text x="556" y="196" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" font-weight="700" fill="#000000">H3 · bio_head (list[])</text>
-  <text x="556" y="211" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" fill="#000000">Multi-span B/I/O tagger</text>
-
-  <rect x="546" y="230" width="184" height="42" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.2"/>
-  <text x="556" y="248" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" font-weight="700" fill="#000000">H4 · op_head (8-way)</text>
-  <text x="556" y="263" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" fill="#000000">SUM · DIFF · MUL · ISO · Δt</text>
-
-  <rect x="546" y="282" width="184" height="44" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.2"/>
-  <text x="556" y="300" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" font-weight="700" fill="#000000">H5 · quantile_head</text>
-  <text x="556" y="315" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" fill="#000000">Pinball [p10, median, p90]</text>
-
-  <!-- Orthogonal Merge to Output -->
-  <path d="M 730 96 L 750 96 L 750 200 L 768 200" fill="none" stroke="#000000" stroke-width="1.2"/>
-  <path d="M 730 148 L 750 148" fill="none" stroke="#000000" stroke-width="1.2"/>
-  <path d="M 730 200 L 768 200" fill="none" stroke="#000000" stroke-width="1.2" marker-end="url(#arrow)"/>
-  <path d="M 730 252 L 750 252" fill="none" stroke="#000000" stroke-width="1.2"/>
-  <path d="M 730 304 L 750 304 L 750 200" fill="none" stroke="#000000" stroke-width="1.2"/>
-
-  <!-- Right Cluster: Calibrated Output -->
-  <rect x="772" y="72" width="176" height="256" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.2"/>
-  <text x="786" y="94" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" font-weight="700" fill="#000000" letter-spacing="1.5">CALIBRATED OUTPUT</text>
-  <line x1="772" y1="104" x2="948" y2="104" stroke="#000000" stroke-width="1.2"/>
-
-  <text x="784" y="126" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" font-weight="700" fill="#000000">order_id:</text>
-  <text x="784" y="140" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" fill="#000000">"A-88412" span:[10,17]</text>
-  <text x="784" y="153" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" fill="#000000">p_null: 0.000007</text>
-
-  <line x1="784" y1="164" x2="936" y2="164" stroke="#000000" stroke-width="0.8" stroke-dasharray="3,3"/>
-
-  <text x="784" y="180" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" font-weight="700" fill="#000000">amount_paid:</text>
-  <text x="784" y="194" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" fill="#000000">701.10 (649.00 + 52.10)</text>
-
-  <line x1="784" y1="205" x2="936" y2="205" stroke="#000000" stroke-width="0.8" stroke-dasharray="3,3"/>
-
-  <text x="784" y="221" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" font-weight="700" fill="#000000">tracking_number:</text>
-  <text x="784" y="235" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" fill="#000000">null (p_null: 0.9990)</text>
-
-  <line x1="784" y1="246" x2="936" y2="246" stroke="#000000" stroke-width="0.8" stroke-dasharray="3,3"/>
-
-  <text x="784" y="262" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" font-weight="700" fill="#000000">repair_cost (estimate):</text>
-  <text x="784" y="276" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" fill="#000000">p10: 166 · med: 247</text>
-  <text x="784" y="290" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" fill="#000000">p90: 424 · 0 tokens</text>
-  <text x="784" y="312" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" font-weight="700" fill="#000000">0.026ms Fast / 45ms HF</text>
+  <!-- Stage 4: Grounded & Verified Output -->
+  <rect x="796" y="36" width="164" height="188" rx="6" fill="#ffffff" stroke="#000000" stroke-width="1.2"/>
+  <rect x="810" y="50" width="90" height="20" rx="2" fill="#ffffff" stroke="#000000" stroke-width="1.2"/>
+  <text x="855" y="64" font-family="'Geist Mono', monospace" font-size="10" font-weight="700" text-anchor="middle" fill="#000000">[ VERIFIED ]</text>
+  <text x="810" y="94" font-size="14" font-weight="700" fill="#000000">Typed Telemetry</text>
+  <text x="810" y="116" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">• value / null</text>
+  <text x="810" y="136" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">• span [s, e]</text>
+  <text x="810" y="156" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">• span_entropy</text>
+  <text x="810" y="176" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">• p_true / probs</text>
+  <text x="810" y="196" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">• verified: true</text>
 </svg>
