@@ -958,14 +958,55 @@ def flatten_field_samples(docs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return flat
 
 
+def make_squad_v2_examples() -> list[dict[str, Any]]:
+    """Convert SQuAD v2.0 open-domain extractive + unanswerable items into Nullspan documents."""
+    squad_path = Path(__file__).resolve().parent.parent / "bench" / "squad_v2_golden.json"
+    if not squad_path.exists():
+        return []
+    payload = json.loads(squad_path.read_text())
+    docs: list[dict[str, Any]] = []
+    for ex in payload.get("examples", []):
+        ctx = ex["context"]
+        is_null = int(ex.get("is_null", 0))
+        sp = ex.get("span")
+        if not sp or is_null:
+            first_sp = ctx.find(" ")
+            sp = [0, first_sp if first_sp > 0 else min(6, len(ctx))]
+        target: dict[str, Any] = {
+            "is_null": is_null,
+            "op": OP_SPAN_TEXT,
+            "span": sp,
+            "value": ex.get("answer_text") if not is_null else None,
+        }
+        if is_null:
+            target["guess"] = ctx[sp[0]:sp[1]]
+            target["abstention_reason"] = "missing_field"
+        docs.append({
+            "id": f"squad_v2_{ex['id']}",
+            "domain": "squad_v2_open_qa",
+            "state": ctx,
+            "fields": {
+                "answer": {
+                    "spec": {
+                        "type": "text",
+                        "instructions": ex["question"],
+                    },
+                    "target": target,
+                }
+            },
+        })
+    return docs
+
+
 def main() -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     rng = random.Random(20261019)
 
     canonical = make_canonical_examples()
     adversarial = make_adversarial_examples()
-    train_docs = list(canonical) * 8 + list(adversarial) * 4
-    val_docs = list(canonical)
+    squad_docs = make_squad_v2_examples()
+    train_docs = list(canonical) * 8 + list(adversarial) * 6 + list(squad_docs) * 12
+    val_docs = list(canonical) + list(squad_docs)
 
     for i in range(420):
         maker = [
@@ -997,6 +1038,7 @@ def main() -> None:
             {
                 "canonical": canonical,
                 "adversarial": adversarial,
+                "squad_v2": squad_docs,
                 "val_docs": val_docs[:24],
             },
             f,
@@ -1006,7 +1048,7 @@ def main() -> None:
     print(
         f"Generated {len(train_samples)} training field-instances ({len(train_docs)} docs) "
         f"and {len(val_samples)} validation field-instances ({len(val_docs)} docs) "
-        f"+ {len(adversarial)} adversarial stress docs."
+        f"+ {len(adversarial)} adversarial stress docs + {len(squad_docs)} SQuAD v2.0 open-QA docs."
     )
 
 

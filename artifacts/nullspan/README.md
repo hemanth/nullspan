@@ -25,7 +25,7 @@ pipeline_tag: question-answering
 ## Architectural Enhancements (`NullspanForExtraction`)
 
 Built on `distilbert/distilbert-base-uncased` (67M parameters) with 5 parallel System One heads and 10 routed operations:
-1. **`null_head`**: Calibrated `p_null` probability (`ECE: 1e-05`, `Brier: 0.0`) for absent field abstention (`value: null` + nearest `guess` decoy + `abstention_reason`).
+1. **`null_head`**: Calibrated `p_null` probability (`ECE: 0.00206`, `Brier: 0.0022`) for absent field abstention (`value: null` + nearest `guess` decoy + `abstention_reason`).
 2. **`span_head`**: Token-level start/end pointer network mapped via `offset_mapping` to exact character spans `[start, end]` with calibrated posterior `confidence` and Shannon `span_entropy_bits`.
 3. **`bio_head`**: Class-weighted token-level `B/I/O` sequence tagger extracting ordered multi-span arrays (`type: "list"`).
 4. **`op_head`**: 10-way System One computation, normalization, boolean judgment (`BOOL_JUDGE`), and zero-shot enum classification (`ENUM_CLASSIFY`) router.
@@ -33,9 +33,9 @@ Built on `distilbert/distilbert-base-uncased` (67M parameters) with 5 parallel S
 
 ## Multi-Axis Empirical Evaluation (`gnumanth/nullspan-dataset`)
 
-- **Training time**: `358.3s` (`Apple Silicon MPS`)
-- **Null Abstention Accuracy (`p_null`)**: `100.0%` (`ECE: 1e-05`, `Brier: 0.0`)
-- **Grounded Span Exact Match (`[start, end]`)**: `99.31%`
+- **Training time**: `165.8s` (`Apple Silicon MPS`)
+- **Null Abstention Accuracy (`p_null`)**: `99.75%` (`ECE: 0.00206`, `Brier: 0.0022`)
+- **Grounded Span Exact Match (`[start, end]`)**: `99.24%`
 - **10-Way Operation Router Accuracy**: `100.0%`
 - **Multi-Span List BIO Token Accuracy**: `100.0%`
 - **Quantile Distribution MAE / Pinball Loss**: `0.0007` / `0.0001`
@@ -82,31 +82,31 @@ print(result["answers"])
 {
   "reporter": {
     "type": "text",
-    "p_null": 3.8e-07,
+    "p_null": 1.2e-06,
     "span": [
       276,
       280
     ],
     "guess": "Mira",
     "confidence": 0.999992,
-    "span_entropy_bits": 0.0002,
+    "span_entropy_bits": 0.0001,
     "value": "Mira"
   },
   "incident_id": {
     "type": "text",
-    "p_null": 3e-08,
+    "p_null": 1.3e-06,
     "span": [
       9,
       18
     ],
     "guess": "INC-40928",
-    "confidence": 0.999962,
-    "span_entropy_bits": 0.0006,
+    "confidence": 0.999994,
+    "span_entropy_bits": 0.0001,
     "value": "INC-40928"
   },
   "opened_on": {
     "type": "date",
-    "p_null": 2.7e-07,
+    "p_null": 4e-08,
     "span": [
       29,
       41
@@ -118,26 +118,26 @@ print(result["answers"])
   },
   "total_credit": {
     "type": "number",
-    "p_null": 4.5e-06,
+    "p_null": 7.51e-06,
     "span": [
       109,
       130
     ],
     "guess": 1550.75,
-    "confidence": 0.999989,
-    "span_entropy_bits": 0.0002,
+    "confidence": 0.99998,
+    "span_entropy_bits": 0.0003,
     "value": 1550.75
   },
   "outage_days": {
     "type": "duration",
-    "p_null": 3.04e-06,
+    "p_null": 3.18e-06,
     "unit": "days",
     "span": [
       29,
       41
     ],
     "guess": 7,
-    "confidence": 0.999992,
+    "confidence": 0.999995,
     "span_entropy_bits": 0.0001,
     "value": 7
   },
@@ -157,12 +157,12 @@ print(result["answers"])
         100
       ]
     ],
-    "confidence": 0.497096,
-    "span_entropy_bits": 1.5381
+    "confidence": 0.999932,
+    "span_entropy_bits": 0.0011
   },
   "severity": {
     "type": "enum",
-    "p_null": 1.4e-07,
+    "p_null": 4.779e-05,
     "span": [
       155,
       160
@@ -173,38 +173,38 @@ print(result["answers"])
       "sev-3"
     ],
     "probs": {
-      "sev-1": 0.999975,
-      "sev-2": 1.3e-05,
-      "sev-3": 1.3e-05
+      "sev-1": 0.99994,
+      "sev-2": 3e-05,
+      "sev-3": 3e-05
     },
     "guess": "sev-1",
-    "confidence": 0.999975,
-    "span_entropy_bits": 0.0005,
+    "confidence": 0.99994,
+    "span_entropy_bits": 0.0003,
     "value": "sev-1"
   },
   "data_loss": {
     "type": "boolean",
-    "p_null": 1.28e-06,
-    "p_true": 7e-06,
+    "p_null": 3.117e-05,
+    "p_true": 3.7e-05,
     "span": [
       188,
       193
     ],
     "guess": false,
-    "confidence": 0.999993,
-    "span_entropy_bits": 0.0001,
+    "confidence": 0.999963,
+    "span_entropy_bits": 0.0002,
     "value": false
   },
   "cve_id": {
     "type": "text",
-    "p_null": 0.9999429,
+    "p_null": 0.99994409,
     "span": [
       123,
       130
     ],
     "guess": "$310.25",
     "confidence": 0.05,
-    "span_entropy_bits": 0.0009,
+    "span_entropy_bits": 0.0008,
     "value": null,
     "abstention_reason": "unassigned_placeholder"
   },
@@ -213,10 +213,10 @@ print(result["answers"])
     "value": 1890,
     "median": 1870,
     "p10": 1270,
-    "p90": 2670,
+    "p90": 2660,
     "p_below": 0.0,
     "p_above": 0.0,
-    "confidence": 0.99999
+    "confidence": 0.999963
   }
 }
 ```

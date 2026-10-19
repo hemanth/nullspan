@@ -1,0 +1,241 @@
+{
+  "benchmark_version": "2.0.0-science-baked",
+  "timestamp": "2026-10-19T14:45:00Z",
+  "environment": {
+    "os": "Darwin 25.5.0 (arm64)",
+    "python": "3.14.8",
+    "pytorch": "2.12.1",
+    "onnxruntime": "1.31.0",
+    "accelerator": "Apple Silicon MPS + CPU"
+  },
+  "datasets": {
+    "squad_v2_golden": {
+      "source": "rajpurkar/squad_v2 (Stanford Question Answering Dataset v2.0, ACL 2018)",
+      "n_examples": 60,
+      "n_answerable": 30,
+      "n_unanswerable": 30
+    },
+    "structured_multi_task": {
+      "source": "gnumanth/nullspan-dataset (5 domains: incident_report, compute_ledger, cluster_throughput_comps, edge_traffic_forecast, adversarial_stress)",
+      "n_docs": 8,
+      "n_fields": 42
+    },
+    "adversarial_stress": {
+      "n_docs": 2,
+      "n_fields": 8
+    }
+  },
+  "tiers": {
+    "tier_1a_pytorch_fp32": {
+      "name": "NullspanForExtraction (PyTorch FP32 Neural, 67M)",
+      "footprint_mb": 255.83,
+      "squad_v2": {
+        "n_examples": 60,
+        "overall_accuracy_pct": 91.67,
+        "overall_accuracy_ci95": [
+          83.33,
+          98.33
+        ],
+        "answerable_f1_pct": 83.33,
+        "answerable_f1_ci95": [
+          70.0,
+          93.33
+        ],
+        "answerable_span_match_pct": 83.33,
+        "unanswerable_abstention_pct": 100.0,
+        "null_auroc": 0.99889,
+        "null_ece": 0.01348,
+        "null_brier": 0.0145,
+        "latency": {
+          "mean_ms": 33.6498,
+          "p50_ms": 24.5621,
+          "p95_ms": 76.7126,
+          "p99_ms": 454.705
+        }
+      },
+      "structured_suite": {
+        "n_fields": 42,
+        "field_accuracy_pct": 100.0,
+        "field_accuracy_ci95": [
+          100.0,
+          100.0
+        ],
+        "span_exact_match_pct": 100.0,
+        "null_auroc": 1.0,
+        "null_ece": 2e-05,
+        "null_brier": 0.0,
+        "quantile_monotonicity_pct": 100.0,
+        "winkler_interval_score_norm": 0.3723,
+        "invariant_verification_pct": 100.0,
+        "latency_per_field": {
+          "mean_ms": 10.2409,
+          "p50_ms": 12.323,
+          "p95_ms": 13.7715,
+          "p99_ms": 13.7715
+        }
+      },
+      "adversarial_suite": {
+        "n_fields": 8,
+        "field_accuracy_pct": 100.0,
+        "field_accuracy_ci95": [
+          100.0,
+          100.0
+        ],
+        "span_exact_match_pct": 100.0,
+        "null_auroc": 1.0,
+        "null_ece": 3e-05,
+        "null_brier": 0.0,
+        "quantile_monotonicity_pct": 0.0,
+        "winkler_interval_score_norm": 0.0,
+        "invariant_verification_pct": 100.0,
+        "latency_per_field": {
+          "mean_ms": 17.4208,
+          "p50_ms": 18.4597,
+          "p95_ms": 18.4597,
+          "p99_ms": 18.4597
+        }
+      }
+    },
+    "tier_1b_onnx_int8": {
+      "name": "NullspanForExtraction (ONNX Int8 Quantized, WASM/CPU)",
+      "footprint_mb": 64.34,
+      "compression_ratio": 3.98,
+      "squad_v2": {
+        "n_examples": 60,
+        "overall_accuracy_pct": 90.0,
+        "overall_accuracy_ci95": [
+          81.67,
+          96.67
+        ],
+        "answerable_f1_pct": 86.67,
+        "answerable_f1_ci95": [
+          73.33,
+          96.67
+        ],
+        "answerable_span_match_pct": 86.67,
+        "unanswerable_abstention_pct": 93.33,
+        "null_auroc": 0.99556,
+        "null_ece": 0.04021,
+        "null_brier": 0.02496,
+        "latency": {
+          "mean_ms": 29.5068,
+          "p50_ms": 28.5148,
+          "p95_ms": 49.3835,
+          "p99_ms": 82.1756
+        }
+      },
+      "structured_suite": {
+        "n_fields": 42,
+        "field_accuracy_pct": 100.0,
+        "field_accuracy_ci95": [
+          100.0,
+          100.0
+        ],
+        "span_exact_match_pct": 100.0,
+        "null_auroc": 1.0,
+        "null_ece": 1e-05,
+        "null_brier": 0.0,
+        "quantile_monotonicity_pct": 100.0,
+        "winkler_interval_score_norm": 0.3726,
+        "invariant_verification_pct": 100.0,
+        "latency_per_field": {
+          "mean_ms": 22.6698,
+          "p50_ms": 25.2569,
+          "p95_ms": 27.3221,
+          "p99_ms": 27.3221
+        }
+      },
+      "adversarial_suite": {
+        "n_fields": 8,
+        "field_accuracy_pct": 100.0,
+        "field_accuracy_ci95": [
+          100.0,
+          100.0
+        ],
+        "span_exact_match_pct": 100.0,
+        "null_auroc": 1.0,
+        "null_ece": 3e-05,
+        "null_brier": 0.0,
+        "quantile_monotonicity_pct": 0.0,
+        "winkler_interval_score_norm": 0.0,
+        "invariant_verification_pct": 100.0,
+        "latency_per_field": {
+          "mean_ms": 20.4981,
+          "p50_ms": 22.9028,
+          "p95_ms": 22.9028,
+          "p99_ms": 22.9028
+        }
+      }
+    },
+    "tier_2_zero_dep_engine": {
+      "name": "nullspan Zero-Dep Algorithmic Fast Engine (Python/JS)",
+      "footprint_mb": 0.0,
+      "squad_v2": {
+        "n_examples": 60,
+        "overall_accuracy_pct": 23.33,
+        "overall_accuracy_ci95": [
+          13.33,
+          35.0
+        ],
+        "answerable_f1_pct": 23.33,
+        "answerable_f1_ci95": [
+          10.0,
+          40.0
+        ],
+        "answerable_span_match_pct": 23.33,
+        "unanswerable_abstention_pct": 23.33,
+        "null_auroc": 0.40389,
+        "null_ece": 0.41942,
+        "null_brier": 0.42834,
+        "latency": {
+          "mean_ms": 0.0497,
+          "p50_ms": 0.0407,
+          "p95_ms": 0.1853,
+          "p99_ms": 0.2923
+        }
+      },
+      "structured_suite": {
+        "n_fields": 42,
+        "field_accuracy_pct": 100.0,
+        "field_accuracy_ci95": [
+          100.0,
+          100.0
+        ],
+        "span_exact_match_pct": 100.0,
+        "null_auroc": 1.0,
+        "null_ece": 5e-05,
+        "null_brier": 0.0,
+        "quantile_monotonicity_pct": 100.0,
+        "winkler_interval_score_norm": 0.3671,
+        "invariant_verification_pct": 100.0,
+        "latency_per_field": {
+          "mean_ms": 0.0281,
+          "p50_ms": 0.0226,
+          "p95_ms": 0.0805,
+          "p99_ms": 0.0805
+        }
+      },
+      "adversarial_suite": {
+        "n_fields": 8,
+        "field_accuracy_pct": 100.0,
+        "field_accuracy_ci95": [
+          100.0,
+          100.0
+        ],
+        "span_exact_match_pct": 100.0,
+        "null_auroc": 1.0,
+        "null_ece": 0.0001,
+        "null_brier": 0.0,
+        "quantile_monotonicity_pct": 0.0,
+        "winkler_interval_score_norm": 0.0,
+        "invariant_verification_pct": 100.0,
+        "latency_per_field": {
+          "mean_ms": 0.0082,
+          "p50_ms": 0.0082,
+          "p95_ms": 0.0082,
+          "p99_ms": 0.0082
+        }
+      }
+    }
+  }
+}

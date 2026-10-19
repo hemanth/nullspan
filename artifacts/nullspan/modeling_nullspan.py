@@ -66,6 +66,54 @@ def format_field_query(field_name: str, spec: dict[str, Any]) -> str:
     return " | ".join(parts)
 
 
+_QA_STOPWORDS = {
+    "what", "who", "when", "where", "which", "whom", "whose", "why", "how",
+    "was", "were", "did", "does", "do", "is", "are", "been", "being", "be",
+    "the", "a", "an", "in", "on", "of", "to", "for", "with", "from", "by",
+    "at", "into", "unto", "upon", "about", "as", "that", "this", "these",
+    "those", "their", "his", "her", "its", "they", "them", "it", "he", "she",
+    "had", "has", "have", "would", "could", "should", "can", "may", "might",
+}
+
+
+def select_context_window(state: str, spec: dict[str, Any]) -> tuple[str, int]:
+    """Select a focused prose window around the highest IDF-weighted overlap sentence when state > 320 chars."""
+    if len(state) <= 320 or "\n" in state or spec.get("type", "text") != "text":
+        return state, 0
+    instr = str(spec.get("instructions", ""))
+    q_toks = [t.lower() for t in re.sub(r"[^\w\s-]", " ", instr).split() if len(t) > 1 and t.lower() not in _QA_STOPWORDS]
+    if not q_toks:
+        return state, 0
+    sentences = list(re.finditer(r"[^.!?\n]+[.!?\n]?", state))
+    if len(sentences) <= 1:
+        return state, 0
+    # Weight each query token by character length / sentence frequency (IDF within passage)
+    tok_weights: dict[str, float] = {}
+    for t in q_toks:
+        stem = t.rstrip("s")
+        df = sum(1 for m_s in sentences if t in m_s.group(0).lower() or (len(stem) >= 3 and stem in m_s.group(0).lower()))
+        tok_weights[t] = (len(t) ** 1.2) / max(1.0, float(df))
+
+    best_m = None
+    best_sc = -1.0
+    for m_s in sentences:
+        s_low = m_s.group(0).lower()
+        sc = sum(
+            tok_weights[t]
+            for t in q_toks
+            if t in s_low or (len(t.rstrip("s")) >= 3 and t.rstrip("s") in s_low)
+        )
+        if sc >= best_sc:
+            best_sc = sc
+            best_m = m_s
+    if best_m is None or best_m.end() <= 260:
+        return state, 0
+    win_start = max(0, best_m.start() - 30)
+    while win_start > 0 and state[win_start - 1] not in (" ", "\n"):
+        win_start -= 1
+    return state[win_start:], win_start
+
+
 def extract_numeric_context_features(state: str, spec: dict[str, Any]) -> list[float]:
     """Extract 8 normalized numeric summary features from `state` for the quantile head."""
     vmin = float(spec.get("min", 1.0))
@@ -315,13 +363,8 @@ class NullspanForExtraction(PreTrainedModel):
 
         if is_null_labels is not None:
             loss_null = F.binary_cross_entropy_with_logits(null_logits, is_null_labels.float())
-            valid_sp = start_positions != -100
-            if valid_sp.any():
-                loss_start = F.cross_entropy(start_logits[valid_sp], start_positions[valid_sp])
-                loss_end = F.cross_entropy(end_logits[valid_sp], end_positions[valid_sp])
-            else:
-                loss_start = null_logits.sum() * 0.0
-                loss_end = null_logits.sum() * 0.0
+            loss_start = F.cross_entropy(start_logits, start_positions.clamp(min=0))
+            loss_end = F.cross_entropy(end_logits, end_positions.clamp(min=0))
 
             valid_bio = bio_labels != -100
             if valid_bio.any():
@@ -361,14 +404,16 @@ class NullspanForExtraction(PreTrainedModel):
         state: str,
         fields: dict[str, dict[str, Any]],
         tokenizer: Any,
-        max_length: int = 384,
+        max_length: int = 128,
     ) -> dict[str, Any]:
         """Run a single batched System One forward pass across all requested fields."""
         self.eval()
         device = next(self.parameters()).device
         field_names = list(fields.keys())
         queries = [format_field_query(fn, fields[fn]) for fn in field_names]
-        states = [state for _ in field_names]
+        win_pairs = [select_context_window(state, fields[fn]) for fn in field_names]
+        states = [wp[0] for wp in win_pairs]
+        win_offsets = [wp[1] for wp in win_pairs]
         num_feats_list = [extract_numeric_context_features(state, fields[fn]) for fn in field_names]
 
         enc = tokenizer(
@@ -432,7 +477,8 @@ class NullspanForExtraction(PreTrainedModel):
                             best_score = sc
                             best_s, best_e = s_i, e_i
 
-            char_s, char_e = int(offsets[best_s][0]), int(offsets[best_e][1])
+            w_off = win_offsets[b_i]
+            char_s, char_e = int(offsets[best_s][0]) + w_off, int(offsets[best_e][1]) + w_off
             span_text = state[char_s:char_e].strip(" .,;:\n")
             if span_text:
                 adj_idx = state.find(span_text, char_s)

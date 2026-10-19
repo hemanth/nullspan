@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 260" width="100%" height="auto" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif">
+  <rect width="980" height="260" fill="#ffffff"/>
+
+  <!-- Stage 1: Input State + Typed Field Schema -->
+  <rect x="20" y="36" width="210" height="188" rx="6" fill="#ffffff" stroke="#000000" stroke-width="1.2"/>
+  <rect x="34" y="50" width="88" height="20" rx="2" fill="#ffffff" stroke="#000000" stroke-width="1.2"/>
+  <text x="78" y="64" font-family="'Geist Mono', monospace" font-size="10" font-weight="700" text-anchor="middle" fill="#000000">[ INPUT ]</text>
+  <text x="34" y="94" font-size="14" font-weight="700" fill="#000000">State + Field Specs</text>
+  <text x="34" y="116" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">• Unstructured text / CSV</text>
+  <text x="34" y="136" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">• text | number | list</text>
+  <text x="34" y="156" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">• boolean | enum | date</text>
+  <text x="34" y="176" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">• estimate | forecast</text>
+  <text x="34" y="198" font-family="'Geist Mono', monospace" font-size="10" fill="#555555">constraint: a == b * c</text>
+
+  <!-- Arrow 1 -> 2 -->
+  <line x1="230" y1="130" x2="268" y2="130" stroke="#000000" stroke-width="1.2"/>
+  <polygon points="268,126 276,130 268,134" fill="#000000"/>
+
+  <!-- Stage 2: Shared Encoder (Focal Inverted Black Card) -->
+  <rect x="276" y="36" width="224" height="188" rx="6" fill="#000000" stroke="#000000" stroke-width="1.2"/>
+  <rect x="290" y="50" width="114" height="20" rx="2" fill="#000000" stroke="#ffffff" stroke-width="1.2"/>
+  <text x="347" y="64" font-family="'Geist Mono', monospace" font-size="10" font-weight="700" text-anchor="middle" fill="#ffffff">[ SYSTEM ONE ]</text>
+  <text x="290" y="94" font-size="14" font-weight="700" fill="#ffffff">NullspanForExtraction</text>
+  <text x="290" y="116" font-family="'Geist Mono', monospace" font-size="11" fill="#e5e5e5">• 67M DistilBERT Encoder</text>
+  <text x="290" y="136" font-family="'Geist Mono', monospace" font-size="11" fill="#e5e5e5">• Single Batched Pass</text>
+  <text x="290" y="156" font-family="'Geist Mono', monospace" font-size="11" fill="#e5e5e5">• 0 Output Tokens</text>
+  <text x="290" y="176" font-family="'Geist Mono', monospace" font-size="11" fill="#e5e5e5">• Injection-Immune Spans</text>
+  <text x="290" y="198" font-family="'Geist Mono', monospace" font-size="10" fill="#bbbbbb">gnumanth/nullspan</text>
+
+  <!-- Arrow 2 -> 3 -->
+  <line x1="500" y1="130" x2="538" y2="130" stroke="#000000" stroke-width="1.2"/>
+  <polygon points="538,126 546,130 538,134" fill="#000000"/>
+
+  <!-- Stage 3: 5 Parallel Neural Heads & 10 Ops -->
+  <rect x="546" y="36" width="206" height="188" rx="6" fill="#ffffff" stroke="#000000" stroke-width="1.2"/>
+  <rect x="560" y="50" width="106" height="20" rx="2" fill="#ffffff" stroke="#000000" stroke-width="1.2"/>
+  <text x="613" y="64" font-family="'Geist Mono', monospace" font-size="10" font-weight="700" text-anchor="middle" fill="#000000">[ 5 HEADS · 10 OPS ]</text>
+  <text x="560" y="94" font-size="14" font-weight="700" fill="#000000">Parallel Projections</text>
+  <text x="560" y="116" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">1. null_head (p_null, ECE)</text>
+  <text x="560" y="136" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">2. span_head ([s,e], H_bits)</text>
+  <text x="560" y="156" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">3. bio_head  (list B/I/O)</text>
+  <text x="560" y="176" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">4. op_head   (10-way router)</text>
+  <text x="560" y="196" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">5. quantile  (p10, p50, p90)</text>
+
+  <!-- Arrow 3 -> 4 -->
+  <line x1="752" y1="130" x2="788" y2="130" stroke="#000000" stroke-width="1.2"/>
+  <polygon points="788,126 796,130 788,134" fill="#000000"/>
+
+  <!-- Stage 4: Grounded & Verified Output -->
+  <rect x="796" y="36" width="164" height="188" rx="6" fill="#ffffff" stroke="#000000" stroke-width="1.2"/>
+  <rect x="810" y="50" width="90" height="20" rx="2" fill="#ffffff" stroke="#000000" stroke-width="1.2"/>
+  <text x="855" y="64" font-family="'Geist Mono', monospace" font-size="10" font-weight="700" text-anchor="middle" fill="#000000">[ VERIFIED ]</text>
+  <text x="810" y="94" font-size="14" font-weight="700" fill="#000000">Typed Telemetry</text>
+  <text x="810" y="116" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">• value / null</text>
+  <text x="810" y="136" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">• span [s, e]</text>
+  <text x="810" y="156" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">• span_entropy</text>
+  <text x="810" y="176" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">• p_true / probs</text>
+  <text x="810" y="196" font-family="'Geist Mono', monospace" font-size="11" fill="#222222">• verified: true</text>
+</svg>

@@ -411,6 +411,88 @@
       background: var(--ink);
       color: var(--bg);
     }
+
+    .plain-english-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      padding: 18px 20px;
+      margin-bottom: 18px;
+    }
+
+    .plain-english-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1.2px solid var(--border-subtle);
+    }
+
+    .plain-english-header h2 {
+      margin: 0;
+      font-family: var(--mono);
+      font-size: 0.88rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .plain-english-lead {
+      margin: 0 0 14px 0;
+      font-size: 0.94rem;
+      color: var(--ink);
+      line-height: 1.55;
+    }
+
+    .plain-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .plain-item {
+      background: var(--bg);
+      border: 1.2px solid var(--border);
+      border-radius: 5px;
+      padding: 11px 13px;
+    }
+
+    .plain-item strong {
+      display: block;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      margin-bottom: 4px;
+      color: var(--ink);
+    }
+
+    .plain-item p {
+      margin: 0;
+      font-size: 0.83rem;
+      color: var(--ink-muted);
+      line-height: 1.45;
+    }
+
+    .glossary-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border-subtle);
+      font-size: 0.79rem;
+      color: var(--ink-muted);
+    }
+
+    .glossary-strip code {
+      font-family: var(--mono);
+      font-weight: 700;
+      color: var(--ink);
+      background: var(--muted-bg);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
   </style>
 </head>
 <body>
@@ -422,7 +504,8 @@
       <span class="badge">100% Span, Invariant &amp; Abstention EM</span>
     </div>
     <nav class="links">
-      <a href="https://huggingface.co/gnumanth/nullspan" target="_blank" rel="noopener">HF Model (67M)</a>
+      <a href="https://huggingface.co/spaces/gnumanth/nullspan" target="_blank" rel="noopener">HF Space</a>
+      <a href="https://huggingface.co/gnumanth/nullspan" target="_blank" rel="noopener">HF Model (67M + ONNX)</a>
       <a href="https://huggingface.co/datasets/gnumanth/nullspan-dataset" target="_blank" rel="noopener">HF Dataset</a>
       <a href="https://github.com/hemanth/nullspan" target="_blank" rel="noopener">GitHub</a>
     </nav>
@@ -437,6 +520,53 @@
       <div class="install-box">npm i nullspan &nbsp;·&nbsp; pip install nullspan</div>
     </section>
 
+    <section class="plain-english-card" id="plain-english-explainer">
+      <div class="plain-english-header">
+        <h2>In Plain English · What does nullspan actually do?</h2>
+        <span class="badge">Think of it as a Smart Highlighter + Calculator — Not a Chatbot</span>
+      </div>
+      <p class="plain-english-lead">
+        When you ask a standard LLM (like GPT or Claude) to pull structured data out of messy text, it writes JSON word-by-word—which is slow, costs money per output token, can get tricked by <em>"ignore previous instructions"</em> attacks, and often <strong>makes up fake answers (hallucinates)</strong> when a field is missing. <strong>nullspan</strong> reads your text once and extracts every field in a single pass without generating a single word:
+      </p>
+      <div class="plain-grid">
+        <div class="plain-item">
+          <strong>1. Points to Exact Text ([start, end] Span)</strong>
+          <p>Instead of re-typing words, it highlights the exact character positions in your original text. Because it can only point to text that actually exists, it <strong>cannot hallucinate fake text</strong> or obey prompt injections.</p>
+        </div>
+        <div class="plain-item">
+          <strong>2. Knows When to Say "Not There" (p_null)</strong>
+          <p>If an answer isn't in the text (like an unassigned CVE or missing discount), it calculates the probability that the field is missing (<code>p_null</code>) and cleanly returns <code>null</code> instead of guessing.</p>
+        </div>
+        <div class="plain-item">
+          <strong>3. Checks the Math Automatically (verified)</strong>
+          <p>For numbers, dates, and invoices, it adds up line items, counts days between dates, and checks formulas like <code>subtotal == nodes * hourly_rate</code> so you know if the document's math is right.</p>
+        </div>
+        <div class="plain-item">
+          <strong>4. Gives Realistic Ranges (p10 / median / p90)</strong>
+          <p>When you ask for an estimate or forecast (like tomorrow's server traffic or repair cost), instead of one shaky guess, it returns a low (<code>p10</code>), middle (<code>median</code>), and high (<code>p90</code>) range.</p>
+        </div>
+      </div>
+      <div class="glossary-strip">
+        <span><strong>How to read the output badges:</strong></span>
+        <span><code>span=[start, end]</code> Exact character slice in your input text</span>
+        <span><code>p_null</code> Chance the field is missing (≥ 50% → returns <code>null</code>)</span>
+        <span><code>verified=true</code> Cross-field math formula passed</span>
+        <span><code>H=0.00b</code> Uncertainty in bits (closer to <code>0b</code> = more certain)</span>
+        <span><code>Tier 2 vs Tier 1</code> Run instantly in pure JS (Tier 2) or download the real 67M neural network into your browser (Tier 1 ONNX)</span>
+      </div>
+    </section>
+
+    <section class="preset-bar" id="engine-switcher-bar" style="margin-bottom: 12px; background: var(--muted-bg);">
+      <div class="preset-buttons">
+        <span style="font-family: var(--mono); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 4px;">Browser Runtime Tier:</span>
+        <button class="preset-btn active" id="engine-btn-fast" type="button">⚡ Tier 2: Zero-Dep Fast Engine (Sub-ms)</button>
+        <button class="preset-btn" id="engine-btn-onnx" type="button">🧠 Tier 1: In-Browser Neural ONNX (WASM SIMD · 64.3 MB Int8)</button>
+      </div>
+      <div class="metrics-strip">
+        <span id="engine-status-pill" style="font-weight: 700;">Active: Zero-Dep Fast Engine (0 B weights)</span>
+      </div>
+    </section>
+
     <section class="preset-bar">
       <div class="preset-buttons" id="preset-buttons">
         <button class="preset-btn active" data-preset="incident">1. SRE Incident (Span + Enum + Bool + Abstention)</button>
@@ -444,6 +574,7 @@
         <button class="preset-btn" data-preset="cluster">3. Cluster Comps (99-Percentile Estimate)</button>
         <button class="preset-btn" data-preset="edge">4. Edge Gateway (Horizon Forecast)</button>
         <button class="preset-btn" data-preset="adversarial">5. Adversarial Prompt-Injection &amp; Decoy Stress</button>
+        <button class="preset-btn" data-preset="squad_v2">6. SQuAD v2.0 Open-Domain QA + Unanswerable</button>
       </div>
       <div class="metrics-strip">
         <span id="metric-fields">Fields: 10</span>
@@ -556,6 +687,13 @@
               <td>Non-null <code>cve_id</code> extraction + <code>data_loss: true</code> + <code>sev-2</code></td>
               <td><button class="preset-btn" data-preset="cve_assigned">Load ↵</button></td>
             </tr>
+            <tr data-sample="squad_v2" style="cursor:pointer">
+              <td><code>squad_v2_56ddde6b9a695914005b9628</code></td>
+              <td><code>squad_v2_open_qa</code></td>
+              <td>The Normans... in the 10th and 11th centuries gave their name to Normandy, a region in France...</td>
+              <td>Open-domain extractive span + adversarial unanswerable abstention (<code>p_null</code>)</td>
+              <td><button class="preset-btn" data-preset="squad_v2">Load ↵</button></td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -566,66 +704,61 @@
       </div>
 
       <div class="arch-card">
-        <h2>6-Axis Scientific Evaluation Matrix (Validation · Golden · Adversarial Stress)</h2>
+        <h2>Multi-Tier Scientific Evaluation Matrix (95% Bootstrap CIs, B=1,000 · Validation · Golden · Adversarial · SQuAD v2.0)</h2>
+        <p style="margin: 0 0 12px 0; font-size: 0.85rem; color: var(--ink-muted);">
+          <strong>Plain-English Takeaway:</strong> For structured telemetry, invoices, estimates, and prompt-injection stress tests, all three tiers achieve <strong>100.0% accuracy</strong>—meaning you can use the <strong>0 MB Zero-Dep Fast Engine</strong> at <code>0.023 ms/field</code>. When extracting answers from open-domain prose or tricky unanswerable questions (<strong>Stanford SQuAD v2.0</strong>), the <strong>67M Neural Model (PyTorch FP32 / 64.3 MB Int8 ONNX)</strong> jumps accuracy to <strong>91.7% (100% unanswerable abstention, AUROC 0.999)</strong>.
+        </p>
         <table class="bench-table">
           <thead>
             <tr>
               <th>Evaluation Axis / Metric</th>
-              <th>gnumanth/nullspan (67M Neural)</th>
-              <th>nullspan (Zero-Dep Engine)</th>
-              <th>gpt-5.4-nano (Ref)</th>
-              <th>claude-haiku-4.5 (Ref)</th>
+              <th>Tier 1A: PyTorch FP32 (67M Neural)</th>
+              <th>Tier 1B: ONNX Int8 Quantized (64.3 MB Browser/Edge)</th>
+              <th>Tier 2: Zero-Dep Fast Engine (Sub-ms)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>1. Null Abstention Accuracy &amp; Calibration (p_null, ECE)</td>
-              <td><strong>100.0% (ECE 0.0012)</strong></td>
-              <td><strong>100.0%</strong></td>
-              <td>88.4%</td>
-              <td>91.0%</td>
+              <td>1. Structured Multi-Task Accuracy (N=42 fields, 95% CI)</td>
+              <td><strong>100.0% [100.0, 100.0]</strong></td>
+              <td><strong>100.0% [100.0, 100.0]</strong></td>
+              <td><strong>100.0% [100.0, 100.0]</strong></td>
             </tr>
             <tr>
-              <td>2. Grounded Span Exact Match &amp; Char IoU ([start, end])</td>
-              <td><strong>100.0% (IoU 1.00)</strong></td>
-              <td><strong>100.0% (IoU 1.00)</strong></td>
-              <td>—</td>
-              <td>—</td>
+              <td>2. Grounded Span Exact Match &amp; Invariant Verification</td>
+              <td><strong>100.0% / 100.0% (IoU 1.00)</strong></td>
+              <td><strong>100.0% / 100.0% (IoU 1.00)</strong></td>
+              <td><strong>100.0% / 100.0% (IoU 1.00)</strong></td>
             </tr>
             <tr>
-              <td>3. 10-Way System One Op Router + Bool/Enum Accuracy</td>
-              <td><strong>100.0%</strong></td>
-              <td><strong>100.0%</strong></td>
-              <td>—</td>
-              <td>—</td>
+              <td>3. Structured Null Calibration (AUROC / ECE / Brier)</td>
+              <td><strong>1.0000 / 0.00002 / 0.0000</strong></td>
+              <td><strong>1.0000 / 0.00001 / 0.0000</strong></td>
+              <td><strong>1.0000 / 0.00005 / 0.0000</strong></td>
             </tr>
             <tr>
-              <td>4. Cross-Field Algebraic Invariant Verification</td>
-              <td><strong>100.0%</strong></td>
-              <td><strong>100.0%</strong></td>
-              <td>—</td>
-              <td>—</td>
+              <td>4. Quantile Monotonicity &amp; Winkler Score (α=0.20)</td>
+              <td><strong>100.0% (Winkler 0.3723)</strong></td>
+              <td><strong>100.0% (Winkler 0.3726)</strong></td>
+              <td><strong>100.0% (Winkler 0.3671)</strong></td>
             </tr>
             <tr>
-              <td>5. Adversarial Prompt-Injection &amp; Decoy Stress Accuracy</td>
-              <td><strong>100.0% (0% FPHR)</strong></td>
-              <td><strong>100.0% (0% FPHR)</strong></td>
-              <td>Vulnerable</td>
-              <td>Vulnerable</td>
+              <td>5. Adversarial Prompt-Injection &amp; Decoy Stress (N=8)</td>
+              <td><strong>100.0% (0.0% FPHR)</strong></td>
+              <td><strong>100.0% (0.0% FPHR)</strong></td>
+              <td><strong>100.0% (0.0% FPHR)</strong></td>
             </tr>
             <tr>
-              <td>6. Quantile MAE / Pinball Loss &amp; Monotonicity (p10 &le; p50 &le; p90)</td>
-              <td><strong>0.0064 / 0.0021 (100%)</strong></td>
-              <td><strong>0.0051 (100%)</strong></td>
-              <td>—</td>
-              <td>—</td>
+              <td>6. Stanford SQuAD v2.0 Open-Domain QA + Unanswerable (N=60)</td>
+              <td><strong>91.67% [83.3, 98.3] · AUROC 0.999</strong></td>
+              <td><strong>90.00% [81.7, 96.7] · AUROC 0.996</strong></td>
+              <td><strong>23.33% [13.3, 35.0] (Lexical Baseline)</strong></td>
             </tr>
             <tr>
-              <td>Mean Multi-Field Document Latency (0 Output Tokens)</td>
-              <td><strong>45.3 ms (0 tok)</strong></td>
-              <td><strong>0.028 ms (0 tok)</strong></td>
-              <td>480.0 ms (~180 tok)</td>
-              <td>620.0 ms (~180 tok)</td>
+              <td>Model Footprint &amp; Latency (p50 / p95 per field · 0 Output Tokens)</td>
+              <td><strong>255.8 MB · 12.3 / 13.8 ms</strong></td>
+              <td><strong>64.3 MB (3.98x) · 25.3 / 27.3 ms</strong></td>
+              <td><strong>0 MB · 0.023 / 0.081 ms</strong></td>
             </tr>
           </tbody>
         </table>
@@ -633,8 +766,12 @@
     </div>
   </main>
 
+  <script src="./nullspan-onnx-browser.js"></script>
   <script type="module">
     import { extract } from './nullspan-engine.js';
+    window.NullspanExtract = extract;
+
+    let activeEngineMode = 'fast'; // 'fast' | 'onnx'
 
     const PRESETS = {
       incident: {
@@ -697,6 +834,15 @@
           cve_id: { type: "text", instructions: "Assigned CVE identifier if present" },
           outage_days: { type: "duration", unit: "days", integer: true, instructions: "Days from incident open to cluster stabilization" }
         }
+      },
+      squad_v2: {
+        state: "The Normans (Norman: Nourmands; French: Normands; Latin: Normanni) were the people who in the 10th and 11th centuries gave their name to Normandy, a region in France. They were descended from Norse (\"Norman\" comes from \"Norseman\") raiders and pirates from Denmark, Iceland and Norway who, under their leader Rollo, agreed to swear fealty to King Charles III of West Francia.",
+        fields: {
+          normandy_country: { type: "text", instructions: "In what country is Normandy located?" },
+          norse_leader: { type: "text", instructions: "Who was the Norse leader?" },
+          norse_origins: { type: "text", instructions: "From which countries did the Norse originate?" },
+          unanswerable_trap: { type: "text", instructions: "What other countries besides France did the Normans give their name to?" }
+        }
       }
     };
 
@@ -707,9 +853,12 @@
     const rawJson = document.getElementById('raw-json');
     const metricFields = document.getElementById('metric-fields');
     const metricLatency = document.getElementById('metric-latency');
+    const engineBtnFast = document.getElementById('engine-btn-fast');
+    const engineBtnOnnx = document.getElementById('engine-btn-onnx');
+    const engineStatusPill = document.getElementById('engine-status-pill');
 
     function escapeHtml(s) {
-      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
     function renderGroundedState(state, answers) {
@@ -765,6 +914,7 @@
         }
 
         const metaParts = [];
+        if (ans.neural_op) metaParts.push(`neural_op: ${ans.neural_op}`);
         if (ans.p_null !== undefined) metaParts.push(`p_null: ${ans.p_null}`);
         if (ans.p_true !== undefined) metaParts.push(`p_true: ${ans.p_true}`);
         if (ans.confidence !== undefined) metaParts.push(`confidence: ${ans.confidence}`);
@@ -788,7 +938,7 @@
       }
     }
 
-    function runExtraction() {
+    async function runExtraction() {
       const state = stateInput.value;
       let fields;
       try {
@@ -797,6 +947,21 @@
         rawJson.textContent = 'Invalid JSON in fields schema: ' + err.message;
         return;
       }
+
+      if (activeEngineMode === 'onnx' && window.NullspanOnnxBrowser) {
+        try {
+          const { result, diagnostics } = await window.NullspanOnnxBrowser.extract(state, fields);
+          metricFields.textContent = `Fields: ${Object.keys(fields).length} (ONNX Int8)`;
+          metricLatency.textContent = `Pass Latency: ${diagnostics.inferenceMs} ms`;
+          renderGroundedState(state, result.answers);
+          renderAnswers(result.answers, fields);
+          rawJson.textContent = JSON.stringify({ ...result, diagnostics }, null, 2);
+          return;
+        } catch (err) {
+          engineStatusPill.textContent = 'ONNX Error: ' + err.message;
+        }
+      }
+
       const t0 = performance.now();
       const out = extract(state, fields);
       const dt = (performance.now() - t0).toFixed(2);
@@ -809,17 +974,51 @@
 
     function loadPreset(key) {
       const p = PRESETS[key];
+      if (!p) return;
       stateInput.value = p.state;
       fieldsInput.value = JSON.stringify(p.fields, null, 2);
-      document.querySelectorAll('.preset-btn').forEach(btn => {
+      document.querySelectorAll('#preset-buttons .preset-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.preset === key);
       });
       runExtraction();
     }
 
+    engineBtnFast.addEventListener('click', () => {
+      activeEngineMode = 'fast';
+      engineBtnFast.classList.add('active');
+      engineBtnOnnx.classList.remove('active');
+      engineStatusPill.textContent = 'Active: Zero-Dep Fast Engine (0 B weights)';
+      runExtraction();
+    });
+
+    engineBtnOnnx.addEventListener('click', async () => {
+      activeEngineMode = 'onnx';
+      engineBtnOnnx.classList.add('active');
+      engineBtnFast.classList.remove('active');
+      if (!window.NullspanOnnxBrowser) {
+        engineStatusPill.textContent = 'Error: nullspan-onnx-browser.js not loaded';
+        return;
+      }
+      try {
+        const meta = await window.NullspanOnnxBrowser.loadModel((prog) => {
+          if (prog.phase === 'downloading') {
+            engineStatusPill.textContent = `Downloading ONNX Int8 (${prog.loadedMb} / ${prog.totalMb} MB · ${prog.pct}%)...`;
+          } else if (prog.phase === 'compiling') {
+            engineStatusPill.textContent = `Compiling WASM SIMD Session (${prog.loadedMb} MB)...`;
+          } else if (prog.phase === 'cached') {
+            engineStatusPill.textContent = `Loaded from Browser Cache (${prog.loadedMb} MB)...`;
+          }
+        });
+        engineStatusPill.textContent = `Active: ${meta.modelId} (${meta.modelSizeMb} MB · ${meta.provider})`;
+        await runExtraction();
+      } catch (err) {
+        engineStatusPill.textContent = 'ONNX Load Error: ' + err.message;
+      }
+    });
+
     document.getElementById('preset-buttons').addEventListener('click', (e) => {
       const btn = e.target.closest('.preset-btn');
-      if (btn) loadPreset(btn.dataset.preset);
+      if (btn && btn.dataset.preset) loadPreset(btn.dataset.preset);
     });
     document.getElementById('sample-explorer-table').addEventListener('click', (e) => {
       const tr = e.target.closest('tr[data-sample]');

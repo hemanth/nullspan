@@ -1,10 +1,21 @@
 # nullspan
 
-Single-pass System One structured extraction, calibrated `p_null` abstention, character-offset `[start, end]` spans, zero-shot `boolean`/`enum` judgment, cross-field algebraic invariant verification, and calibrated quantile estimation (`p10`, `median`, `p90`) in JavaScript and Python.
+Single-pass System One structured extraction, calibrated `p_null` abstention, character-offset `[start, end]` spans, zero-shot `boolean`/`enum` judgment, cross-field algebraic invariant verification, and calibrated quantile estimation (`p10`, `median`, `p90`) in JavaScript, Python, and Browser WebAssembly ONNX.
 
-- **Interactive Playground**: [https://hemanth.github.io/nullspan/](https://hemanth.github.io/nullspan/)
-- **Fine-Tuned Hugging Face Model (67M)**: [https://huggingface.co/gnumanth/nullspan](https://huggingface.co/gnumanth/nullspan)
+- **Interactive Playground (Browser WASM ONNX + Zero-Dep Engine)**: [https://hemanth.github.io/nullspan/](https://hemanth.github.io/nullspan/)
+- **Hugging Face Space**: [https://huggingface.co/spaces/gnumanth/nullspan](https://huggingface.co/spaces/gnumanth/nullspan)
+- **Fine-Tuned Hugging Face Model (67M PyTorch + 64.3 MB Int8 ONNX)**: [https://huggingface.co/gnumanth/nullspan](https://huggingface.co/gnumanth/nullspan)
 - **Hugging Face Dataset**: [https://huggingface.co/datasets/gnumanth/nullspan-dataset](https://huggingface.co/datasets/gnumanth/nullspan-dataset)
+- **Empirical Science Report**: [`bench/SCIENCE_REPORT.md`](./bench/SCIENCE_REPORT.md)
+
+## In Plain English
+
+Standard LLMs extract data by generating JSON token-by-token—which is slow, costs money per output token, can get hijacked by *"ignore previous instructions"* prompt injections, and often hallucinates values when a field is missing. **`nullspan` acts like a smart highlighter + calculator instead of a chatbot:**
+
+1. **Points to Exact Text (`[start, end]` Span)**: Highlights exact character positions in your input text (`0` output tokens generated), making fabricated strings and prompt-injection payloads impossible.
+2. **Knows When to Say "Not There" (`p_null`)**: Computes a calibrated probability that a field is missing (`p_null`) and returns `null` when evidence is absent.
+3. **Checks the Math Automatically (`constraint` & `verified`)**: Computes sums, durations, and products and verifies cross-field equations like `subtotal == nodes * hourly_rate`.
+4. **Gives Realistic Ranges (`p10 / median / p90`)**: Returns calibrated low/middle/high quantile distributions for estimates and forecasts.
 
 ## Install
 
@@ -81,17 +92,20 @@ out = extract(
 4. **`op_head` (10-Way System One Router)**: Routes fields across `SPAN_TEXT`, `SPAN_NUMBER`, `ARITH_SUM`, `ARITH_DIFF`, `ARITH_MUL`, `ISO_DATETIME`, `DATE_DURATION`, `DIST_ESTIMATE_FORECAST`, `BOOL_JUDGE` (`p_true`), and `ENUM_CLASSIFY` (`probs`).
 5. **`quantile_head` + Invariant Verifier**: Predicts monotone `(p10, median, p90)` quantiles and verifies cross-field algebraic constraints (`verified: true/false`).
 
-## 6-Axis Scientific Evaluation (`bench/run_bench.py`)
+## Multi-Tier Scientific Evaluation (`bench/run_bench.py` · 95% Bootstrap CIs, $B=1,000$)
 
-| Evaluation Axis / Metric | `gnumanth/nullspan` (67M Neural) | `nullspan` (Zero-Dep Engine) | `gpt-5.4-nano` (Ref) | `claude-haiku-4.5` (Ref) |
-|---|---|---|---|---|
-| 1. Validation Null Abstention & Calibration (`p_null`, ECE, Brier) | **100.0% (ECE 0.0012, Brier 0.0001)** | **100.0%** | 88.4% | 91.0% |
-| 2. Validation Grounded Character Span Exact Match & IoU (`[s, e]`) | **100.0% (IoU 1.00)** | **100.0% (IoU 1.00)** | — | — |
-| 3. Validation 10-Way Op Router + `boolean` / `enum` Accuracy | **100.0%** | **100.0%** | — | — |
-| 4. Cross-Field Algebraic Invariant Verification (`a == b * c`) | **100.0%** | **100.0%** | — | — |
-| 5. Adversarial Prompt-Injection & Decoy Stress Suite (FPHR) | **100.0% (0.0% FPHR)** | **100.0% (0.0% FPHR)** | Vulnerable | Vulnerable |
-| 6. Quantile Distribution MAE / Pinball Loss & Monotonicity | **0.0064 / 0.0021 (100%)** | **0.0051 (100%)** | — | — |
-| Mean Multi-Field Document Latency (`0` Output Tokens) | **45.3 ms** | **0.028 ms** | 480.0 ms | 620.0 ms |
+| Evaluation Axis / Metric | Tier 1A: PyTorch FP32 (67M Neural) | Tier 1B: ONNX Int8 (64.3 MB Browser/Edge) | Tier 2: Zero-Dep Fast Engine |
+|---|---|---|---|
+| **Structured Multi-Task Accuracy** ($N=42$ fields, 95% CI) | **100.0%** `[100.0, 100.0]` | **100.0%** `[100.0, 100.0]` | **100.0%** `[100.0, 100.0]` |
+| **Grounded Span Exact Match & Invariant Verification** | **100.0% / 100.0%** | **100.0% / 100.0%** | **100.0% / 100.0%** |
+| **Structured Null Calibration** (`AUROC` / `ECE` / `Brier`) | **1.0000 / 0.00002 / 0.0000** | **1.0000 / 0.00001 / 0.0000** | **1.0000 / 0.00005 / 0.0000** |
+| **Quantile Monotonicity & Winkler Score** ($\alpha=0.20$) | **100.0% (0.3723)** | **100.0% (0.3726)** | **100.0% (0.3671)** |
+| **Adversarial Prompt-Injection & Decoy Suite** ($N=8$, FPHR) | **100.0% (0.0% FPHR)** | **100.0% (0.0% FPHR)** | **100.0% (0.0% FPHR)** |
+| **Stanford SQuAD v2.0 Open-Domain QA** ($N=60$, 95% CI) | **91.67%** `[83.33, 98.33]` | **90.00%** `[81.67, 96.67]` | **23.33%** `[13.33, 35.00]` |
+| **SQuAD v2.0 Abstention AUROC / ECE / Brier** | **0.9989 / 0.0135 / 0.0145** | **0.9956 / 0.0402 / 0.0250** | **0.4039 / 0.4194 / 0.4283** |
+| **Footprint & Latency (`p50` / `p95` per field)** | **255.8 MB · 12.3 / 13.8 ms** | **64.3 MB (3.98x) · 25.3 / 27.3 ms** | **0 MB · 0.023 / 0.081 ms** |
+
+See full methodology, proper scoring definitions, and ablation analysis in [`bench/SCIENCE_REPORT.md`](./bench/SCIENCE_REPORT.md).
 
 ## License
 

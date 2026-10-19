@@ -19,6 +19,7 @@ from modeling_nullspan import (
     NullspanForExtraction,
     extract_numeric_context_features,
     format_field_query,
+    select_context_window,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -33,11 +34,15 @@ class NullspanFieldDataset(Dataset):
         self.encoded = [self._encode_row(r) for r in self.rows]
 
     def _encode_row(self, row: dict[str, Any]) -> dict[str, torch.Tensor]:
-        state: str = row["state"]
+        orig_state: str = row["state"]
         fname: str = row["field_name"]
         spec: dict[str, Any] = row["field_spec"]
         target: dict[str, Any] = row["target"]
         query = format_field_query(fname, spec)
+        state, win_off = select_context_window(orig_state, spec)
+        if win_off > 0 and "span" in target and target["span"]:
+            target = dict(target)
+            target["span"] = [max(0, int(target["span"][0]) - win_off), max(0, int(target["span"][1]) - win_off)]
 
         enc = self.tokenizer(
             query,
@@ -52,15 +57,18 @@ class NullspanFieldDataset(Dataset):
         L = len(enc["input_ids"])
 
         state_mask = [0] * L
+        first_state_tok = 1
         for i in range(L):
             if seq_ids[i] == 1 and offsets[i][1] > offsets[i][0]:
                 state_mask[i] = 1
+                if first_state_tok == 1:
+                    first_state_tok = i
 
         is_null = int(target.get("is_null", 0))
         op_id = int(target.get("op", 0))
 
-        start_pos = -100
-        end_pos = -100
+        start_pos = first_state_tok
+        end_pos = first_state_tok
         if "span" in target and target["span"]:
             cs, ce = int(target["span"][0]), int(target["span"][1])
             overlapping = [
@@ -160,31 +168,35 @@ def evaluate_validation(
         op_correct += int((op_preds == b_dev["op_labels"]).sum().item())
         op_total += b_dev["op_labels"].numel()
 
-        s_preds = out["start_logits"].argmax(dim=-1)
-        e_preds = out["end_logits"].argmax(dim=-1)
-        valid_sp = b_dev["start_positions"] != -100
+        s_preds = out["start_logits"].argmax(dim=-1).cpu()
+        e_preds = out["end_logits"].argmax(dim=-1).cpu()
+        s_tgts = batch["start_positions"]
+        e_tgts = batch["end_positions"]
+        valid_sp = s_tgts != -100
         if valid_sp.any():
-            exact = (s_preds[valid_sp] == b_dev["start_positions"][valid_sp]) & (
-                e_preds[valid_sp] == b_dev["end_positions"][valid_sp]
+            exact = (s_preds[valid_sp] == s_tgts[valid_sp]) & (
+                e_preds[valid_sp] == e_tgts[valid_sp]
             )
             span_em_correct += int(exact.sum().item())
             span_total += int(valid_sp.sum().item())
 
-        bio_p = out["bio_logits"].argmax(dim=-1)
-        valid_bio = b_dev["bio_labels"] != -100
+        bio_p = out["bio_logits"].argmax(dim=-1).cpu()
+        bio_t = batch["bio_labels"]
+        valid_bio = bio_t != -100
         if valid_bio.any():
-            bio_tok_correct += int((bio_p[valid_bio] == b_dev["bio_labels"][valid_bio]).sum().item())
+            bio_tok_correct += int((bio_p[valid_bio] == bio_t[valid_bio]).sum().item())
             bio_tok_total += int(valid_bio.sum().item())
 
-        q_mask = b_dev["has_quantile_mask"] == 1
+        q_mask = batch["has_quantile_mask"] == 1
         if q_mask.any():
-            q_pred_sub = out["quantile_preds"][q_mask]
-            q_tgt_sub = b_dev["quantile_labels"][q_mask]
+            q_pred_sub = out["quantile_preds"].cpu()[q_mask]
+            q_tgt_sub = batch["quantile_labels"][q_mask]
             err = (q_pred_sub - q_tgt_sub).abs().mean(dim=-1)
-            q_errors.extend(err.cpu().tolist())
+            q_errors.extend(err.tolist())
+            taus_cpu = torch.tensor([0.10, 0.50, 0.90]).unsqueeze(0)
             diff = q_tgt_sub - q_pred_sub
-            pb = torch.maximum(taus * diff, (taus - 1.0) * diff).mean(dim=-1)
-            pinball_losses.extend(pb.cpu().tolist())
+            pb = torch.maximum(taus_cpu * diff, (taus_cpu - 1.0) * diff).mean(dim=-1)
+            pinball_losses.extend(pb.tolist())
 
     brier = sum((p - float(y)) ** 2 for p, y in zip(all_null_probs, all_null_labels)) / max(1, len(all_null_probs))
     ece = _compute_ece(all_null_probs, all_null_labels)
@@ -385,9 +397,7 @@ def main() -> None:
     parser.add_argument("--dataset-repo-id", type=str, default="gnumanth/nullspan-dataset")
     parser.add_argument("--push-hf", action="store_true")
     args = parser.parse_args()
-
-    if not (DATA_DIR / "train.jsonl").exists():
-        generate_data_main()
+    generate_data_main()
 
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -428,7 +438,7 @@ def main() -> None:
         print(f"Warm-started {len(filtered_sd)}/{len(cur_sd)} tensors from {ARTIFACT_DIR / 'model.safetensors'}", flush=True)
         for p in model.encoder.embeddings.parameters():
             p.requires_grad = False
-        for layer in model.encoder.transformer.layer[:4]:
+        for layer in model.encoder.transformer.layer[:2]:
             for p in layer.parameters():
                 p.requires_grad = False
 
@@ -471,7 +481,13 @@ def main() -> None:
             ep_loss += float(loss.item())
 
         avg_loss = ep_loss / max(1, len(train_loader))
+        if device.type == "mps":
+            torch.mps.empty_cache()
         val_metrics = evaluate_validation(model, val_loader, device)
+        if device.type == "mps":
+            torch.mps.empty_cache()
+        ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+        model.save_pretrained(ARTIFACT_DIR, safe_serialization=True)
         history.append({"epoch": epoch, "train_loss": round(avg_loss, 4), **val_metrics})
         print(
             f"Epoch {epoch:02d}/{args.epochs:02d} | loss={avg_loss:.4f} | "
