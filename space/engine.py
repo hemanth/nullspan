@@ -632,15 +632,25 @@ def _run_extraction(
     model_id: str = DEFAULT_HF_REPO,
 ) -> dict[str, Any]:
     t0 = time.perf_counter()
-    if backend == "hf":
+    if backend in ("hf", "onnx"):
         from transformers import AutoModel, AutoTokenizer
 
-        if model_id not in _HF_CACHE:
+        cache_key = f"{backend}:{model_id}"
+        if cache_key not in _HF_CACHE:
             tok = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
             mdl = AutoModel.from_pretrained(model_id, trust_remote_code=True)
-            _HF_CACHE[model_id] = (tok, mdl)
-        tok, mdl = _HF_CACHE[model_id]
+            if backend == "onnx":
+                import onnxruntime as ort
+                from huggingface_hub import hf_hub_download
+
+                onnx_file = hf_hub_download(repo_id=model_id, filename="onnx/model_quantized.onnx")
+                sess = ort.InferenceSession(onnx_file, providers=["CPUExecutionProvider"])
+                _HF_CACHE[cache_key] = (tok, mdl, sess)
+            else:
+                _HF_CACHE[cache_key] = (tok, mdl, None)
+        tok, mdl, _ = _HF_CACHE[cache_key]
         out = mdl.extract(state=state, fields=fields, tokenizer=tok)
+        out["engine"] = "onnx-int8" if backend == "onnx" else "pytorch-fp32"
         out["latency_ms"] = round((time.perf_counter() - t0) * 1000.0, 3)
         return out
 
