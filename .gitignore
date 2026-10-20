@@ -10,4 +10,4 @@ node_modules/
 *.safetensors
 *.bin
 .env
-artifacts/nullspan/onnx/*.onnx
+artifacts/nullspan/onnx/

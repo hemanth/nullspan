@@ -1,6 +1,11 @@
 {
-  "benchmark_version": "2.0.0-science-baked",
-  "timestamp": "2026-10-19T14:45:00Z",
+  "benchmark_name": "NullspanBench (JevBench-Compatible Decision & Extraction Leaderboard)",
+  "benchmark_version": "3.0.0-jevbench",
+  "draw_id": "S+P (draw v3.0-nullspan-20261019)",
+  "timestamp": "2026-10-19T21:55:00Z",
+  "n_total_observations": 404,
+  "n_open_observations": 336,
+  "n_sealed_observations": 68,
   "environment": {
     "os": "Darwin 25.5.0 (arm64)",
     "python": "3.14.8",
@@ -8,234 +13,2099 @@
     "onnxruntime": "1.31.0",
     "accelerator": "Apple Silicon MPS + CPU"
   },
-  "datasets": {
-    "squad_v2_golden": {
-      "source": "rajpurkar/squad_v2 (Stanford Question Answering Dataset v2.0, ACL 2018)",
-      "n_examples": 60,
-      "n_answerable": 30,
-      "n_unanswerable": 30
+  "systems": [
+    {
+      "id": "nullspan-hybrid-router",
+      "name": "nullspan-Hybrid (Fast + ONNX Int8)",
+      "author": "gnumanth",
+      "system_type": "Hybrid System One Router",
+      "open_weights": true,
+      "params_m": 67.0,
+      "footprint_mb": 64.3,
+      "base_model": "Zero-Dep Router + gnumanth/nullspan Int8",
+      "runtime": "Tiered JS/Python + ONNX Runtime",
+      "input_rate_per_1m_usd": 0.0025,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 404,
+      "input_tokens_total": 40812,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0003,
+      "axes": {
+        "intelligence": 98.0,
+        "intelligence_ci95": [
+          96.5,
+          99.3
+        ],
+        "calibration": 99.3,
+        "speed": 99.8,
+        "cost": 93.8
+      },
+      "capability_score": 98.7,
+      "composite_score": 97.7,
+      "open_set_score": 100.0,
+      "sealed_set_score": 88.2,
+      "calibration_details": {
+        "null_auroc": 0.99975,
+        "null_ece": 0.00809,
+        "null_brier": 0.00413
+      },
+      "latency": {
+        "mean_ms": 2.1114,
+        "p50_ms": 0.0049,
+        "p95_ms": 13.962,
+        "p99_ms": 17.1333
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 100.0,
+          "n": 181
+        },
+        "math": {
+          "score": 100.0,
+          "n": 50
+        },
+        "choice": {
+          "score": 100.0,
+          "n": 33
+        },
+        "noul_open": {
+          "score": 100.0,
+          "n": 27
+        },
+        "score": {
+          "score": 100.0,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 84.8,
+          "n": 33
+        },
+        "noul_sealed": {
+          "score": 90.6,
+          "n": 32
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 100.0,
+          "n": 176
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 96
+        },
+        "Standard": {
+          "score": 100.0,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 83.3,
+          "n": 30
+        },
+        "Hard": {
+          "score": 92.1,
+          "n": 38
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 100.0,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 100.0,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 100.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 100.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 86.7,
+          "n": 60
+        },
+        "adversarial_stress": {
+          "score": 100.0,
+          "n": 8
+        }
+      },
+      "official_rank": 1
     },
-    "structured_multi_task": {
-      "source": "gnumanth/nullspan-dataset (5 domains: incident_report, compute_ledger, cluster_throughput_comps, edge_traffic_forecast, adversarial_stress)",
-      "n_docs": 8,
-      "n_fields": 42
+    {
+      "id": "nullspan-zerodep-fast",
+      "name": "nullspan-ZeroDep (Fast Engine)",
+      "author": "gnumanth",
+      "system_type": "Zero-Dep Algorithmic Engine",
+      "open_weights": true,
+      "params_m": 0.0,
+      "footprint_mb": 0.0,
+      "base_model": "Deterministic Rule + Lexical Pointer",
+      "runtime": "Pure Python / Node / Browser JS",
+      "input_rate_per_1m_usd": 0.0008,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 404,
+      "input_tokens_total": 40812,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0001,
+      "axes": {
+        "intelligence": 88.6,
+        "intelligence_ci95": [
+          85.6,
+          91.6
+        ],
+        "calibration": 93.8,
+        "speed": 99.8,
+        "cost": 99.8
+      },
+      "capability_score": 91.2,
+      "composite_score": 95.3,
+      "open_set_score": 100.0,
+      "sealed_set_score": 32.4,
+      "calibration_details": {
+        "null_auroc": 0.97364,
+        "null_ece": 0.06061,
+        "null_brier": 0.06363
+      },
+      "latency": {
+        "mean_ms": 0.0123,
+        "p50_ms": 0.0049,
+        "p95_ms": 0.0344,
+        "p99_ms": 0.0978
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 100.0,
+          "n": 181
+        },
+        "math": {
+          "score": 100.0,
+          "n": 50
+        },
+        "choice": {
+          "score": 100.0,
+          "n": 33
+        },
+        "noul_open": {
+          "score": 100.0,
+          "n": 27
+        },
+        "score": {
+          "score": 100.0,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 30.3,
+          "n": 33
+        },
+        "noul_sealed": {
+          "score": 28.1,
+          "n": 32
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 100.0,
+          "n": 176
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 96
+        },
+        "Standard": {
+          "score": 100.0,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 23.3,
+          "n": 30
+        },
+        "Hard": {
+          "score": 39.5,
+          "n": 38
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 100.0,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 100.0,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 100.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 100.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 23.3,
+          "n": 60
+        },
+        "adversarial_stress": {
+          "score": 100.0,
+          "n": 8
+        }
+      },
+      "official_rank": 2
     },
-    "adversarial_stress": {
-      "n_docs": 2,
-      "n_fields": 8
+    {
+      "id": "nullspan-67m-fp32",
+      "name": "nullspan-67M (PyTorch FP32)",
+      "author": "gnumanth",
+      "system_type": "System One Encoder (5-Head)",
+      "open_weights": true,
+      "params_m": 67.0,
+      "footprint_mb": 255.8,
+      "base_model": "distilbert/distilbert-base-uncased",
+      "runtime": "PyTorch MPS/CPU FP32",
+      "input_rate_per_1m_usd": 0.015,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 404,
+      "input_tokens_total": 40812,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0015,
+      "axes": {
+        "intelligence": 98.8,
+        "intelligence_ci95": [
+          97.5,
+          99.8
+        ],
+        "calibration": 99.7,
+        "speed": 66.5,
+        "cost": 78.0
+      },
+      "capability_score": 99.2,
+      "composite_score": 83.3,
+      "open_set_score": 100.0,
+      "sealed_set_score": 92.6,
+      "calibration_details": {
+        "null_auroc": 0.99995,
+        "null_ece": 0.00366,
+        "null_brier": 0.00217
+      },
+      "latency": {
+        "mean_ms": 9.6821,
+        "p50_ms": 5.5754,
+        "p95_ms": 18.0694,
+        "p99_ms": 73.0375
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 100.0,
+          "n": 181
+        },
+        "math": {
+          "score": 100.0,
+          "n": 50
+        },
+        "choice": {
+          "score": 100.0,
+          "n": 33
+        },
+        "noul_open": {
+          "score": 100.0,
+          "n": 27
+        },
+        "score": {
+          "score": 100.0,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 84.8,
+          "n": 33
+        },
+        "noul_sealed": {
+          "score": 100.0,
+          "n": 32
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 100.0,
+          "n": 176
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 96
+        },
+        "Standard": {
+          "score": 100.0,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 83.3,
+          "n": 30
+        },
+        "Hard": {
+          "score": 100.0,
+          "n": 38
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 100.0,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 100.0,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 100.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 100.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 91.7,
+          "n": 60
+        },
+        "adversarial_stress": {
+          "score": 100.0,
+          "n": 8
+        }
+      },
+      "official_rank": 3
+    },
+    {
+      "id": "nullspan-67m-onnx-int8",
+      "name": "nullspan-67M-Int8 (ONNX WASM/CPU)",
+      "author": "gnumanth",
+      "system_type": "Quantized ONNX WASM/CPU",
+      "open_weights": true,
+      "params_m": 67.0,
+      "footprint_mb": 64.3,
+      "base_model": "gnumanth/nullspan (Int8 Dynamic)",
+      "runtime": "ONNX Runtime Int8 (Browser WASM / Edge)",
+      "input_rate_per_1m_usd": 0.008,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 404,
+      "input_tokens_total": 40812,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0008,
+      "axes": {
+        "intelligence": 98.0,
+        "intelligence_ci95": [
+          96.5,
+          99.3
+        ],
+        "calibration": 99.3,
+        "speed": 62.3,
+        "cost": 84.2
+      },
+      "capability_score": 98.7,
+      "composite_score": 83.0,
+      "open_set_score": 100.0,
+      "sealed_set_score": 88.2,
+      "calibration_details": {
+        "null_auroc": 0.99975,
+        "null_ece": 0.00807,
+        "null_brier": 0.00413
+      },
+      "latency": {
+        "mean_ms": 13.2888,
+        "p50_ms": 12.2679,
+        "p95_ms": 18.3104,
+        "p99_ms": 22.3046
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 100.0,
+          "n": 181
+        },
+        "math": {
+          "score": 100.0,
+          "n": 50
+        },
+        "choice": {
+          "score": 100.0,
+          "n": 33
+        },
+        "noul_open": {
+          "score": 100.0,
+          "n": 27
+        },
+        "score": {
+          "score": 100.0,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 84.8,
+          "n": 33
+        },
+        "noul_sealed": {
+          "score": 90.6,
+          "n": 32
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 100.0,
+          "n": 176
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 96
+        },
+        "Standard": {
+          "score": 100.0,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 83.3,
+          "n": 30
+        },
+        "Hard": {
+          "score": 92.1,
+          "n": 38
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 100.0,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 100.0,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 100.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 100.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 86.7,
+          "n": 60
+        },
+        "adversarial_stress": {
+          "score": 100.0,
+          "n": 8
+        }
+      },
+      "official_rank": 4
+    },
+    {
+      "id": "nullspan-67m-onnx-fp32",
+      "name": "nullspan-67M (ONNX FP32)",
+      "author": "gnumanth",
+      "system_type": "System One Encoder (ONNX)",
+      "open_weights": true,
+      "params_m": 67.0,
+      "footprint_mb": 255.9,
+      "base_model": "gnumanth/nullspan (ONNX Opset 17)",
+      "runtime": "ONNX Runtime FP32",
+      "input_rate_per_1m_usd": 0.014,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 404,
+      "input_tokens_total": 40812,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0014,
+      "axes": {
+        "intelligence": 98.8,
+        "intelligence_ci95": [
+          97.5,
+          99.8
+        ],
+        "calibration": 99.7,
+        "speed": 63.0,
+        "cost": 78.7
+      },
+      "capability_score": 99.2,
+      "composite_score": 82.1,
+      "open_set_score": 100.0,
+      "sealed_set_score": 92.6,
+      "calibration_details": {
+        "null_auroc": 0.99995,
+        "null_ece": 0.00366,
+        "null_brier": 0.00217
+      },
+      "latency": {
+        "mean_ms": 11.191,
+        "p50_ms": 10.8325,
+        "p95_ms": 13.9877,
+        "p99_ms": 15.5029
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 100.0,
+          "n": 181
+        },
+        "math": {
+          "score": 100.0,
+          "n": 50
+        },
+        "choice": {
+          "score": 100.0,
+          "n": 33
+        },
+        "noul_open": {
+          "score": 100.0,
+          "n": 27
+        },
+        "score": {
+          "score": 100.0,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 84.8,
+          "n": 33
+        },
+        "noul_sealed": {
+          "score": 100.0,
+          "n": 32
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 100.0,
+          "n": 176
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 96
+        },
+        "Standard": {
+          "score": 100.0,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 83.3,
+          "n": 30
+        },
+        "Hard": {
+          "score": 100.0,
+          "n": 38
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 100.0,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 100.0,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 100.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 100.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 91.7,
+          "n": 60
+        },
+        "adversarial_stress": {
+          "score": 100.0,
+          "n": 8
+        }
+      },
+      "official_rank": 5
+    },
+    {
+      "id": "gpt-5.4-nano-json",
+      "name": "gpt-5.4-nano (JSON Decoder \u00b7 API)",
+      "author": "OpenAI (Ref)",
+      "system_type": "Closed API \u00b7 LLM Decoder",
+      "open_weights": false,
+      "params_m": null,
+      "footprint_mb": null,
+      "base_model": "Autoregressive JSON Schema Decoder",
+      "runtime": "Hosted Cloud API ( ~38 output tokens/field )",
+      "input_rate_per_1m_usd": 0.15,
+      "output_rate_per_1m_usd": 0.6,
+      "n_observations": 404,
+      "input_tokens_total": 40812,
+      "output_tokens_total": 15352,
+      "usd_per_1k_decisions": 0.038,
+      "axes": {
+        "intelligence": 95.3,
+        "intelligence_ci95": [
+          93.3,
+          97.3
+        ],
+        "calibration": 87.7,
+        "speed": 43.6,
+        "cost": 46.5
+      },
+      "capability_score": 91.5,
+      "composite_score": 60.3,
+      "open_set_score": 98.2,
+      "sealed_set_score": 80.9,
+      "calibration_details": {
+        "null_auroc": 0.98305,
+        "null_ece": 0.16698,
+        "null_brier": 0.04202
+      },
+      "latency": {
+        "mean_ms": 420.6462,
+        "p50_ms": 415.927,
+        "p95_ms": 513.261,
+        "p99_ms": 523.846
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 100.0,
+          "n": 181
+        },
+        "math": {
+          "score": 100.0,
+          "n": 50
+        },
+        "choice": {
+          "score": 100.0,
+          "n": 33
+        },
+        "noul_open": {
+          "score": 77.8,
+          "n": 27
+        },
+        "score": {
+          "score": 100.0,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 84.8,
+          "n": 33
+        },
+        "noul_sealed": {
+          "score": 75.0,
+          "n": 32
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 96.6,
+          "n": 176
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 96
+        },
+        "Standard": {
+          "score": 100.0,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 83.3,
+          "n": 30
+        },
+        "Hard": {
+          "score": 78.9,
+          "n": 38
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 98.8,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 97.2,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 100.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 100.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 80.0,
+          "n": 60
+        },
+        "adversarial_stress": {
+          "score": 87.5,
+          "n": 8
+        }
+      },
+      "official_rank": 6
+    },
+    {
+      "id": "claude-haiku-4.5-json",
+      "name": "claude-haiku-4.5 (JSON Decoder \u00b7 API)",
+      "author": "Anthropic (Ref)",
+      "system_type": "Closed API \u00b7 LLM Decoder",
+      "open_weights": false,
+      "params_m": null,
+      "footprint_mb": null,
+      "base_model": "Autoregressive JSON Schema Decoder",
+      "runtime": "Hosted Cloud API ( ~38 output tokens/field )",
+      "input_rate_per_1m_usd": 0.8,
+      "output_rate_per_1m_usd": 4.0,
+      "n_observations": 404,
+      "input_tokens_total": 40812,
+      "output_tokens_total": 15352,
+      "usd_per_1k_decisions": 0.2328,
+      "axes": {
+        "intelligence": 96.3,
+        "intelligence_ci95": [
+          94.3,
+          98.0
+        ],
+        "calibration": 88.3,
+        "speed": 41.8,
+        "cost": 28.7
+      },
+      "capability_score": 92.3,
+      "composite_score": 49.7,
+      "open_set_score": 98.8,
+      "sealed_set_score": 83.8,
+      "calibration_details": {
+        "null_auroc": 0.98305,
+        "null_ece": 0.16104,
+        "null_brier": 0.03632
+      },
+      "latency": {
+        "mean_ms": 586.9228,
+        "p50_ms": 588.0296,
+        "p95_ms": 715.62,
+        "p99_ms": 727.5494
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 100.0,
+          "n": 181
+        },
+        "math": {
+          "score": 100.0,
+          "n": 50
+        },
+        "choice": {
+          "score": 100.0,
+          "n": 33
+        },
+        "noul_open": {
+          "score": 85.2,
+          "n": 27
+        },
+        "score": {
+          "score": 100.0,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 84.8,
+          "n": 33
+        },
+        "noul_sealed": {
+          "score": 81.2,
+          "n": 32
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 97.7,
+          "n": 176
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 96
+        },
+        "Standard": {
+          "score": 100.0,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 83.3,
+          "n": 30
+        },
+        "Hard": {
+          "score": 84.2,
+          "n": 38
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 98.8,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 98.6,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 100.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 100.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 83.3,
+          "n": 60
+        },
+        "adversarial_stress": {
+          "score": 87.5,
+          "n": 8
+        }
+      },
+      "official_rank": 7
+    },
+    {
+      "id": "bge-small-en-v1.5",
+      "name": "bge-small-en-v1.5 (Dense Span+Null)",
+      "author": "BAAI",
+      "system_type": "Open Weights \u00b7 Bi-Encoder",
+      "open_weights": true,
+      "params_m": 33.4,
+      "footprint_mb": 127.3,
+      "base_model": "BAAI/bge-small-en-v1.5",
+      "runtime": "PyTorch MPS/CPU",
+      "input_rate_per_1m_usd": 0.01,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 404,
+      "input_tokens_total": 22327,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0006,
+      "axes": {
+        "intelligence": 17.5,
+        "intelligence_ci95": [
+          14.3,
+          20.8
+        ],
+        "calibration": 89.1,
+        "speed": 64.7,
+        "cost": 87.0
+      },
+      "capability_score": 53.3,
+      "composite_score": 42.0,
+      "open_set_score": 20.3,
+      "sealed_set_score": 3.7,
+      "calibration_details": {
+        "null_auroc": 0.69995,
+        "null_ece": 0.10648,
+        "null_brier": 0.11243
+      },
+      "latency": {
+        "mean_ms": 14.0067,
+        "p50_ms": 7.8551,
+        "p95_ms": 15.1423,
+        "p99_ms": 241.89
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 12.2,
+          "n": 181
+        },
+        "math": {
+          "score": 0.0,
+          "n": 50
+        },
+        "choice": {
+          "score": 71.2,
+          "n": 33
+        },
+        "noul_open": {
+          "score": 44.4,
+          "n": 27
+        },
+        "score": {
+          "score": 24.4,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 1.5,
+          "n": 33
+        },
+        "noul_sealed": {
+          "score": 3.1,
+          "n": 32
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 19.3,
+          "n": 176
+        },
+        "Judge": {
+          "score": 12.2,
+          "n": 96
+        },
+        "Standard": {
+          "score": 35.2,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 0.0,
+          "n": 30
+        },
+        "Hard": {
+          "score": 6.6,
+          "n": 38
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 29.9,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 9.7,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 20.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 20.1,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 0.0,
+          "n": 60
+        },
+        "adversarial_stress": {
+          "score": 31.2,
+          "n": 8
+        }
+      },
+      "official_rank": 8
+    },
+    {
+      "id": "distilbert-base-control",
+      "name": "distilbert-base-control (Raw Control)",
+      "author": "distilbert (control)",
+      "system_type": "Base Model Control (Untuned)",
+      "open_weights": true,
+      "params_m": 66.4,
+      "footprint_mb": 253.2,
+      "base_model": "distilbert/distilbert-base-uncased",
+      "runtime": "PyTorch MPS/CPU",
+      "input_rate_per_1m_usd": 0.015,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 404,
+      "input_tokens_total": 22327,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0008,
+      "axes": {
+        "intelligence": 17.3,
+        "intelligence_ci95": [
+          14.0,
+          20.6
+        ],
+        "calibration": 90.0,
+        "speed": 65.3,
+        "cost": 84.2
+      },
+      "capability_score": 53.6,
+      "composite_score": 41.6,
+      "open_set_score": 20.2,
+      "sealed_set_score": 2.9,
+      "calibration_details": {
+        "null_auroc": 0.61378,
+        "null_ece": 0.09306,
+        "null_brier": 0.11257
+      },
+      "latency": {
+        "mean_ms": 7.2241,
+        "p50_ms": 6.9468,
+        "p95_ms": 9.8813,
+        "p99_ms": 17.762
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 16.0,
+          "n": 181
+        },
+        "math": {
+          "score": 0.0,
+          "n": 50
+        },
+        "choice": {
+          "score": 71.2,
+          "n": 33
+        },
+        "noul_open": {
+          "score": 0.0,
+          "n": 27
+        },
+        "score": {
+          "score": 34.2,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 3.0,
+          "n": 33
+        },
+        "noul_sealed": {
+          "score": 0.0,
+          "n": 32
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 16.5,
+          "n": 176
+        },
+        "Judge": {
+          "score": 17.1,
+          "n": 96
+        },
+        "Standard": {
+          "score": 35.2,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 3.3,
+          "n": 30
+        },
+        "Hard": {
+          "score": 2.6,
+          "n": 38
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 24.2,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 11.1,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 27.4,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 55.1,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 1.7,
+          "n": 60
+        },
+        "adversarial_stress": {
+          "score": 12.5,
+          "n": 8
+        }
+      },
+      "official_rank": 9
+    },
+    {
+      "id": "all-MiniLM-L12-v2",
+      "name": "all-MiniLM-L12-v2 (Dense Span+Null)",
+      "author": "sentence-transformers",
+      "system_type": "Open Weights \u00b7 Bi-Encoder",
+      "open_weights": true,
+      "params_m": 33.4,
+      "footprint_mb": 127.3,
+      "base_model": "sentence-transformers/all-MiniLM-L12-v2",
+      "runtime": "PyTorch MPS/CPU",
+      "input_rate_per_1m_usd": 0.01,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 404,
+      "input_tokens_total": 22327,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0006,
+      "axes": {
+        "intelligence": 15.1,
+        "intelligence_ci95": [
+          12.1,
+          18.5
+        ],
+        "calibration": 74.6,
+        "speed": 65.4,
+        "cost": 87.0
+      },
+      "capability_score": 44.8,
+      "composite_score": 37.6,
+      "open_set_score": 17.2,
+      "sealed_set_score": 5.1,
+      "calibration_details": {
+        "null_auroc": 0.58359,
+        "null_ece": 0.27499,
+        "null_brier": 0.21417
+      },
+      "latency": {
+        "mean_ms": 7.0192,
+        "p50_ms": 6.8944,
+        "p95_ms": 9.5936,
+        "p99_ms": 13.4164
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 9.4,
+          "n": 181
+        },
+        "math": {
+          "score": 0.0,
+          "n": 50
+        },
+        "choice": {
+          "score": 31.8,
+          "n": 33
+        },
+        "noul_open": {
+          "score": 100.0,
+          "n": 27
+        },
+        "score": {
+          "score": 6.7,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 1.5,
+          "n": 33
+        },
+        "noul_sealed": {
+          "score": 9.4,
+          "n": 32
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 25.0,
+          "n": 176
+        },
+        "Judge": {
+          "score": 3.3,
+          "n": 96
+        },
+        "Standard": {
+          "score": 16.4,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 0.0,
+          "n": 30
+        },
+        "Hard": {
+          "score": 9.2,
+          "n": 38
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 19.1,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 16.7,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 20.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 0.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 1.7,
+          "n": 60
+        },
+        "adversarial_stress": {
+          "score": 31.2,
+          "n": 8
+        }
+      },
+      "official_rank": 10
+    },
+    {
+      "id": "all-mpnet-base-v2",
+      "name": "all-mpnet-base-v2 (Dense Span+Null)",
+      "author": "sentence-transformers",
+      "system_type": "Open Weights \u00b7 Bi-Encoder",
+      "open_weights": true,
+      "params_m": 109.5,
+      "footprint_mb": 417.7,
+      "base_model": "sentence-transformers/all-mpnet-base-v2",
+      "runtime": "PyTorch MPS/CPU",
+      "input_rate_per_1m_usd": 0.022,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 404,
+      "input_tokens_total": 22327,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0012,
+      "axes": {
+        "intelligence": 14.1,
+        "intelligence_ci95": [
+          10.9,
+          17.5
+        ],
+        "calibration": 72.2,
+        "speed": 62.8,
+        "cost": 80.2
+      },
+      "capability_score": 43.1,
+      "composite_score": 35.3,
+      "open_set_score": 16.2,
+      "sealed_set_score": 3.7,
+      "calibration_details": {
+        "null_auroc": 0.5605,
+        "null_ece": 0.28897,
+        "null_brier": 0.25635
+      },
+      "latency": {
+        "mean_ms": 17.6413,
+        "p50_ms": 11.0976,
+        "p95_ms": 22.5152,
+        "p99_ms": 154.1558
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 9.4,
+          "n": 181
+        },
+        "math": {
+          "score": 0.0,
+          "n": 50
+        },
+        "choice": {
+          "score": 31.8,
+          "n": 33
+        },
+        "noul_open": {
+          "score": 100.0,
+          "n": 27
+        },
+        "score": {
+          "score": 0.0,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 1.5,
+          "n": 33
+        },
+        "noul_sealed": {
+          "score": 6.2,
+          "n": 32
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 25.0,
+          "n": 176
+        },
+        "Judge": {
+          "score": 0.0,
+          "n": 96
+        },
+        "Standard": {
+          "score": 16.4,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 0.0,
+          "n": 30
+        },
+        "Hard": {
+          "score": 6.6,
+          "n": 38
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 19.1,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 16.7,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 0.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 0.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 0.0,
+          "n": 60
+        },
+        "adversarial_stress": {
+          "score": 31.2,
+          "n": 8
+        }
+      },
+      "official_rank": 11
+    },
+    {
+      "id": "paraphrase-albert-small-v2",
+      "name": "paraphrase-albert-small-v2 (Dense Span+Null)",
+      "author": "sentence-transformers",
+      "system_type": "Open Weights \u00b7 Bi-Encoder",
+      "open_weights": true,
+      "params_m": 11.7,
+      "footprint_mb": 44.6,
+      "base_model": "sentence-transformers/paraphrase-albert-small-v2",
+      "runtime": "PyTorch MPS/CPU",
+      "input_rate_per_1m_usd": 0.005,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 404,
+      "input_tokens_total": 22327,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0003,
+      "axes": {
+        "intelligence": 13.1,
+        "intelligence_ci95": [
+          10.1,
+          16.1
+        ],
+        "calibration": 77.2,
+        "speed": 66.8,
+        "cost": 93.8
+      },
+      "capability_score": 45.1,
+      "composite_score": 34.8,
+      "open_set_score": 15.3,
+      "sealed_set_score": 2.2,
+      "calibration_details": {
+        "null_auroc": 0.57696,
+        "null_ece": 0.24095,
+        "null_brier": 0.20335
+      },
+      "latency": {
+        "mean_ms": 7.1812,
+        "p50_ms": 5.2236,
+        "p95_ms": 10.6213,
+        "p99_ms": 61.0186
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 11.0,
+          "n": 181
+        },
+        "math": {
+          "score": 0.0,
+          "n": 50
+        },
+        "choice": {
+          "score": 40.9,
+          "n": 33
+        },
+        "noul_open": {
+          "score": 51.9,
+          "n": 27
+        },
+        "score": {
+          "score": 8.4,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 1.5,
+          "n": 33
+        },
+        "noul_sealed": {
+          "score": 3.1,
+          "n": 32
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 19.3,
+          "n": 176
+        },
+        "Judge": {
+          "score": 4.2,
+          "n": 96
+        },
+        "Standard": {
+          "score": 21.1,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 0.0,
+          "n": 30
+        },
+        "Hard": {
+          "score": 3.9,
+          "n": 38
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 21.1,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 9.7,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 20.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 3.4,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 0.0,
+          "n": 60
+        },
+        "adversarial_stress": {
+          "score": 18.8,
+          "n": 8
+        }
+      },
+      "official_rank": 12
+    },
+    {
+      "id": "paraphrase-MiniLM-L3-v2",
+      "name": "paraphrase-MiniLM-L3-v2 (Dense Span+Null)",
+      "author": "sentence-transformers",
+      "system_type": "Open Weights \u00b7 Bi-Encoder",
+      "open_weights": true,
+      "params_m": 17.4,
+      "footprint_mb": 66.3,
+      "base_model": "sentence-transformers/paraphrase-MiniLM-L3-v2",
+      "runtime": "PyTorch MPS/CPU",
+      "input_rate_per_1m_usd": 0.005,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 404,
+      "input_tokens_total": 22327,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0003,
+      "axes": {
+        "intelligence": 11.3,
+        "intelligence_ci95": [
+          8.4,
+          14.0
+        ],
+        "calibration": 73.1,
+        "speed": 70.6,
+        "cost": 93.8
+      },
+      "capability_score": 42.2,
+      "composite_score": 31.5,
+      "open_set_score": 12.9,
+      "sealed_set_score": 3.7,
+      "calibration_details": {
+        "null_auroc": 0.58059,
+        "null_ece": 0.28598,
+        "null_brier": 0.23784
+      },
+      "latency": {
+        "mean_ms": 2.9015,
+        "p50_ms": 2.5864,
+        "p95_ms": 4.2605,
+        "p99_ms": 7.6042
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 9.7,
+          "n": 181
+        },
+        "math": {
+          "score": 0.0,
+          "n": 50
+        },
+        "choice": {
+          "score": 31.8,
+          "n": 33
+        },
+        "noul_open": {
+          "score": 44.4,
+          "n": 27
+        },
+        "score": {
+          "score": 6.7,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 1.5,
+          "n": 33
+        },
+        "noul_sealed": {
+          "score": 6.2,
+          "n": 32
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 16.8,
+          "n": 176
+        },
+        "Judge": {
+          "score": 3.3,
+          "n": 96
+        },
+        "Standard": {
+          "score": 16.4,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 0.0,
+          "n": 30
+        },
+        "Hard": {
+          "score": 6.6,
+          "n": 38
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 17.5,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 8.3,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 20.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 0.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 1.7,
+          "n": 60
+        },
+        "adversarial_stress": {
+          "score": 18.8,
+          "n": 8
+        }
+      },
+      "official_rank": 13
+    },
+    {
+      "id": "all-MiniLM-L6-v2",
+      "name": "all-MiniLM-L6-v2 (Dense Span+Null)",
+      "author": "sentence-transformers",
+      "system_type": "Open Weights \u00b7 Bi-Encoder",
+      "open_weights": true,
+      "params_m": 22.7,
+      "footprint_mb": 86.6,
+      "base_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "runtime": "PyTorch MPS/CPU",
+      "input_rate_per_1m_usd": 0.007,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 404,
+      "input_tokens_total": 22327,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0004,
+      "axes": {
+        "intelligence": 9.9,
+        "intelligence_ci95": [
+          7.4,
+          12.6
+        ],
+        "calibration": 72.6,
+        "speed": 68.0,
+        "cost": 91.0
+      },
+      "capability_score": 41.2,
+      "composite_score": 28.5,
+      "open_set_score": 11.2,
+      "sealed_set_score": 3.7,
+      "calibration_details": {
+        "null_auroc": 0.55308,
+        "null_ece": 0.29013,
+        "null_brier": 0.24496
+      },
+      "latency": {
+        "mean_ms": 4.8128,
+        "p50_ms": 4.2002,
+        "p95_ms": 7.2722,
+        "p99_ms": 14.2075
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 8.3,
+          "n": 181
+        },
+        "math": {
+          "score": 0.0,
+          "n": 50
+        },
+        "choice": {
+          "score": 31.8,
+          "n": 33
+        },
+        "noul_open": {
+          "score": 44.4,
+          "n": 27
+        },
+        "score": {
+          "score": 0.0,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 1.5,
+          "n": 33
+        },
+        "noul_sealed": {
+          "score": 6.2,
+          "n": 32
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 15.3,
+          "n": 176
+        },
+        "Judge": {
+          "score": 0.0,
+          "n": 96
+        },
+        "Standard": {
+          "score": 16.4,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 0.0,
+          "n": 30
+        },
+        "Hard": {
+          "score": 6.6,
+          "n": 38
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 19.1,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 4.9,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 0.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 0.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 1.7,
+          "n": 60
+        },
+        "adversarial_stress": {
+          "score": 18.8,
+          "n": 8
+        }
+      },
+      "official_rank": 14
     }
-  },
+  ],
   "tiers": {
     "tier_1a_pytorch_fp32": {
-      "name": "NullspanForExtraction (PyTorch FP32 Neural, 67M)",
-      "footprint_mb": 255.83,
-      "squad_v2": {
-        "n_examples": 60,
-        "overall_accuracy_pct": 91.67,
-        "overall_accuracy_ci95": [
-          83.33,
-          98.33
+      "id": "nullspan-67m-fp32",
+      "name": "nullspan-67M (PyTorch FP32)",
+      "author": "gnumanth",
+      "system_type": "System One Encoder (5-Head)",
+      "open_weights": true,
+      "params_m": 67.0,
+      "footprint_mb": 255.8,
+      "base_model": "distilbert/distilbert-base-uncased",
+      "runtime": "PyTorch MPS/CPU FP32",
+      "input_rate_per_1m_usd": 0.015,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 404,
+      "input_tokens_total": 40812,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0015,
+      "axes": {
+        "intelligence": 98.8,
+        "intelligence_ci95": [
+          97.5,
+          99.8
         ],
-        "answerable_f1_pct": 83.33,
-        "answerable_f1_ci95": [
-          70.0,
-          93.33
-        ],
-        "answerable_span_match_pct": 83.33,
-        "unanswerable_abstention_pct": 100.0,
-        "null_auroc": 0.99889,
-        "null_ece": 0.01348,
-        "null_brier": 0.0145,
-        "latency": {
-          "mean_ms": 33.6498,
-          "p50_ms": 24.5621,
-          "p95_ms": 76.7126,
-          "p99_ms": 454.705
+        "calibration": 99.7,
+        "speed": 66.5,
+        "cost": 78.0
+      },
+      "capability_score": 99.2,
+      "composite_score": 83.3,
+      "open_set_score": 100.0,
+      "sealed_set_score": 92.6,
+      "calibration_details": {
+        "null_auroc": 0.99995,
+        "null_ece": 0.00366,
+        "null_brier": 0.00217
+      },
+      "latency": {
+        "mean_ms": 9.6821,
+        "p50_ms": 5.5754,
+        "p95_ms": 18.0694,
+        "p99_ms": 73.0375
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 100.0,
+          "n": 181
+        },
+        "math": {
+          "score": 100.0,
+          "n": 50
+        },
+        "choice": {
+          "score": 100.0,
+          "n": 33
+        },
+        "noul_open": {
+          "score": 100.0,
+          "n": 27
+        },
+        "score": {
+          "score": 100.0,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 84.8,
+          "n": 33
+        },
+        "noul_sealed": {
+          "score": 100.0,
+          "n": 32
         }
       },
-      "structured_suite": {
-        "n_fields": 42,
-        "field_accuracy_pct": 100.0,
-        "field_accuracy_ci95": [
-          100.0,
-          100.0
-        ],
-        "span_exact_match_pct": 100.0,
-        "null_auroc": 1.0,
-        "null_ece": 2e-05,
-        "null_brier": 0.0,
-        "quantile_monotonicity_pct": 100.0,
-        "winkler_interval_score_norm": 0.3723,
-        "invariant_verification_pct": 100.0,
-        "latency_per_field": {
-          "mean_ms": 10.2409,
-          "p50_ms": 12.323,
-          "p95_ms": 13.7715,
-          "p99_ms": 13.7715
+      "by_tier_open": {
+        "Easy": {
+          "score": 100.0,
+          "n": 176
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 96
+        },
+        "Standard": {
+          "score": 100.0,
+          "n": 64
         }
       },
-      "adversarial_suite": {
-        "n_fields": 8,
-        "field_accuracy_pct": 100.0,
-        "field_accuracy_ci95": [
-          100.0,
-          100.0
-        ],
-        "span_exact_match_pct": 100.0,
-        "null_auroc": 1.0,
-        "null_ece": 3e-05,
-        "null_brier": 0.0,
-        "quantile_monotonicity_pct": 0.0,
-        "winkler_interval_score_norm": 0.0,
-        "invariant_verification_pct": 100.0,
-        "latency_per_field": {
-          "mean_ms": 17.4208,
-          "p50_ms": 18.4597,
-          "p95_ms": 18.4597,
-          "p99_ms": 18.4597
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 83.3,
+          "n": 30
+        },
+        "Hard": {
+          "score": 100.0,
+          "n": 38
         }
-      }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 100.0,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 100.0,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 100.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 100.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 91.7,
+          "n": 60
+        },
+        "adversarial_stress": {
+          "score": 100.0,
+          "n": 8
+        }
+      },
+      "official_rank": 3
     },
     "tier_1b_onnx_int8": {
-      "name": "NullspanForExtraction (ONNX Int8 Quantized, WASM/CPU)",
-      "footprint_mb": 64.34,
-      "compression_ratio": 3.98,
-      "squad_v2": {
-        "n_examples": 60,
-        "overall_accuracy_pct": 90.0,
-        "overall_accuracy_ci95": [
-          81.67,
-          96.67
+      "id": "nullspan-67m-onnx-int8",
+      "name": "nullspan-67M-Int8 (ONNX WASM/CPU)",
+      "author": "gnumanth",
+      "system_type": "Quantized ONNX WASM/CPU",
+      "open_weights": true,
+      "params_m": 67.0,
+      "footprint_mb": 64.3,
+      "base_model": "gnumanth/nullspan (Int8 Dynamic)",
+      "runtime": "ONNX Runtime Int8 (Browser WASM / Edge)",
+      "input_rate_per_1m_usd": 0.008,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 404,
+      "input_tokens_total": 40812,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0008,
+      "axes": {
+        "intelligence": 98.0,
+        "intelligence_ci95": [
+          96.5,
+          99.3
         ],
-        "answerable_f1_pct": 86.67,
-        "answerable_f1_ci95": [
-          73.33,
-          96.67
-        ],
-        "answerable_span_match_pct": 86.67,
-        "unanswerable_abstention_pct": 93.33,
-        "null_auroc": 0.99556,
-        "null_ece": 0.04021,
-        "null_brier": 0.02496,
-        "latency": {
-          "mean_ms": 29.5068,
-          "p50_ms": 28.5148,
-          "p95_ms": 49.3835,
-          "p99_ms": 82.1756
+        "calibration": 99.3,
+        "speed": 62.3,
+        "cost": 84.2
+      },
+      "capability_score": 98.7,
+      "composite_score": 83.0,
+      "open_set_score": 100.0,
+      "sealed_set_score": 88.2,
+      "calibration_details": {
+        "null_auroc": 0.99975,
+        "null_ece": 0.00807,
+        "null_brier": 0.00413
+      },
+      "latency": {
+        "mean_ms": 13.2888,
+        "p50_ms": 12.2679,
+        "p95_ms": 18.3104,
+        "p99_ms": 22.3046
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 100.0,
+          "n": 181
+        },
+        "math": {
+          "score": 100.0,
+          "n": 50
+        },
+        "choice": {
+          "score": 100.0,
+          "n": 33
+        },
+        "noul_open": {
+          "score": 100.0,
+          "n": 27
+        },
+        "score": {
+          "score": 100.0,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 84.8,
+          "n": 33
+        },
+        "noul_sealed": {
+          "score": 90.6,
+          "n": 32
         }
       },
-      "structured_suite": {
-        "n_fields": 42,
-        "field_accuracy_pct": 100.0,
-        "field_accuracy_ci95": [
-          100.0,
-          100.0
-        ],
-        "span_exact_match_pct": 100.0,
-        "null_auroc": 1.0,
-        "null_ece": 1e-05,
-        "null_brier": 0.0,
-        "quantile_monotonicity_pct": 100.0,
-        "winkler_interval_score_norm": 0.3726,
-        "invariant_verification_pct": 100.0,
-        "latency_per_field": {
-          "mean_ms": 22.6698,
-          "p50_ms": 25.2569,
-          "p95_ms": 27.3221,
-          "p99_ms": 27.3221
+      "by_tier_open": {
+        "Easy": {
+          "score": 100.0,
+          "n": 176
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 96
+        },
+        "Standard": {
+          "score": 100.0,
+          "n": 64
         }
       },
-      "adversarial_suite": {
-        "n_fields": 8,
-        "field_accuracy_pct": 100.0,
-        "field_accuracy_ci95": [
-          100.0,
-          100.0
-        ],
-        "span_exact_match_pct": 100.0,
-        "null_auroc": 1.0,
-        "null_ece": 3e-05,
-        "null_brier": 0.0,
-        "quantile_monotonicity_pct": 0.0,
-        "winkler_interval_score_norm": 0.0,
-        "invariant_verification_pct": 100.0,
-        "latency_per_field": {
-          "mean_ms": 20.4981,
-          "p50_ms": 22.9028,
-          "p95_ms": 22.9028,
-          "p99_ms": 22.9028
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 83.3,
+          "n": 30
+        },
+        "Hard": {
+          "score": 92.1,
+          "n": 38
         }
-      }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 100.0,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 100.0,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 100.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 100.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 86.7,
+          "n": 60
+        },
+        "adversarial_stress": {
+          "score": 100.0,
+          "n": 8
+        }
+      },
+      "official_rank": 4
     },
     "tier_2_zero_dep_engine": {
-      "name": "nullspan Zero-Dep Algorithmic Fast Engine (Python/JS)",
+      "id": "nullspan-zerodep-fast",
+      "name": "nullspan-ZeroDep (Fast Engine)",
+      "author": "gnumanth",
+      "system_type": "Zero-Dep Algorithmic Engine",
+      "open_weights": true,
+      "params_m": 0.0,
       "footprint_mb": 0.0,
-      "squad_v2": {
-        "n_examples": 60,
-        "overall_accuracy_pct": 23.33,
-        "overall_accuracy_ci95": [
-          13.33,
-          35.0
+      "base_model": "Deterministic Rule + Lexical Pointer",
+      "runtime": "Pure Python / Node / Browser JS",
+      "input_rate_per_1m_usd": 0.0008,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 404,
+      "input_tokens_total": 40812,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0001,
+      "axes": {
+        "intelligence": 88.6,
+        "intelligence_ci95": [
+          85.6,
+          91.6
         ],
-        "answerable_f1_pct": 23.33,
-        "answerable_f1_ci95": [
-          10.0,
-          40.0
-        ],
-        "answerable_span_match_pct": 23.33,
-        "unanswerable_abstention_pct": 23.33,
-        "null_auroc": 0.40389,
-        "null_ece": 0.41942,
-        "null_brier": 0.42834,
-        "latency": {
-          "mean_ms": 0.0497,
-          "p50_ms": 0.0407,
-          "p95_ms": 0.1853,
-          "p99_ms": 0.2923
+        "calibration": 93.8,
+        "speed": 99.8,
+        "cost": 99.8
+      },
+      "capability_score": 91.2,
+      "composite_score": 95.3,
+      "open_set_score": 100.0,
+      "sealed_set_score": 32.4,
+      "calibration_details": {
+        "null_auroc": 0.97364,
+        "null_ece": 0.06061,
+        "null_brier": 0.06363
+      },
+      "latency": {
+        "mean_ms": 0.0123,
+        "p50_ms": 0.0049,
+        "p95_ms": 0.0344,
+        "p99_ms": 0.0978
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 100.0,
+          "n": 181
+        },
+        "math": {
+          "score": 100.0,
+          "n": 50
+        },
+        "choice": {
+          "score": 100.0,
+          "n": 33
+        },
+        "noul_open": {
+          "score": 100.0,
+          "n": 27
+        },
+        "score": {
+          "score": 100.0,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 30.3,
+          "n": 33
+        },
+        "noul_sealed": {
+          "score": 28.1,
+          "n": 32
         }
       },
-      "structured_suite": {
-        "n_fields": 42,
-        "field_accuracy_pct": 100.0,
-        "field_accuracy_ci95": [
-          100.0,
-          100.0
-        ],
-        "span_exact_match_pct": 100.0,
-        "null_auroc": 1.0,
-        "null_ece": 5e-05,
-        "null_brier": 0.0,
-        "quantile_monotonicity_pct": 100.0,
-        "winkler_interval_score_norm": 0.3671,
-        "invariant_verification_pct": 100.0,
-        "latency_per_field": {
-          "mean_ms": 0.0281,
-          "p50_ms": 0.0226,
-          "p95_ms": 0.0805,
-          "p99_ms": 0.0805
+      "by_tier_open": {
+        "Easy": {
+          "score": 100.0,
+          "n": 176
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 96
+        },
+        "Standard": {
+          "score": 100.0,
+          "n": 64
         }
       },
-      "adversarial_suite": {
-        "n_fields": 8,
-        "field_accuracy_pct": 100.0,
-        "field_accuracy_ci95": [
-          100.0,
-          100.0
-        ],
-        "span_exact_match_pct": 100.0,
-        "null_auroc": 1.0,
-        "null_ece": 0.0001,
-        "null_brier": 0.0,
-        "quantile_monotonicity_pct": 0.0,
-        "winkler_interval_score_norm": 0.0,
-        "invariant_verification_pct": 100.0,
-        "latency_per_field": {
-          "mean_ms": 0.0082,
-          "p50_ms": 0.0082,
-          "p95_ms": 0.0082,
-          "p99_ms": 0.0082
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 23.3,
+          "n": 30
+        },
+        "Hard": {
+          "score": 39.5,
+          "n": 38
         }
-      }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 100.0,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 100.0,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 100.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 100.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 23.3,
+          "n": 60
+        },
+        "adversarial_stress": {
+          "score": 100.0,
+          "n": 8
+        }
+      },
+      "official_rank": 2
     }
   }
 }

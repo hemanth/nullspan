@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NullspanBench · JevBench-Style Extraction &amp; Decision Leaderboard</title>
+  <style>
+    :root {
+      --bg: #FBFAF7;
+      --surface: #FFFFFF;
+      --muted-bg: #F3F0E8;
+      --ink: #111111;
+      --ink-muted: #52504A;
+      --border: #111111;
+      --border-subtle: #E5E1D8;
+      --accent-span: #FFE484;
+      --accent-list: #C8F0D4;
+      --accent-null: #F5D0CE;
+      --sys-a: #111111;
+      --sys-b: #D94E34;
+      --mono: "IBM Plex Mono", "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      --sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.5;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      border-bottom: 1.5px solid var(--border);
+      background: rgba(251, 250, 247, 0.94);
+      backdrop-filter: blur(10px);
+      padding: 14px 28px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .brand-mark {
+      background: var(--ink);
+      color: var(--bg);
+      font-family: var(--mono);
+      font-size: 0.95rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 4px;
+      text-decoration: none;
+    }
+
+    .badge {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border: 1.2px solid var(--border);
+      background: var(--surface);
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+    }
+
+    .links a {
+      color: var(--ink);
+      text-decoration: none;
+      padding: 5px 10px;
+      border: 1.2px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface);
+      font-weight: 600;
+    }
+
+    .links a:hover, .links a.active {
+      background: var(--ink);
+      color: var(--bg);
+    }
+
+    main {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 28px 28px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .hero {
+      border-bottom: 1.5px solid var(--border);
+      padding-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px 0;
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--ink-muted);
+      max-width: 780px;
+      font-size: 0.96rem;
+    }
+
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-label {
+      font-family: var(--mono);
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--ink-muted);
+      margin-right: 4px;
+    }
+
+    button.ctrl-btn {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 6px 11px;
+      border: 1.2px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    button.ctrl-btn.active {
+      background: var(--ink);
+      color: var(--bg);
+    }
+
+    .section-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .section-header {
+      background: var(--ink);
+      color: var(--bg);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      padding: 10px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      text-transform: uppercase;
+      gap: 8px;
+    }
+
+    .section-body {
+      padding: 20px;
+    }
+
+    /* Capability Horizontal Bars */
+    .cap-row {
+      display: grid;
+      grid-template-columns: 270px 1fr 125px;
+      align-items: center;
+      gap: 14px;
+      padding: 7px 0;
+      border-bottom: 1px dashed var(--border-subtle);
+    }
+
+    @media (max-width: 760px) {
+      .cap-row { grid-template-columns: 1fr; gap: 6px; }
+    }
+
+    .cap-name {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cap-name span {
+      font-size: 0.68rem;
+      color: var(--ink-muted);
+      font-weight: 500;
+    }
+
+    .cap-track {
+      height: 26px;
+      background: var(--muted-bg);
+      border: 1.2px solid var(--border);
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cap-fill {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding-left: 10px;
+      font-family: var(--mono);
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .cap-score-val {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    /* Pareto 2-col grid */
+    .pareto-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 960px) {
+      .pareto-grid { grid-template-columns: 1fr; }
+    }
+
+    .chart-box {
+      border: 1.2px solid var(--border);
+      border-radius: 6px;
+      padding: 14px;
+      background: var(--bg);
+    }
+
+    .chart-box h3 {
+      margin: 0 0 4px 0;
+      font-family: var(--mono);
+      font-size: 0.84rem;
+      text-transform: uppercase;
+    }
+
+    .chart-box p {
+      margin: 0 0 10px 0;
+      font-size: 0.78rem;
+      color: var(--ink-muted);
+    }
+
+    /* Sliders row */
+    .sliders-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 12px;
+      margin: 14px 0;
+      padding: 12px 14px;
+      background: var(--muted-bg);
+      border: 1.2px solid var(--border);
+      border-radius: 5px;
+    }
+
+    .slider-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .slider-item input[type="range"] {
+      accent-color: var(--ink);
+      width: 100%;
+    }
+
+    /* Leaderboard Table */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table.lb-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+    }
+
+    table.lb-table th, table.lb-table td {
+      border: 1.2px solid var(--border);
+      padding: 8px 10px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    table.lb-table th {
+      background: var(--muted-bg);
+      cursor: pointer;
+      user-select: none;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+    }
+
+    table.lb-table th:hover {
+      background: var(--accent-span);
+    }
+
+    .axis-pill {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 700;
+      border: 1px solid var(--ink);
+    }
+
+    /* Radar 2x2 grid */
+    .radar-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 920px) {
+      .radar-grid { grid-template-columns: 1fr; }
+    }
+
+    select.sys-select, input.search-input {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 6px 10px;
+      border: 1.2px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    .bh-heat {
+      text-align: center !important;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <a href="./index.html" class="brand-mark">nullspan</a>
+      <span class="badge" style="background: var(--accent-span);">NullspanBench v3.0 · JevBench Methodology</span>
+      <span class="badge" id="draw-badge">S+P (404 Scored Observations)</span>
+    </div>
+    <nav class="links">
+      <a href="./index.html">← Interactive Playground</a>
+      <a href="./bench.html" class="active">Benchmark Leaderboard</a>
+      <a href="https://huggingface.co/spaces/gnumanth/nullspan" target="_blank" rel="noopener">HF Space</a>
+      <a href="https://huggingface.co/gnumanth/nullspan" target="_blank" rel="noopener">HF Model (ONNX + PyTorch)</a>
+      <a href="https://github.com/hemanth/nullspan" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <h1>NullspanBench — Decision &amp; Extraction Model Leaderboard</h1>
+        <p>
+          Following the <strong>Benchmark Heaven (JevBench)</strong> evaluation protocol: comparing 14 systems across <strong>Intelligence (I)</strong>, <strong>Probability Calibration (C)</strong>, <strong>Speed (S)</strong>, and <strong>Cost (K)</strong> over <strong>404 scored observations (S+P)</strong> spanning Open structured extraction (<em>n=336</em>) and Sealed Stanford SQuAD v2.0 + Adversarial prompt-injection traps (<em>n=68</em>).
+        </p>
+      </div>
+      <div class="btn-group">
+        <span class="btn-label">Pool Filter:</span>
+        <button class="ctrl-btn" id="btn-pool-open" type="button">Open Weights Only (12)</button>
+        <button class="ctrl-btn active" id="btn-pool-all" type="button">Show All Mixed (+ 2 API Decoders)</button>
+      </div>
+    </section>
+
+    <!-- 1. Capability Score Headline Chart -->
+    <section class="section-card">
+      <div class="section-header">
+        <span>1. NullspanBench Capability Score · Mean of Intelligence (I) &amp; Calibration (C)</span>
+        <span>95% Bootstrap CIs (B=1,000) · S+P Pool</span>
+      </div>
+      <div class="section-body">
+        <div id="capability-bars"></div>
+      </div>
+    </section>
+
+    <!-- 2. Pareto Frontier: Capability vs Cost & Speed -->
+    <section class="section-card">
+      <div class="section-header">
+        <span>2. Pareto Frontier: Capability Against Cost &amp; Speed</span>
+        <span>Upper-Right is Best (More Capable &amp; Cheaper / Faster)</span>
+      </div>
+      <div class="section-body">
+        <div class="pareto-grid">
+          <div class="chart-box">
+            <h3>Capability vs Cost ($ / 1,000 Decisions · Log Scale)</h3>
+            <p>Encoders generate <code>0</code> output tokens; autoregressive API decoders pay per generated JSON token.</p>
+            <div id="pareto-cost-svg"></div>
+          </div>
+          <div class="chart-box">
+            <h3>Capability vs Speed (p50 Latency ms / Decision · Log Scale)</h3>
+            <p>Bubble size follows the official Composite Score; dashed line traces the Pareto-optimal frontier.</p>
+            <div id="pareto-speed-svg"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Composite Score Leaderboard Table -->
+    <section class="section-card">
+      <div class="section-header">
+        <span>3. Composite Score Leaderboard · Four Axes (0–100) Weighted Harmonic Mean</span>
+        <span id="ranked-count-label">14 Ranked Systems</span>
+      </div>
+      <div class="section-body">
+        <div class="filter-bar" style="margin-bottom: 12px;">
+          <div class="btn-group" id="weight-preset-btns">
+            <span class="btn-label">Weights:</span>
+            <button class="ctrl-btn active" data-weights="25,25,25,25" type="button">Official 25:25:25:25</button>
+            <button class="ctrl-btn" data-weights="40,20,20,20" type="button">Option B 40:20:20:20</button>
+            <button class="ctrl-btn" data-weights="33,33,34,0" type="button">Balanced 33:33:33</button>
+            <button class="ctrl-btn" data-weights="60,20,10,10" type="button">Accuracy 60:20:10:10</button>
+            <button class="ctrl-btn" data-weights="20,20,20,40" type="button">Cost 20:20:20:40</button>
+            <button class="ctrl-btn" data-weights="20,20,40,20" type="button">Speed 20:20:40:20</button>
+            <button class="ctrl-btn" data-weights="50,50,0,0" type="button">Capability Only</button>
+            <button class="ctrl-btn" data-weights="100,0,0,0" type="button">Intelligence Only</button>
+          </div>
+          <div class="btn-group">
+            <input type="text" id="search-input" class="search-input" placeholder="Search system or base model..." />
+          </div>
+        </div>
+
+        <div class="sliders-grid">
+          <div class="slider-item">
+            <span>Intelligence (I): <strong id="lbl-w-i">25%</strong></span>
+            <input type="range" id="sl-w-i" min="0" max="100" value="25" />
+          </div>
+          <div class="slider-item">
+            <span>Calibration (C): <strong id="lbl-w-c">25%</strong></span>
+            <input type="range" id="sl-w-c" min="0" max="100" value="25" />
+          </div>
+          <div class="slider-item">
+            <span>Speed (S): <strong id="lbl-w-s">25%</strong></span>
+            <input type="range" id="sl-w-s" min="0" max="100" value="25" />
+          </div>
+          <div class="slider-item">
+            <span>Cost (K): <strong id="lbl-w-k">25%</strong></span>
+            <input type="range" id="sl-w-k" min="0" max="100" value="25" />
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="lb-table" id="lb-table">
+            <thead>
+              <tr>
+                <th data-sort="rank"># ▲</th>
+                <th data-sort="name">System ↕</th>
+                <th data-sort="system_type">Architecture / Runtime ↕</th>
+                <th data-sort="composite">Composite ↕</th>
+                <th data-sort="capability">Cap. ↕</th>
+                <th data-sort="intelligence">Intel. (I) ↕</th>
+                <th data-sort="calibration">Calib. (C) ↕</th>
+                <th data-sort="speed">Speed (S) ↕</th>
+                <th data-sort="cost">Cost (K) ↕</th>
+                <th data-sort="usd">$/1k dec. ↕</th>
+                <th data-sort="p50">p50 ms ↕</th>
+                <th data-sort="ece">Null ECE ↕</th>
+                <th data-sort="open_set">Open (S) ↕</th>
+                <th data-sort="sealed_set">Sealed (P) ↕</th>
+              </tr>
+            </thead>
+            <tbody id="lb-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Compare Two Systems (4 SVG Radars) -->
+    <section class="section-card">
+      <div class="section-header">
+        <span>4. Compare Two Systems · Multi-Axis Radar Diagnostics</span>
+        <span>Four Axes · Request Types · Difficulty Tiers · Subject Domains</span>
+      </div>
+      <div class="section-body">
+        <div class="filter-bar">
+          <div class="btn-group">
+            <span class="btn-label" style="color: var(--sys-a);">■ System A:</span>
+            <select id="select-sys-a" class="sys-select"></select>
+          </div>
+          <div class="btn-group">
+            <span class="btn-label" style="color: var(--sys-b);">● System B:</span>
+            <select id="select-sys-b" class="sys-select"></select>
+          </div>
+        </div>
+
+        <div class="radar-grid">
+          <div class="chart-box">
+            <h3>The Four Score Axes (0–100)</h3>
+            <p id="radar-desc-axes"></p>
+            <div id="radar-axes-svg"></div>
+          </div>
+          <div class="chart-box">
+            <h3>Competence per Request Type (Open / Sealed)</h3>
+            <p id="radar-desc-req"></p>
+            <div id="radar-req-svg"></div>
+          </div>
+          <div class="chart-box">
+            <h3>Competence per Difficulty Tier (Open &amp; Sealed)</h3>
+            <p id="radar-desc-tier"></p>
+            <div id="radar-tier-svg"></div>
+          </div>
+          <div class="chart-box">
+            <h3>Competence by Subject Domain / Use Case</h3>
+            <p id="radar-desc-domain"></p>
+            <div id="radar-domain-svg"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Competence Heatmap Matrix -->
+    <section class="section-card">
+      <div class="section-header">
+        <span>5. Competence Heatmap by Request Type, Difficulty Tier &amp; Subject Domain</span>
+        <span>Greener = Stronger Within Column · Exact Observation Counts (n=404)</span>
+      </div>
+      <div class="section-body">
+        <div class="table-wrap">
+          <table class="lb-table" id="heatmap-table">
+            <thead>
+              <tr>
+                <th>System</th>
+                <th>Span (Open)</th>
+                <th>Span (Sealed)</th>
+                <th>Noul / p_null (Open)</th>
+                <th>Noul / p_null (Sealed)</th>
+                <th>Choice (Bool/Enum)</th>
+                <th>Math &amp; Invariants</th>
+                <th>Score (Quantiles)</th>
+                <th>Tier: Easy</th>
+                <th>Tier: Standard</th>
+                <th>Tier: Judge</th>
+                <th>Tier: Hard</th>
+                <th>SRE Incident</th>
+                <th>Cloud Invoice</th>
+                <th>SQuAD v2.0 QA</th>
+                <th>Adversarial</th>
+              </tr>
+            </thead>
+            <tbody id="heatmap-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let BENCH_DATA = null;
+    let showApiModels = true;
+    let currentSortKey = 'composite';
+    let currentSortAsc = false;
+    let weights = { i: 25, c: 25, s: 25, k: 25 };
+
+    function computeWeightedComposite(sys, w) {
+      const ax = sys.axes;
+      const wi = w.i, wc = w.c, ws = w.s, wk = w.k;
+      const wSum = wi + wc + ws + wk;
+      if (wSum <= 0) return 0;
+      const denom = (wi / Math.max(1, ax.intelligence)) +
+                    (wc / Math.max(1, ax.calibration)) +
+                    (ws / Math.max(1, ax.speed)) +
+                    (wk / Math.max(1, ax.cost));
+      return Number((wSum / denom).toFixed(1));
+    }
+
+    function heatColor(score) {
+      if (score === undefined || score === null) return '#F3F0E8';
+      const norm = Math.max(0, Math.min(1, (score - 20) / 80));
+      if (norm >= 0.85) return '#C8F0D4';
+      if (norm >= 0.60) return '#E2F5D8';
+      if (norm >= 0.35) return '#FFE484';
+      return '#F5D0CE';
+    }
+
+    function getFilteredSystems() {
+      if (!BENCH_DATA) return [];
+      const q = (document.getElementById('search-input').value || '').toLowerCase().trim();
+      const list = BENCH_DATA.systems
+        .filter(s => showApiModels || s.open_weights)
+        .filter(s => !q || s.name.toLowerCase().includes(q) || s.base_model.toLowerCase().includes(q) || s.system_type.toLowerCase().includes(q))
+        .map(s => ({
+          ...s,
+          live_composite: computeWeightedComposite(s, weights)
+        }));
+
+      list.sort((a, b) => {
+        let va, vb;
+        switch (currentSortKey) {
+          case 'name': va = a.name; vb = b.name; break;
+          case 'system_type': va = a.system_type; vb = b.system_type; break;
+          case 'composite': va = a.live_composite; vb = b.live_composite; break;
+          case 'capability': va = a.capability_score; vb = b.capability_score; break;
+          case 'intelligence': va = a.axes.intelligence; vb = b.axes.intelligence; break;
+          case 'calibration': va = a.axes.calibration; vb = b.axes.calibration; break;
+          case 'speed': va = a.axes.speed; vb = b.axes.speed; break;
+          case 'cost': va = a.axes.cost; vb = b.axes.cost; break;
+          case 'usd': va = a.usd_per_1k_decisions; vb = b.usd_per_1k_decisions; break;
+          case 'p50': va = a.latency.p50_ms; vb = b.latency.p50_ms; break;
+          case 'ece': va = a.calibration_details.null_ece; vb = b.calibration_details.null_ece; break;
+          case 'open_set': va = a.open_set_score; vb = b.open_set_score; break;
+          case 'sealed_set': va = a.sealed_set_score; vb = b.sealed_set_score; break;
+          default: va = a.live_composite; vb = b.live_composite;
+        }
+        if (typeof va === 'string') {
+          return currentSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+        }
+        return currentSortAsc ? (va - vb) : (vb - va);
+      });
+      return list;
+    }
+
+    function renderCapabilityBars(systems) {
+      const byCap = [...systems].sort((a, b) => b.capability_score - a.capability_score);
+      const container = document.getElementById('capability-bars');
+      container.innerHTML = byCap.map((s, idx) => {
+        const fillBg = s.id.startsWith('nullspan') ? 'var(--accent-span)' : (s.open_weights ? 'var(--accent-list)' : 'var(--accent-null)');
+        const ci = s.axes.intelligence_ci95 || [s.axes.intelligence, s.axes.intelligence];
+        return `
+          <div class="cap-row">
+            <div class="cap-name">
+              <div>#${idx + 1} ${s.name}</div>
+              <span>${s.system_type} · ${s.footprint_mb !== null ? s.footprint_mb + ' MB' : 'Cloud API'}</span>
+            </div>
+            <div class="cap-track">
+              <div class="cap-fill" style="width: ${Math.max(8, s.capability_score)}%; background: ${fillBg};">
+                I: ${s.axes.intelligence.toFixed(1)} [${ci[0]}, ${ci[1]}] · C: ${s.axes.calibration.toFixed(1)}
+              </div>
+            </div>
+            <div class="cap-score-val">${s.capability_score.toFixed(1)} / 100</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderParetoChart(systems, containerId, mode) {
+      const W = 580, H = 300, padL = 52, padR = 28, padT = 24, padB = 42;
+      const plotW = W - padL - padR, plotH = H - padT - padB;
+
+      // X axis: log10(cost) or log10(p50_ms), inverted so right = cheaper / faster!
+      const xs = systems.map(s => mode === 'cost' ? Math.log10(Math.max(0.00005, s.usd_per_1k_decisions)) : Math.log10(Math.max(0.005, s.latency.p50_ms)));
+      const minX = Math.min(...xs) - 0.25;
+      const maxX = Math.max(...xs) + 0.25;
+      const minY = 30, maxY = 102;
+
+      function toX(val) {
+        // Right is better (smaller cost or smaller latency -> further right)
+        return padL + ((maxX - val) / Math.max(1e-6, maxX - minX)) * plotW;
+      }
+      function toY(cap) {
+        return padT + ((maxY - cap) / (maxY - minY)) * plotH;
+      }
+
+      const pts = systems.map((s, i) => ({
+        s,
+        x: toX(xs[i]),
+        y: toY(s.capability_score),
+        r: Math.max(5, Math.min(12, (s.live_composite - 40) / 5))
+      }));
+
+      // Compute Pareto frontier (sorted left-to-right by x, keeping increasing max capability)
+      const sortedByX = [...pts].sort((a, b) => b.x - a.x);
+      const frontier = [];
+      let bestCap = -1;
+      for (const p of sortedByX) {
+        if (p.s.capability_score >= bestCap) {
+          frontier.push(p);
+          bestCap = p.s.capability_score;
+        }
+      }
+      const frontierPath = frontier.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+
+      const gridLines = [40, 60, 80, 100].map(yVal => {
+        const y = toY(yVal);
+        return `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#E5E1D8" stroke-dasharray="3,3" />
+                <text x="${padL - 8}" y="${y + 4}" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="10" fill="#52504A">${yVal}</text>`;
+      }).join('');
+
+      const circles = pts.map(p => {
+        const fill = p.s.id.startsWith('nullspan') ? '#FFE484' : (p.s.open_weights ? '#C8F0D4' : '#F5D0CE');
+        const shortLbl = p.s.name.split(' ')[0];
+        return `
+          <g>
+            <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.r.toFixed(1)}" fill="${fill}" stroke="#111111" stroke-width="1.6">
+              <title>${p.s.name} · Cap: ${p.s.capability_score} · $/1k: $${p.s.usd_per_1k_decisions} · p50: ${p.s.latency.p50_ms}ms</title>
+            </circle>
+            <text x="${(p.x + 8).toFixed(1)}" y="${(p.y + 3).toFixed(1)}" font-family="IBM Plex Mono, monospace" font-size="9.5" font-weight="700" fill="#111111">${shortLbl}</text>
+          </g>
+        `;
+      }).join('');
+
+      const xAxisLabel = mode === 'cost' ? 'Cheaper ($/1k decisions, log scale) →' : 'Faster (p50 ms/decision, log scale) →';
+
+      document.getElementById(containerId).innerHTML = `
+        <svg viewBox="0 0 ${W} ${H}" style="width: 100%; height: auto; display: block;">
+          ${gridLines}
+          <line x1="${padL}" y1="${H - padB}" x2="${W - padR}" y2="${H - padB}" stroke="#111111" stroke-width="1.5" />
+          <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H - padB}" stroke="#111111" stroke-width="1.5" />
+          <path d="${frontierPath}" fill="none" stroke="#111111" stroke-width="1.8" stroke-dasharray="5,4" />
+          ${circles}
+          <text x="${W / 2}" y="${H - 10}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" font-weight="700" fill="#111111">${xAxisLabel}</text>
+          <text x="14" y="${H / 2}" text-anchor="middle" transform="rotate(-90 14 ${H / 2})" font-family="IBM Plex Mono, monospace" font-size="11" font-weight="700" fill="#111111">Capability Score</text>
+        </svg>
+      `;
+    }
+
+    function renderLeaderboardTable(systems) {
+      document.getElementById('ranked-count-label').textContent = `${systems.length} Ranked Systems`;
+      const tbody = document.getElementById('lb-tbody');
+      tbody.innerHTML = systems.map((s, idx) => {
+        const ax = s.axes;
+        return `
+          <tr>
+            <td><strong>${idx + 1}</strong></td>
+            <td>
+              <strong>${s.name}</strong><br/>
+              <span style="font-size: 0.68rem; color: var(--ink-muted);">${s.base_model}</span>
+            </td>
+            <td>${s.system_type}</td>
+            <td><span class="axis-pill" style="background: var(--accent-span); font-size: 0.85rem;">${s.live_composite.toFixed(1)}</span></td>
+            <td><strong>${s.capability_score.toFixed(1)}</strong></td>
+            <td style="background: ${heatColor(ax.intelligence)}">${ax.intelligence.toFixed(1)}</td>
+            <td style="background: ${heatColor(ax.calibration)}">${ax.calibration.toFixed(1)}</td>
+            <td style="background: ${heatColor(ax.speed)}">${ax.speed.toFixed(1)}</td>
+            <td style="background: ${heatColor(ax.cost)}">${ax.cost.toFixed(1)}</td>
+            <td>$${s.usd_per_1k_decisions.toFixed(4)}</td>
+            <td>${s.latency.p50_ms.toFixed(3)} ms</td>
+            <td>${s.calibration_details.null_ece.toFixed(5)}</td>
+            <td>${s.open_set_score.toFixed(1)}%</td>
+            <td><strong>${s.sealed_set_score.toFixed(1)}%</strong></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function drawRadarSvg(containerId, labels, valsA, valsB) {
+      const W = 380, H = 285, cx = 190, cy = 145, R = 98;
+      const N = labels.length;
+      const rings = [25, 50, 75, 100];
+
+      function pt(idx, val) {
+        const angle = -Math.PI / 2 + (idx * 2 * Math.PI) / N;
+        const r = (Math.max(0, Math.min(100, val)) / 100) * R;
+        return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
+      }
+
+      const ringPolys = rings.map(rk => {
+        const pts = labels.map((_, i) => pt(i, rk).map(v => v.toFixed(1)).join(',')).join(' ');
+        return `<polygon points="${pts}" fill="none" stroke="${rk === 50 ? '#111111' : '#D5D0C5'}" stroke-width="${rk === 50 ? '1.2' : '0.8'}" stroke-dasharray="${rk === 50 ? 'none' : '2,2'}" />`;
+      }).join('');
+
+      const spokes = labels.map((lbl, i) => {
+        const [x, y] = pt(i, 100);
+        const [lx, ly] = pt(i, 120);
+        return `
+          <line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#D5D0C5" stroke-width="0.9" />
+          <text x="${lx.toFixed(1)}" y="${(ly + 3).toFixed(1)}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9.5" font-weight="700" fill="#111111">${lbl}</text>
+        `;
+      }).join('');
+
+      const polyA = labels.map((_, i) => pt(i, valsA[i]).map(v => v.toFixed(1)).join(',')).join(' ');
+      const polyB = labels.map((_, i) => pt(i, valsB[i]).map(v => v.toFixed(1)).join(',')).join(' ');
+
+      const dotsA = valsA.map((v, i) => {
+        const [x, y] = pt(i, v);
+        return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="#111111" />`;
+      }).join('');
+
+      const dotsB = valsB.map((v, i) => {
+        const [x, y] = pt(i, v);
+        return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="#D94E34" />`;
+      }).join('');
+
+      document.getElementById(containerId).innerHTML = `
+        <svg viewBox="0 0 ${W} ${H}" style="width: 100%; height: auto; display: block;">
+          ${ringPolys}
+          ${spokes}
+          <polygon points="${polyB}" fill="rgba(217, 78, 52, 0.16)" stroke="#D94E34" stroke-width="2" />
+          <polygon points="${polyA}" fill="rgba(17, 17, 17, 0.16)" stroke="#111111" stroke-width="2.2" />
+          ${dotsB}
+          ${dotsA}
+        </svg>
+      `;
+    }
+
+    function renderComparisonRadars() {
+      if (!BENCH_DATA) return;
+      const idA = document.getElementById('select-sys-a').value;
+      const idB = document.getElementById('select-sys-b').value;
+      const sysA = BENCH_DATA.systems.find(s => s.id === idA) || BENCH_DATA.systems[0];
+      const sysB = BENCH_DATA.systems.find(s => s.id === idB) || BENCH_DATA.systems[1];
+
+      // 1. Four Axes
+      const axesLabels = ['Intelligence', 'Calibration', 'Speed', 'Cost'];
+      const axesA = [sysA.axes.intelligence, sysA.axes.calibration, sysA.axes.speed, sysA.axes.cost];
+      const axesB = [sysB.axes.intelligence, sysB.axes.calibration, sysB.axes.speed, sysB.axes.cost];
+      document.getElementById('radar-desc-axes').textContent =
+        `${sysA.name} vs ${sysB.name} · Intel: ${axesA[0]} vs ${axesB[0]} · Calib: ${axesA[1]} vs ${axesB[1]} · Speed: ${axesA[2]} vs ${axesB[2]} · Cost: ${axesA[3]} vs ${axesB[3]}`;
+      drawRadarSvg('radar-axes-svg', axesLabels, axesA, axesB);
+
+      // 2. Request Types
+      const reqKeys = [
+        ['span_open', 'Span·Open'],
+        ['span_sealed', 'Span·Sealed'],
+        ['noul_open', 'Noul·Open'],
+        ['noul_sealed', 'Noul·Sealed'],
+        ['choice', 'Choice'],
+        ['math', 'Math/Inv'],
+        ['score', 'Score (p10-90)']
+      ];
+      const reqA = reqKeys.map(([k]) => sysA.by_request_type[k]?.score ?? 0);
+      const reqB = reqKeys.map(([k]) => sysB.by_request_type[k]?.score ?? 0);
+      document.getElementById('radar-desc-req').textContent =
+        `Noul (Sealed): ${reqA[3]}% vs ${reqB[3]}% · Span (Sealed): ${reqA[1]}% vs ${reqB[1]}% · Math/Invariants: ${reqA[5]}% vs ${reqB[5]}%`;
+      drawRadarSvg('radar-req-svg', reqKeys.map(x => x[1]), reqA, reqB);
+
+      // 3. Difficulty Tiers
+      const tierKeys = [
+        ['Easy', 'open', 'Easy·Open'],
+        ['Standard', 'open', 'Std·Open'],
+        ['Judge', 'open', 'Judge·Open'],
+        ['Standard', 'sealed', 'Std·Sealed'],
+        ['Hard', 'sealed', 'Hard·Sealed']
+      ];
+      const tierA = tierKeys.map(([t, p]) => (p === 'open' ? sysA.by_tier_open[t]?.score : sysA.by_tier_sealed[t]?.score) ?? 0);
+      const tierB = tierKeys.map(([t, p]) => (p === 'open' ? sysB.by_tier_open[t]?.score : sysB.by_tier_sealed[t]?.score) ?? 0);
+      document.getElementById('radar-desc-tier').textContent =
+        `Judge (Cross-Field Math): ${tierA[2]}% vs ${tierB[2]}% · Hard (Adversarial + SQuAD Null): ${tierA[4]}% vs ${tierB[4]}%`;
+      drawRadarSvg('radar-tier-svg', tierKeys.map(x => x[2]), tierA, tierB);
+
+      // 4. Subject Domains
+      const domKeys = [
+        ['incident_report', 'SRE Incident'],
+        ['compute_ledger', 'Cloud Ledger'],
+        ['cluster_throughput_comps', 'Cluster Comps'],
+        ['edge_traffic_forecast', 'Edge Forecast'],
+        ['squad_v2_open_qa', 'SQuAD v2.0'],
+        ['adversarial_stress', 'Adversarial']
+      ];
+      const domA = domKeys.map(([k]) => sysA.by_domain[k]?.score ?? 0);
+      const domB = domKeys.map(([k]) => sysB.by_domain[k]?.score ?? 0);
+      document.getElementById('radar-desc-domain').textContent =
+        `SQuAD v2.0: ${domA[4]}% vs ${domB[4]}% · Adversarial Guardrails: ${domA[5]}% vs ${domB[5]}%`;
+      drawRadarSvg('radar-domain-svg', domKeys.map(x => x[1]), domA, domB);
+    }
+
+    function renderHeatmapTable(systems) {
+      const tbody = document.getElementById('heatmap-tbody');
+      function cell(obj) {
+        if (!obj) return `<td class="bh-heat">—</td>`;
+        return `<td class="bh-heat" style="background: ${heatColor(obj.score)}" title="n=${obj.n} scored observations">${obj.score.toFixed(0)}</td>`;
+      }
+      tbody.innerHTML = systems.map(s => `
+        <tr>
+          <td><strong>${s.name}</strong></td>
+          ${cell(s.by_request_type.span_open)}
+          ${cell(s.by_request_type.span_sealed)}
+          ${cell(s.by_request_type.noul_open)}
+          ${cell(s.by_request_type.noul_sealed)}
+          ${cell(s.by_request_type.choice)}
+          ${cell(s.by_request_type.math)}
+          ${cell(s.by_request_type.score)}
+          ${cell(s.by_tier_open.Easy)}
+          ${cell(s.by_tier_open.Standard)}
+          ${cell(s.by_tier_open.Judge)}
+          ${cell(s.by_tier_sealed.Hard)}
+          ${cell(s.by_domain.incident_report)}
+          ${cell(s.by_domain.compute_ledger)}
+          ${cell(s.by_domain.squad_v2_open_qa)}
+          ${cell(s.by_domain.adversarial_stress)}
+        </tr>
+      `).join('');
+    }
+
+    function refreshAll() {
+      const systems = getFilteredSystems();
+      renderCapabilityBars(systems);
+      renderParetoChart(systems, 'pareto-cost-svg', 'cost');
+      renderParetoChart(systems, 'pareto-speed-svg', 'speed');
+      renderLeaderboardTable(systems);
+      renderHeatmapTable(systems);
+      renderComparisonRadars();
+    }
+
+    async function init() {
+      const res = await fetch('./bench-data.json');
+      BENCH_DATA = await res.json();
+      document.getElementById('draw-badge').textContent =
+        `${BENCH_DATA.draw_id} · ${BENCH_DATA.n_total_observations} Scored Observations`;
+
+      const selA = document.getElementById('select-sys-a');
+      const selB = document.getElementById('select-sys-b');
+      selA.innerHTML = BENCH_DATA.systems.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      selB.innerHTML = BENCH_DATA.systems.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      selA.value = 'nullspan-67m-onnx-int8';
+      selB.value = 'bge-small-en-v1.5';
+
+      selA.addEventListener('change', renderComparisonRadars);
+      selB.addEventListener('change', renderComparisonRadars);
+
+      document.getElementById('btn-pool-open').addEventListener('click', () => {
+        showApiModels = false;
+        document.getElementById('btn-pool-open').classList.add('active');
+        document.getElementById('btn-pool-all').classList.remove('active');
+        refreshAll();
+      });
+      document.getElementById('btn-pool-all').addEventListener('click', () => {
+        showApiModels = true;
+        document.getElementById('btn-pool-all').classList.add('active');
+        document.getElementById('btn-pool-open').classList.remove('active');
+        refreshAll();
+      });
+
+      document.getElementById('weight-preset-btns').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-weights]');
+        if (!btn) return;
+        document.querySelectorAll('#weight-preset-btns button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const [wi, wc, ws, wk] = btn.dataset.weights.split(',').map(Number);
+        weights = { i: wi, c: wc, s: ws, k: wk };
+        document.getElementById('sl-w-i').value = wi;
+        document.getElementById('sl-w-c').value = wc;
+        document.getElementById('sl-w-s').value = ws;
+        document.getElementById('sl-w-k').value = wk;
+        document.getElementById('lbl-w-i').textContent = wi + '%';
+        document.getElementById('lbl-w-c').textContent = wc + '%';
+        document.getElementById('lbl-w-s').textContent = ws + '%';
+        document.getElementById('lbl-w-k').textContent = wk + '%';
+        refreshAll();
+      });
+
+      ['i', 'c', 's', 'k'].forEach(axis => {
+        document.getElementById(`sl-w-${axis}`).addEventListener('input', (e) => {
+          weights[axis] = Number(e.target.value);
+          document.getElementById(`lbl-w-${axis}`).textContent = weights[axis] + '%';
+          refreshAll();
+        });
+      });
+
+      document.getElementById('search-input').addEventListener('input', refreshAll);
+
+      document.querySelectorAll('#lb-table thead th[data-sort]').forEach(th => {
+        th.addEventListener('click', () => {
+          const key = th.dataset.sort;
+          if (currentSortKey === key) {
+            currentSortAsc = !currentSortAsc;
+          } else {
+            currentSortKey = key;
+            currentSortAsc = (key === 'name' || key === 'usd' || key === 'p50' || key === 'ece');
+          }
+          refreshAll();
+        });
+      });
+
+      refreshAll();
+    }
+
+    init();
+  </script>
+</body>
+</html>
