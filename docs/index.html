@@ -48,8 +48,9 @@
 
     .brand {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 12px;
+      gap: 8px 12px;
     }
 
     .brand-mark {
@@ -201,6 +202,7 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      min-width: 0;
     }
 
     .panel-header {
@@ -212,6 +214,8 @@
       letter-spacing: 0.08em;
       padding: 9px 14px;
       display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
       justify-content: space-between;
       align-items: center;
       text-transform: uppercase;
@@ -378,6 +382,14 @@
       border: 1.5px solid var(--border);
       border-radius: 6px;
       padding: 20px;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     .arch-card h2 {
@@ -492,6 +504,98 @@
       background: var(--muted-bg);
       padding: 1px 5px;
       border-radius: 3px;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        position: static;
+        padding: 12px 14px;
+        gap: 10px;
+      }
+      .brand .badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+      }
+      .links {
+        width: 100%;
+        gap: 6px;
+        font-size: 0.72rem;
+      }
+      .links a {
+        padding: 5px 8px;
+      }
+      main {
+        padding: 18px 12px 48px;
+      }
+      .hero {
+        gap: 14px;
+        margin-bottom: 18px;
+        padding-bottom: 16px;
+      }
+      .hero h1 {
+        font-size: 1.4rem;
+        line-height: 1.2;
+      }
+      .hero p {
+        font-size: 0.9rem;
+      }
+      .install-box {
+        width: 100%;
+        text-align: center;
+        font-size: 0.76rem;
+        padding: 9px 12px;
+        overflow-x: auto;
+      }
+      .plain-english-card {
+        padding: 14px;
+      }
+      .plain-grid {
+        grid-template-columns: 1fr;
+      }
+      .preset-bar {
+        padding: 10px 12px;
+        gap: 10px;
+      }
+      .preset-buttons {
+        width: 100%;
+        gap: 6px;
+      }
+      button.preset-btn {
+        font-size: 0.72rem;
+        padding: 6px 9px;
+        text-align: left;
+      }
+      .metrics-strip {
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 8px 12px;
+        font-size: 0.74rem;
+      }
+      button.run-btn {
+        width: 100%;
+        padding: 9px 12px;
+        text-align: center;
+      }
+      .panel-body {
+        padding: 12px;
+      }
+      .field-card-top {
+        flex-wrap: wrap;
+      }
+      .arch-card {
+        padding: 14px 12px;
+      }
+      .arch-card h2 {
+        font-size: 0.88rem;
+        line-height: 1.35;
+      }
+      table.bench-table {
+        font-size: 0.74rem;
+      }
+      table.bench-table th, table.bench-table td {
+        padding: 7px 9px;
+      }
     }
   </style>
 </head>
@@ -635,6 +739,7 @@
     <div class="arch-section">
       <div class="arch-card">
         <h2>Sample Dataset Explorer · gnumanth/nullspan-dataset (Click Any Row to Load &amp; Execute)</h2>
+        <div class="table-wrap">
         <table class="bench-table" id="sample-explorer-table">
           <thead>
             <tr>
@@ -697,6 +802,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
 
       <div class="arch-card">
@@ -712,7 +818,8 @@
         <p style="margin: 0 0 12px 0; font-size: 0.85rem; color: var(--ink-muted);">
           <strong>How nullspan compares to TypeSafe Jev &amp; JevBench Leaders:</strong> Evaluated using the official <a href="https://benchmarkheaven.com/jev-models" target="_blank" rel="noopener" style="color: var(--ink);">JevBench 4-axis methodology</a> (<strong>Intelligence <code>I</code></strong>, <strong>Calibration <code>C</code></strong>, <strong>Speed <code>S</code></strong>, <strong>Cost <code>K</code></strong>), <strong>nullspan-67M (PyTorch FP32 / 64.3 MB Int8 ONNX)</strong> achieves <strong>99.2 / 98.7 Capability</strong> (<code>98.8% / 98.0%</code> Intelligence, <code>99.7 / 99.3</code> Calibration) and <strong>83.3 / 83.0 Composite</strong> at <strong>$0.0008–$0.0015 / 1k decisions</strong> (<code>5.6–12.3 ms p50</code>)—compared to <strong>Jev 1.13.0 (TypeSafe AI Hosted API)</strong> at <strong>77.1 Capability / 71.5 Composite</strong> (<code>$0.0323/1k</code>, <code>239.1 ms p50</code>), <strong>H2O-Lightning-4B v1.1</strong> at <strong>75.0 Capability / 72.5 Composite</strong> (<code>$0.0211/1k</code>, <code>29.3 ms p50</code> on RTX 5090), and <strong>basal-omni-1.0-ultra (31B)</strong> at <strong>82.5 Capability / 71.8 Composite</strong> (<code>$0.0447/1k</code>, <code>102.0 ms p50</code>).
         </p>
-        <table class="bench-table" style="margin-bottom: 18px;">
+        <div class="table-wrap" style="margin-bottom: 18px;">
+        <table class="bench-table">
           <thead>
             <tr>
               <th>System</th>
@@ -818,10 +925,12 @@
             </tr>
           </tbody>
         </table>
+        </div>
         <h2 style="margin-top: 14px;">Multi-Tier Scientific Evaluation Matrix (95% Bootstrap CIs, B=1,000 · Validation · Golden · Adversarial · SQuAD v2.0)</h2>
         <p style="margin: 0 0 12px 0; font-size: 0.85rem; color: var(--ink-muted);">
           <strong>Plain-English Takeaway:</strong> For structured telemetry, invoices, estimates, and prompt-injection stress tests, all three tiers achieve <strong>100.0% accuracy</strong>—meaning you can use the <strong>0 MB Zero-Dep Fast Engine</strong> at <code>0.023 ms/field</code>. When extracting answers from open-domain prose or tricky unanswerable questions (<strong>Stanford SQuAD v2.0</strong>), the <strong>67M Neural Model (PyTorch FP32 / 64.3 MB Int8 ONNX)</strong> jumps accuracy to <strong>91.7% (100% unanswerable abstention, AUROC 0.999)</strong>.
         </p>
+        <div class="table-wrap">
         <table class="bench-table">
           <thead>
             <tr>
@@ -876,6 +985,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   </main>
