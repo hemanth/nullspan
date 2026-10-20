@@ -1030,6 +1030,10 @@
     document.getElementById('run-btn').addEventListener('click', runExtraction);
 
     loadPreset('incident');
+    // Auto-activate the 64.3 MB Int8 ONNX Neural Model on the Hugging Face Space
+    setTimeout(() => {
+      engineBtnOnnx.click();
+    }, 150);
   </script>
 </body>
 </html>
