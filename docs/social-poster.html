@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, initial-scale=1.0" />
+  <title>nullspan · Mobile Social Poster</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --poster-bg: #f6f5ef;
+      --card-bg: #ffffff;
+      --dark-band-bg: #161618;
+      --ink: #141416;
+      --ink-muted: #52525b;
+      --border-ink: #18181b;
+      --border-width: 2.5px;
+      --radius-card: 16px;
+      --radius-dark: 18px;
+      --accent-indigo: #635bff;
+      --bar-violet: #7c66ff;
+      --bar-emerald: #22c55e;
+      --bar-coral: #f87153;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      width: 1080px;
+      background: var(--poster-bg);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .poster-frame {
+      width: 1080px;
+      padding: 46px 48px 44px;
+      background: var(--poster-bg);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .header-block {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .eyebrow-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .poster-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent-indigo);
+    }
+
+    .eyebrow-pill {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink);
+      background: #ffffff;
+      border: 2px solid var(--border-ink);
+      border-radius: 999px;
+      padding: 5px 14px;
+    }
+
+    .poster-title {
+      font-size: 64px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1.02;
+      color: var(--ink);
+    }
+
+    .poster-title span.accent {
+      color: var(--accent-indigo);
+    }
+
+    .poster-lead {
+      font-size: 24px;
+      line-height: 1.42;
+      color: #3f3f46;
+      font-weight: 500;
+    }
+
+    .poster-lead strong {
+      color: var(--ink);
+      font-weight: 800;
+    }
+
+    /* 4 Equal-Weight Stack Cards */
+    .stack-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .stack-row {
+      background: var(--card-bg);
+      border: var(--border-width) solid var(--border-ink);
+      border-radius: var(--radius-card);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .stack-row-main {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .stack-row-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .layer-index {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 800;
+      color: #ffffff;
+      background: var(--ink);
+      padding: 4px 10px;
+      border-radius: 7px;
+      letter-spacing: 0.02em;
+    }
+
+    .stack-row-title h2 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: var(--ink);
+    }
+
+    .stack-row-main p {
+      font-size: 19px;
+      line-height: 1.38;
+      color: var(--ink-muted);
+      font-weight: 500;
+    }
+
+    .stack-row-main p code {
+      font-family: var(--font-mono);
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink);
+      background: #f1efe7;
+      padding: 1px 6px;
+      border-radius: 5px;
+    }
+
+    .stack-row-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .big-metric {
+      font-family: var(--font-mono);
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent-indigo);
+      letter-spacing: -0.03em;
+    }
+
+    .proto-pill {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+      background: var(--poster-bg);
+      border: 1.8px solid var(--border-ink);
+      padding: 4px 11px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+
+    /* Dark Contrast Band for 3-Tier Benchmark */
+    .dark-band {
+      background: var(--dark-band-bg);
+      color: #ffffff;
+      border-radius: var(--radius-dark);
+      padding: 24px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      border: var(--border-width) solid var(--border-ink);
+    }
+
+    .dark-band-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .dark-band-title {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #a1a1aa;
+      white-space: nowrap;
+    }
+
+    .dark-band-badge {
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #e4e4e7;
+      background: #27272a;
+      padding: 5px 12px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .tier-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .tier-item {
+      display: grid;
+      grid-template-columns: 285px 1fr 185px;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .tier-label {
+      font-size: 19px;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      white-space: nowrap;
+    }
+
+    .tier-label span {
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #a1a1aa;
+    }
+
+    .bar-track {
+      height: 36px;
+      background: #27272a;
+      border-radius: 9px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      padding: 4px;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 800;
+      color: #141416;
+      white-space: nowrap;
+    }
+
+    .tier-stat {
+      font-family: var(--font-mono);
+      font-size: 16.5px;
+      font-weight: 800;
+      text-align: right;
+      color: #ffffff;
+      white-space: nowrap;
+    }
+
+    /* Bottom KPI Trio */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .kpi-card {
+      background: var(--card-bg);
+      border: var(--border-width) solid var(--border-ink);
+      border-radius: var(--radius-card);
+      padding: 18px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .kpi-num {
+      font-family: var(--font-mono);
+      font-size: 40px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      color: var(--ink);
+      line-height: 1.05;
+    }
+
+    .kpi-num span {
+      color: var(--accent-indigo);
+    }
+
+    .kpi-label {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-top: 2px;
+    }
+
+    .kpi-sub {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink-muted);
+    }
+
+    /* Footer Colophon */
+    .poster-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding-top: 6px;
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .footer-install {
+      background: var(--ink);
+      color: #ffffff;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-weight: 800;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .footer-links {
+      color: var(--ink-muted);
+      font-weight: 700;
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    .footer-links strong {
+      color: var(--ink);
+    }
+  </style>
+</head>
+<body>
+  <div class="poster-frame" id="poster">
+    <div class="header-block">
+      <div class="eyebrow-row">
+        <p class="poster-eyebrow">SYSTEM ONE STRUCTURED EXTRACTION · ZERO OUTPUT TOKENS</p>
+        <span class="eyebrow-pill">JS · Python · Browser WASM ONNX</span>
+      </div>
+      <h1 class="poster-title">nullspan: <span class="accent">Smart Highlighter</span><br>+ Calculator, Not a Chatbot.</h1>
+      <p class="poster-lead">
+        Standard LLMs generate JSON word-by-word—slow, costly, vulnerable to prompt injection, and prone to hallucinating missing fields. <strong>nullspan reads text once and extracts every field in a single pass:</strong>
+      </p>
+    </div>
+
+    <div class="stack-list">
+      <div class="stack-row">
+        <div class="stack-row-main">
+          <div class="stack-row-title">
+            <span class="layer-index">01</span>
+            <h2>Points to Exact Text ([start, end] Span)</h2>
+          </div>
+          <p>Highlights exact character offsets in your source text (<code>0</code> output tokens). Structurally immune to fabricated strings and <code>"ignore instructions"</code> attacks.</p>
+        </div>
+        <div class="stack-row-right">
+          <span class="big-metric">100% EM</span>
+          <span class="proto-pill">0% Injection FPHR</span>
+        </div>
+      </div>
+
+      <div class="stack-row">
+        <div class="stack-row-main">
+          <div class="stack-row-title">
+            <span class="layer-index">02</span>
+            <h2>Knows When to Say "Not There" (p_null)</h2>
+          </div>
+          <p>Predicts calibrated abstention probability (<code>p_null</code>) + nearest decoy <code>guess</code> when a CVE, discount, or SQuAD v2.0 answer is absent from the text.</p>
+        </div>
+        <div class="stack-row-right">
+          <span class="big-metric">0.999 AUROC</span>
+          <span class="proto-pill">ECE 0.00002</span>
+        </div>
+      </div>
+
+      <div class="stack-row">
+        <div class="stack-row-main">
+          <div class="stack-row-title">
+            <span class="layer-index">03</span>
+            <h2>Checks the Math Automatically (verified)</h2>
+          </div>
+          <p>10-way System One router computes sums, durations, <code>boolean</code>/<code>enum</code> probs, and verifies cross-field equations like <code>subtotal == nodes * rate</code>.</p>
+        </div>
+        <div class="stack-row-right">
+          <span class="big-metric">10 Ops</span>
+          <span class="proto-pill">100% Invariants</span>
+        </div>
+      </div>
+
+      <div class="stack-row">
+        <div class="stack-row-main">
+          <div class="stack-row-title">
+            <span class="layer-index">04</span>
+            <h2>Gives Realistic Ranges (p10 / median / p90)</h2>
+          </div>
+          <p>Predicts strictly monotone quantile intervals and 99-percentile log-grid curves for repair cost estimates, cluster throughput comps, and traffic forecasts.</p>
+        </div>
+        <div class="stack-row-right">
+          <span class="big-metric">p10·p50·p90</span>
+          <span class="proto-pill">100% Monotone</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dark-band">
+      <div class="dark-band-header">
+        <span class="dark-band-title">3-TIER EMPIRICAL BENCHMARK · 95% BOOTSTRAP CI</span>
+        <span class="dark-band-badge">Structured · Adversarial · SQuAD v2.0</span>
+      </div>
+      <div class="tier-rows">
+        <div class="tier-item">
+          <div class="tier-label">
+            Tier 1A · PyTorch FP32 Neural
+            <span>67M DistilBERT · 5 Heads · 255.8 MB</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 100%; background: var(--bar-violet);">100% Structured · 91.7% SQuAD v2.0 (100% Null)</div>
+          </div>
+          <div class="tier-stat">12.3 ms / field</div>
+        </div>
+
+        <div class="tier-item">
+          <div class="tier-label">
+            Tier 1B · Browser ONNX Int8
+            <span>WASM SIMD · 64.3 MB (3.98x smaller)</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 96%; background: var(--bar-emerald);">100% Structured · 90.0% SQuAD v2.0 (0.996 AUC)</div>
+          </div>
+          <div class="tier-stat">64.3 MB In-Browser</div>
+        </div>
+
+        <div class="tier-item">
+          <div class="tier-label">
+            Tier 2 · Zero-Dep Fast Engine
+            <span>Pure JS &amp; Python · 0 MB Weights</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 92%; background: var(--bar-coral);">100% Structured, Math &amp; Injection Suite</div>
+          </div>
+          <div class="tier-stat">0.023 ms / field</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-num">0 <span>tok/s</span></div>
+        <div class="kpi-label">Zero Output Tokens</div>
+        <div class="kpi-sub">Single-pass encoder pointer</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-num">64.3 <span>MB</span></div>
+        <div class="kpi-label">Runs in Browser WASM</div>
+        <div class="kpi-sub">Int8 ONNX + 0 MB Fast Tier</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-num">100<span>%</span></div>
+        <div class="kpi-label">Abstention &amp; Math EM</div>
+        <div class="kpi-sub">ECE 0.00002 · AUROC 0.999</div>
+      </div>
+    </div>
+
+    <div class="poster-footer">
+      <div class="footer-install">npm i nullspan &nbsp;·&nbsp; pip install nullspan</div>
+      <div class="footer-links"><strong>hemanth.github.io/nullspan</strong> &nbsp;·&nbsp; <strong>hf.co/spaces/gnumanth/nullspan</strong></div>
+    </div>
+  </div>
+</body>
+</html>
