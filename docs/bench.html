@@ -185,6 +185,7 @@
       border: 1.5px solid var(--border);
       border-radius: 6px;
       overflow: hidden;
+      min-width: 0;
     }
 
     .section-header {
@@ -279,6 +280,7 @@
       border-radius: 6px;
       padding: 14px;
       background: var(--bg);
+      min-width: 0;
     }
 
     .chart-box h3 {
@@ -385,6 +387,70 @@
     .bh-heat {
       text-align: center !important;
       font-weight: 700;
+    }
+
+    @media (max-width: 760px) {
+      header {
+        position: static;
+        padding: 12px 14px;
+        gap: 10px;
+      }
+      .brand .badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+      }
+      .links {
+        width: 100%;
+        gap: 6px;
+        font-size: 0.72rem;
+      }
+      .links a {
+        padding: 5px 8px;
+      }
+      main {
+        padding: 18px 12px 48px;
+        gap: 18px;
+      }
+      .hero h1 {
+        font-size: 1.4rem;
+        line-height: 1.2;
+      }
+      .hero p {
+        font-size: 0.88rem;
+      }
+      .section-body {
+        padding: 12px;
+      }
+      .filter-bar {
+        padding: 10px 12px;
+        gap: 8px;
+      }
+      .btn-group {
+        width: 100%;
+      }
+      select.sys-select, input.search-input {
+        width: 100%;
+        max-width: 100%;
+      }
+      .cap-fill {
+        font-size: 0.66rem;
+        padding-left: 6px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .cap-score-val {
+        text-align: left;
+        font-size: 0.78rem;
+      }
+      .sliders-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .sliders-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
