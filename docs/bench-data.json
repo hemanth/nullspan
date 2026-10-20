@@ -630,6 +630,375 @@
       "official_rank": 5
     },
     {
+      "id": "h2o-lightning-4b",
+      "name": "H2O-Lightning-4B v1.1 (JevBench #1 Comp)",
+      "author": "H2O.ai",
+      "system_type": "Jev-Compatible Decoder (4B)",
+      "open_weights": true,
+      "params_m": 4000.0,
+      "footprint_mb": 8100.0,
+      "base_model": "Qwen/Qwen3.5-4B Fine-Tune (vLLM RTX 5090)",
+      "runtime": "Self-Hosted GPU (RTX 5090)",
+      "input_rate_per_1m_usd": 0.027,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 1500,
+      "input_tokens_total": 1152000,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0211,
+      "axes": {
+        "intelligence": 60.0,
+        "intelligence_ci95": [
+          57.8,
+          62.3
+        ],
+        "calibration": 90.0,
+        "speed": 92.6,
+        "cost": 60.3
+      },
+      "capability_score": 75.0,
+      "composite_score": 72.5,
+      "open_set_score": 64.1,
+      "sealed_set_score": 59.0,
+      "calibration_details": {
+        "null_auroc": 0.908,
+        "null_ece": 0.0502,
+        "null_brier": 0.0645
+      },
+      "latency": {
+        "mean_ms": 34.1,
+        "p50_ms": 29.285,
+        "p95_ms": 58.4,
+        "p99_ms": 74.0
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 61.5,
+          "n": 300
+        },
+        "span_sealed": {
+          "score": 58.2,
+          "n": 300
+        },
+        "noul_open": {
+          "score": 60.9,
+          "n": 150
+        },
+        "noul_sealed": {
+          "score": 68.1,
+          "n": 150
+        },
+        "choice": {
+          "score": 75.2,
+          "n": 300
+        },
+        "math": {
+          "score": 57.6,
+          "n": 150
+        },
+        "score": {
+          "score": 47.0,
+          "n": 150
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 88.2,
+          "n": 100
+        },
+        "Standard": {
+          "score": 57.6,
+          "n": 100
+        },
+        "Judge": {
+          "score": 61.0,
+          "n": 100
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 62.6,
+          "n": 600
+        },
+        "Hard": {
+          "score": 54.3,
+          "n": 600
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 69.4,
+          "n": 300
+        },
+        "compute_ledger": {
+          "score": 59.2,
+          "n": 300
+        },
+        "cluster_throughput_comps": {
+          "score": 47.0,
+          "n": 150
+        },
+        "edge_traffic_forecast": {
+          "score": 44.3,
+          "n": 150
+        },
+        "squad_v2_open_qa": {
+          "score": 62.6,
+          "n": 300
+        },
+        "adversarial_stress": {
+          "score": 54.3,
+          "n": 300
+        }
+      },
+      "official_rank": 6
+    },
+    {
+      "id": "basal-omni-1.0-ultra",
+      "name": "basal-omni-1.0-ultra (JevBench #1 Cap)",
+      "author": "Remek Kinas",
+      "system_type": "Jev-Compatible Decoder (31B)",
+      "open_weights": true,
+      "params_m": 31000.0,
+      "footprint_mb": 62000.0,
+      "base_model": "Gemma-4-31B-it + Merged LoRA (Typed Readout)",
+      "runtime": "Self-Hosted GPU (p50 102 ms)",
+      "input_rate_per_1m_usd": 0.058,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 1500,
+      "input_tokens_total": 1152000,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0447,
+      "axes": {
+        "intelligence": 74.1,
+        "intelligence_ci95": [
+          71.8,
+          76.3
+        ],
+        "calibration": 91.0,
+        "speed": 87.3,
+        "cost": 50.5
+      },
+      "capability_score": 82.5,
+      "composite_score": 71.8,
+      "open_set_score": 76.7,
+      "sealed_set_score": 73.1,
+      "calibration_details": {
+        "null_auroc": 0.924,
+        "null_ece": 0.0449,
+        "null_brier": 0.055
+      },
+      "latency": {
+        "mean_ms": 114.2,
+        "p50_ms": 102.0,
+        "p95_ms": 168.0,
+        "p99_ms": 210.0
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 75.4,
+          "n": 300
+        },
+        "span_sealed": {
+          "score": 73.8,
+          "n": 300
+        },
+        "noul_open": {
+          "score": 68.4,
+          "n": 150
+        },
+        "noul_sealed": {
+          "score": 72.5,
+          "n": 150
+        },
+        "choice": {
+          "score": 82.7,
+          "n": 300
+        },
+        "math": {
+          "score": 69.1,
+          "n": 150
+        },
+        "score": {
+          "score": 69.1,
+          "n": 150
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 96.5,
+          "n": 100
+        },
+        "Standard": {
+          "score": 69.1,
+          "n": 100
+        },
+        "Judge": {
+          "score": 65.2,
+          "n": 100
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 78.8,
+          "n": 600
+        },
+        "Hard": {
+          "score": 74.0,
+          "n": 600
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 81.2,
+          "n": 300
+        },
+        "compute_ledger": {
+          "score": 71.5,
+          "n": 300
+        },
+        "cluster_throughput_comps": {
+          "score": 69.1,
+          "n": 150
+        },
+        "edge_traffic_forecast": {
+          "score": 66.9,
+          "n": 150
+        },
+        "squad_v2_open_qa": {
+          "score": 76.9,
+          "n": 300
+        },
+        "adversarial_stress": {
+          "score": 74.0,
+          "n": 300
+        }
+      },
+      "official_rank": 7
+    },
+    {
+      "id": "jev-1.13.0-ref",
+      "name": "Jev 1.13.0 (TypeSafe AI \u00b7 JevBench Ref)",
+      "author": "TypeSafe AI",
+      "system_type": "Jev Reference \u00b7 Hosted API",
+      "open_weights": false,
+      "params_m": null,
+      "footprint_mb": null,
+      "base_model": "TypeSafe Jev 1.13.0 ($0.042/1M input)",
+      "runtime": "TypeSafe Hosted API (JevBench v1.7)",
+      "input_rate_per_1m_usd": 0.042,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 1500,
+      "input_tokens_total": 1152000,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0323,
+      "axes": {
+        "intelligence": 63.6,
+        "intelligence_ci95": [
+          61.2,
+          66.0
+        ],
+        "calibration": 90.6,
+        "speed": 91.5,
+        "cost": 54.7
+      },
+      "capability_score": 77.1,
+      "composite_score": 71.5,
+      "open_set_score": 68.9,
+      "sealed_set_score": 61.6,
+      "calibration_details": {
+        "null_auroc": 0.912,
+        "null_ece": 0.0468,
+        "null_brier": 0.0612
+      },
+      "latency": {
+        "mean_ms": 251.4,
+        "p50_ms": 239.102,
+        "p95_ms": 412.0,
+        "p99_ms": 530.0
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 66.2,
+          "n": 300
+        },
+        "span_sealed": {
+          "score": 61.4,
+          "n": 300
+        },
+        "noul_open": {
+          "score": 54.5,
+          "n": 150
+        },
+        "noul_sealed": {
+          "score": 46.1,
+          "n": 150
+        },
+        "choice": {
+          "score": 79.0,
+          "n": 300
+        },
+        "math": {
+          "score": 63.2,
+          "n": 150
+        },
+        "score": {
+          "score": 63.3,
+          "n": 150
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 93.9,
+          "n": 100
+        },
+        "Standard": {
+          "score": 63.2,
+          "n": 100
+        },
+        "Judge": {
+          "score": 67.7,
+          "n": 100
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 68.7,
+          "n": 600
+        },
+        "Hard": {
+          "score": 58.9,
+          "n": 600
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 74.2,
+          "n": 300
+        },
+        "compute_ledger": {
+          "score": 66.8,
+          "n": 300
+        },
+        "cluster_throughput_comps": {
+          "score": 63.3,
+          "n": 150
+        },
+        "edge_traffic_forecast": {
+          "score": 63.0,
+          "n": 150
+        },
+        "squad_v2_open_qa": {
+          "score": 61.6,
+          "n": 300
+        },
+        "adversarial_stress": {
+          "score": 58.9,
+          "n": 300
+        }
+      },
+      "official_rank": 8
+    },
+    {
       "id": "gpt-5.4-nano-json",
       "name": "gpt-5.4-nano (JSON Decoder \u00b7 API)",
       "author": "OpenAI (Ref)",
@@ -750,7 +1119,7 @@
           "n": 8
         }
       },
-      "official_rank": 6
+      "official_rank": 9
     },
     {
       "id": "claude-haiku-4.5-json",
@@ -873,7 +1242,7 @@
           "n": 8
         }
       },
-      "official_rank": 7
+      "official_rank": 10
     },
     {
       "id": "bge-small-en-v1.5",
@@ -996,7 +1365,7 @@
           "n": 8
         }
       },
-      "official_rank": 8
+      "official_rank": 11
     },
     {
       "id": "distilbert-base-control",
@@ -1119,7 +1488,7 @@
           "n": 8
         }
       },
-      "official_rank": 9
+      "official_rank": 12
     },
     {
       "id": "all-MiniLM-L12-v2",
@@ -1242,7 +1611,7 @@
           "n": 8
         }
       },
-      "official_rank": 10
+      "official_rank": 13
     },
     {
       "id": "all-mpnet-base-v2",
@@ -1365,7 +1734,7 @@
           "n": 8
         }
       },
-      "official_rank": 11
+      "official_rank": 14
     },
     {
       "id": "paraphrase-albert-small-v2",
@@ -1488,7 +1857,7 @@
           "n": 8
         }
       },
-      "official_rank": 12
+      "official_rank": 15
     },
     {
       "id": "paraphrase-MiniLM-L3-v2",
@@ -1611,7 +1980,7 @@
           "n": 8
         }
       },
-      "official_rank": 13
+      "official_rank": 16
     },
     {
       "id": "all-MiniLM-L6-v2",
@@ -1734,7 +2103,7 @@
           "n": 8
         }
       },
-      "official_rank": 14
+      "official_rank": 17
     }
   ],
   "tiers": {

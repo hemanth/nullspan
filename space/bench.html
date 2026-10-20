@@ -948,7 +948,7 @@
       selA.innerHTML = BENCH_DATA.systems.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
       selB.innerHTML = BENCH_DATA.systems.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
       selA.value = 'nullspan-67m-onnx-int8';
-      selB.value = 'bge-small-en-v1.5';
+      selB.value = 'jev-1.13.0-ref';
 
       selA.addEventListener('change', renderComparisonRadars);
       selB.addEventListener('change', renderComparisonRadars);
