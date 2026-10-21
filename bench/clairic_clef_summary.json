@@ -1,0 +1,50 @@
+{
+  "system": "@cf/cloudflare/clairic + @cf/cloudflare/clef (Live Workers AI)",
+  "n_items": 404,
+  "n_docs": 126,
+  "total_rpc_calls": 160,
+  "total_passes": 226,
+  "total_input_tokens": 69879,
+  "overall_acc_pct": 90.1,
+  "overall_ci95_pct": [
+    87.5,
+    92.7
+  ],
+  "squad_v2_acc_pct": 92.5,
+  "squad_v2_ci95_pct": [
+    85.0,
+    98.3
+  ],
+  "squad_v2_auroc": 0.988,
+  "structured_math_acc_pct": 89.7,
+  "structured_math_ci95_pct": [
+    86.6,
+    92.5
+  ],
+  "adversarial_acc_pct": 87.5,
+  "auroc_all": 0.984,
+  "ece": 0.06449,
+  "brier": 0.05851,
+  "calibration_score": 93.8,
+  "latency_per_item_ms": {
+    "mean_ms": 141.4615,
+    "p50_ms": 95.0278,
+    "p95_ms": 325.787,
+    "p99_ms": 430.8539
+  },
+  "latency_per_doc_ms": {
+    "mean_ms": 453.5751,
+    "p50_ms": 308.63,
+    "p95_ms": 1020.5,
+    "p99_ms": 1217.8325
+  },
+  "by_req_type_pct": {
+    "span_open": 83.8,
+    "math": 100.0,
+    "choice": 100.0,
+    "noul_open": 100.0,
+    "score": 89.0,
+    "span_sealed": 92.4,
+    "noul_sealed": 90.6
+  }
+}

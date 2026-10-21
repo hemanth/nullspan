@@ -442,14 +442,14 @@ def render_scene(draw: ImageDraw.ImageDraw, scene_idx: int, local_f: int) -> Non
             gap=10,
         )
 
-        draw_studio_card(draw, (56, 656 + dy2, 1024, 1202 + dy2), "WHAT YOUR APPLICATION RECEIVES FOR `cve_id`", "AUROC 0.9998")
+        draw_studio_card(draw, (56, 656 + dy2, 1024, 1202 + dy2), "CALIBRATION & ABSTENTION DIAGNOSTICS (N = 404)", "ECE 0.014 VS 0.064")
 
         draw.rounded_rectangle([88, 740 + dy2, 992, 896 + dy2], radius=12, fill=THEME["muted_bg"], outline=THEME["ink"], width=2)
-        draw_pill_centered(draw, 116, 788 + dy2, "@cf/cloudflare/clairic", THEME["null"], font=font_mono_bold(21), pad_x=16, height=46)
-        draw.text((116, 856 + dy2), "Returns bare p_null scalar — no abstention reason or span entropy.", font=font_sans_bold(24), fill=THEME["ink_muted"], anchor="lm")
+        draw_pill_centered(draw, 116, 788 + dy2, "@cf/cloudflare/clairic (ECE 0.064)", THEME["null"], font=font_mono_bold(21), pad_x=16, height=46)
+        draw.text((116, 856 + dy2), "Bare p_null only — 24 false abstentions on terse ledger fields.", font=font_sans_bold(24), fill=THEME["ink_muted"], anchor="lm")
 
         draw.rounded_rectangle([88, 922 + dy2, 992, 1168 + dy2], radius=12, fill=THEME["surface"], outline=THEME["ink"], width=3)
-        draw_pill_centered(draw, 116, 970 + dy2, "nullspan · Epistemic Abstention Gate", THEME["list"], font=font_mono_bold(21), pad_x=16, height=46)
+        draw_pill_centered(draw, 116, 970 + dy2, "nullspan · Epistemic Abstention Gate (ECE 0.014)", THEME["list"], font=font_mono_bold(21), pad_x=16, height=46)
         draw_inline_row(
             draw,
             116,
@@ -457,37 +457,37 @@ def render_scene(draw: ImageDraw.ImageDraw, scene_idx: int, local_f: int) -> Non
             [
                 {"type": "pill", "text": "value: null", "font": font_mono_bold(21), "bg": THEME["null"], "height": 48, "pad_x": 16, "radius": 8},
                 {"type": "pill", "text": "p_null: 0.994", "font": font_mono_bold(21), "bg": THEME["span"], "height": 48, "pad_x": 16, "radius": 8},
-                {"type": "pill", "text": "0% Injection FPHR", "font": font_mono_bold(21), "bg": THEME["list"], "height": 48, "pad_x": 16, "radius": 8},
+                {"type": "pill", "text": "0 False Abstentions", "font": font_mono_bold(21), "bg": THEME["list"], "height": 48, "pad_x": 16, "radius": 8},
             ],
             gap=16,
         )
         draw.text((116, 1126 + dy2), "✓ abstention_reason: 'unassigned_placeholder'  (vs 'missing_field')", font=font_mono_bold(20.5), fill=THEME["ink"], anchor="lm")
 
     else:
-        # SCENE 5: 100% Apples-to-Apples Local Benchmark (Stanford SQuAD v2.0 + Structured Suite)
-        draw_pill_centered(draw, 56, 168 + dy1, "5 · EMPIRICAL BENCHMARK (APPLES-TO-APPLES · SAME ITEMS)", THEME["span"], font=font_mono_bold(17), pad_x=14, height=38, radius=6)
+        # SCENE 5: 100% Apples-to-Apples Live Head-to-Head Benchmark (Nullspan vs Clairic + Clef)
+        draw_pill_centered(draw, 56, 168 + dy1, "5 · LIVE HEAD-TO-HEAD BENCHMARK (N = 404 SAME ITEMS)", THEME["span"], font=font_mono_bold(17), pad_x=14, height=38, radius=6)
 
         draw_inline_row(
             draw,
             56,
             242 + dy1,
             [
-                {"type": "pill", "text": "[91.7% SQuAD v2.0]", "font": font_sans_bold(43), "bg": THEME["span"], "height": 66, "pad_x": 16},
-                {"type": "text", "text": "&", "font": font_sans_bold(48)},
-                {"type": "pill", "text": "100% Structured.", "font": font_sans_bold(43), "bg": THEME["list"], "height": 66, "pad_x": 16},
+                {"type": "pill", "text": "[98.8% vs 90.1%]", "font": font_sans_bold(43), "bg": THEME["list"], "height": 66, "pad_x": 16},
+                {"type": "text", "text": "at", "font": font_sans_bold(48)},
+                {"type": "pill", "text": "17x Faster Speed.", "font": font_sans_bold(43), "bg": THEME["span"], "height": 66, "pad_x": 16},
             ],
             gap=14,
         )
-        draw.text((56, 326 + dy1), "Measured locally on the exact same 404 items (336 Structured + 68 SQuAD v2.0 / Adversarial):", font=font_sans_med(23.5), fill=THEME["ink_muted"], anchor="lm")
+        draw.text((56, 326 + dy1), "Live evaluation on the exact same 404 items (126 docs · SQuAD v2.0 + Structured):", font=font_sans_med(23.5), fill=THEME["ink_muted"], anchor="lm")
 
-        draw_studio_card(draw, (56, 384 + dy2, 1024, 1202 + dy2), "SAME-DATASET EVALUATION · bench/run_bench.py (B=1,000 CIs)", "RESULTS.JSON")
+        draw_studio_card(draw, (56, 384 + dy2, 1024, 1202 + dy2), "SAME-DATASET BENCHMARK · eval_clairic_clef.py (B=1,000 CIs)", "404 ITEMS")
 
         bars = [
             ("1. nullspan-67M (PyTorch FP32)", 98.8, "SQuAD v2.0: 91.7% (0.999 AUC)  ·  Struct/Math: 100%", "5.6 ms · 256 MB", THEME["list"]),
             ("2. nullspan-67M-Int8 (Browser WASM)", 98.0, "SQuAD v2.0: 90.0% (0.996 AUC)  ·  Struct/Math: 100%", "12.3 ms · 64.3 MB", THEME["span"]),
-            ("3. nullspan-ZeroDep (Fast Engine)", 88.6, "SQuAD v2.0: 23.3% (Lexical)  ·  Struct/Math: 100%", "0.005 ms · 0 MB", THEME["span"]),
-            ("4. BAAI/bge-small-en-v1.5 (Bi-Encoder)", 17.5, "SQuAD v2.0: 53.3% (0.859 AUC)  ·  Math/Inv: 0%", "7.9 ms · 127 MB", THEME["null"]),
-            ("5. distilbert-base (Untuned Control)", 17.3, "SQuAD v2.0: 51.7% (0.875 AUC)  ·  Math/Inv: 0%", "6.9 ms · 255 MB", THEME["null"]),
+            ("3. @cf/cloudflare/clairic + Clef (Live)", 90.1, "SQuAD v2.0: 92.5% (0.988 AUC)  ·  Struct/Math: 89.7%", "95.0 ms (309ms RPC)", THEME["null"]),
+            ("4. nullspan-ZeroDep (Fast Engine)", 88.6, "SQuAD v2.0: 23.3% (Lexical)  ·  Struct/Math: 100%", "0.005 ms · 0 MB", THEME["span"]),
+            ("5. BAAI/bge-small-en-v1.5 (Bi-Encoder)", 17.5, "SQuAD v2.0: 53.3% (0.859 AUC)  ·  Math/Inv: 0%", "7.9 ms · 127 MB", THEME["null"]),
         ]
         bar_anim = ease_out_cubic(max(0.0, (local_f - 6) / 22.0))
         for bi, (btitle, overall_i, breakdown_s, bmeta, bcol) in enumerate(bars):
