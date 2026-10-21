@@ -279,15 +279,15 @@ def render_scene(draw: ImageDraw.ImageDraw, scene_idx: int, local_f: int) -> Non
         )
 
         # Card A: Cloudflare (y = 414..742)
-        draw_studio_card(draw, (56, 414 + dy2, 1024, 742 + dy2), "CLOUDFLARE WORKERS AI", "2 SEPARATE MODELS")
+        draw_studio_card(draw, (56, 414 + dy2, 1024, 742 + dy2), "CLOUDFLARE WORKERS AI (LIVE N = 404 RUN)", "160 RPCs · 226 PASSES")
         draw_pill_centered(draw, 88, 514 + dy2, "Model 1: @cf/cloudflare/clairic", THEME["null"], font=font_mono_bold(22), pad_x=16, height=48)
-        draw.text((88, 568 + dy2), "Extracts spans, numbers & estimates only.", font=font_sans_med(25), fill=THEME["ink_muted"], anchor="lm")
-        draw_pill_centered(draw, 88, 636 + dy2, "Model 2: Clef (Decision Model)", THEME["null"], font=font_mono_bold(22), pad_x=16, height=48)
-        draw.text((88, 690 + dy2), "Separate model call required for boolean & enum.", font=font_sans_med(25), fill=THEME["ink_muted"], anchor="lm")
+        draw.text((88, 568 + dy2), "Extracts spans & numbers only (2–3 passes/doc · 69,879 tokens).", font=font_sans_med(24), fill=THEME["ink_muted"], anchor="lm")
+        draw_pill_centered(draw, 88, 636 + dy2, "Model 2: @cf/cloudflare/clef (27B)", THEME["null"], font=font_mono_bold(22), pad_x=16, height=48)
+        draw.text((88, 690 + dy2), "Separate HTTP RPC required for boolean (noul) & enum (choice).", font=font_sans_med(24), fill=THEME["ink_muted"], anchor="lm")
 
         # Card B: nullspan (y = 776..1202)
-        draw_studio_card(draw, (56, 776 + dy2, 1024, 1202 + dy2), "NULLSPAN (67M CROSS-ENCODER)", "1 UNIFIED PASS")
-        draw.text((88, 874 + dy2), "All 5 Neural Heads Run Together in 1 Pass:", font=font_sans_bold(29), fill=THEME["ink"], anchor="lm")
+        draw_studio_card(draw, (56, 776 + dy2, 1024, 1202 + dy2), "NULLSPAN (67M CROSS-ENCODER)", "1 UNIFIED PASS · 0 RPCs")
+        draw.text((88, 874 + dy2), "All 5 Neural Heads Run Together in 1 Local Pass:", font=font_sans_bold(29), fill=THEME["ink"], anchor="lm")
 
         badges = [
             ("span_head · [start, end]", THEME["span"], 88, 954),
@@ -298,11 +298,11 @@ def render_scene(draw: ImageDraw.ImageDraw, scene_idx: int, local_f: int) -> Non
         for btxt, bcol, bx, bcy in badges:
             draw_pill_centered(draw, bx, bcy + dy2, btxt, bcol, font=font_mono_bold(20), pad_x=16, height=54, radius=8, shadow=True)
 
-        draw.text((88, 1138 + dy2), "✓ Zero output tokens     ✓ Zero prompt-injection risk", font=font_mono_bold(22), fill=THEME["ink"], anchor="lm")
+        draw.text((88, 1138 + dy2), "✓ Zero output tokens     ✓ $0.00 per-token RPC billing", font=font_mono_bold(22), fill=THEME["ink"], anchor="lm")
 
     elif scene_idx == 1:
         # SCENE 2: Browser WASM + Open Weights vs Closed Cloud Lock-In
-        draw_pill_centered(draw, 56, 168 + dy1, "2 · OPEN WEIGHTS & BROWSER WASM", THEME["list"], font=font_mono_bold(17), pad_x=14, height=38, radius=6)
+        draw_pill_centered(draw, 56, 168 + dy1, "2 · MEASURED LATENCY & OPEN WEIGHTS", THEME["list"], font=font_mono_bold(17), pad_x=14, height=38, radius=6)
 
         draw_inline_row(
             draw,
@@ -319,19 +319,19 @@ def render_scene(draw: ImageDraw.ImageDraw, scene_idx: int, local_f: int) -> Non
             56,
             332 + dy1,
             [
-                {"type": "text", "text": "Not Locked in", "font": f_h1},
-                {"type": "pill", "text": "Closed Cloud.", "font": f_pill_h1, "bg": THEME["null"], "height": 68, "pad_x": 18},
+                {"type": "text", "text": "25x Faster Than", "font": f_h1},
+                {"type": "pill", "text": "Edge RPCs.", "font": f_pill_h1, "bg": THEME["null"], "height": 68, "pad_x": 18},
             ],
             gap=18,
         )
 
-        draw_studio_card(draw, (56, 414 + dy2, 1024, 1202 + dy2), "DEPLOYMENT & WEIGHTS COMPARISON", "MIT OPEN SOURCE")
+        draw_studio_card(draw, (56, 414 + dy2, 1024, 1202 + dy2), "LIVE LATENCY & WEIGHTS COMPARISON (N = 126 DOCS)", "MIT OPEN SOURCE")
 
         rows = [
-            ("Cloudflare Clairic", "Closed Preview Only", "No Weights · Workers AI RPC Only", THEME["null"]),
-            ("Tier 1B · Browser WASM", "64.3 MB Int8 ONNX", "100% Client-Side in Chrome / Safari", THEME["span"]),
-            ("Tier 1A · PyTorch FP32", "67M Params (HF)", "Open Weights & Training Pipeline", THEME["list"]),
-            ("Tier 2 · Zero-Dep Fast", "0 MB JS & Python", "0.005 ms Latency · Offline Ready", THEME["list"]),
+            ("Cloudflare Clairic + Clef", "308.6 ms/doc RPC", "95.0 ms/item p50 (1,021 ms p95) · Closed Cloud", THEME["null"]),
+            ("Tier 1B · Browser WASM", "12.3 ms · 64.3 MB", "25x faster/doc · 100% Client-Side Int8 ONNX", THEME["span"]),
+            ("Tier 1A · PyTorch FP32", "5.6 ms · 256 MB", "55x faster/doc · Open 67M Weights on HF", THEME["list"]),
+            ("Tier 2 · Zero-Dep Fast", "0.005 ms · 0 MB", "Sub-microsecond JS & Python · Offline Ready", THEME["list"]),
         ]
         for ri, (rtitle, rpill, rsub, rcol) in enumerate(rows):
             ry = 496 + ri * 168 + dy2
@@ -358,23 +358,23 @@ def render_scene(draw: ImageDraw.ImageDraw, scene_idx: int, local_f: int) -> Non
             )
 
     elif scene_idx == 2:
-        # SCENE 3: Cross-Field Algebraic Invariant Verification
-        draw_pill_centered(draw, 56, 168 + dy1, "3 · CROSS-FIELD MATH VERIFICATION", THEME["list"], font=font_mono_bold(17), pad_x=14, height=38, radius=6)
+        # SCENE 3: Cross-Field Algebraic Invariant Verification & Ledger Extraction
+        draw_pill_centered(draw, 56, 168 + dy1, "3 · LEDGER EXTRACTION & MATH VERIFICATION", THEME["list"], font=font_mono_bold(17), pad_x=14, height=38, radius=6)
 
-        draw.text((56, 242 + dy1), "Don't Just Extract.", font=f_h1, fill=THEME["ink"], anchor="lm")
+        draw.text((56, 242 + dy1), "100% vs 89.7% on", font=f_h1, fill=THEME["ink"], anchor="lm")
         draw_inline_row(
             draw,
             56,
             332 + dy1,
             [
-                {"type": "pill", "text": "[Audit the Math]", "font": f_pill_h1, "bg": THEME["list"], "height": 68, "pad_x": 18},
-                {"type": "text", "text": "in One Pass.", "font": f_h1},
+                {"type": "pill", "text": "[Structured Ledgers]", "font": f_pill_h1, "bg": THEME["list"], "height": 68, "pad_x": 18},
+                {"type": "text", "text": "& Math.", "font": f_h1},
             ],
             gap=18,
         )
 
         # Invoice Input Strip (centerline cy = 532)
-        draw_studio_card(draw, (56, 414 + dy2, 1024, 602 + dy2), "INPUT DOCUMENT · CLOUD GPU INVOICE #88310", "OFFSET_MAPPING")
+        draw_studio_card(draw, (56, 414 + dy2, 1024, 602 + dy2), "INPUT · CLOUD GPU INVOICE #88310 (compute_ledger)", "N = 344 STRUCTURED")
         draw_inline_row(
             draw,
             88,
@@ -383,7 +383,7 @@ def render_scene(draw: ImageDraw.ImageDraw, scene_idx: int, local_f: int) -> Non
                 {"type": "text", "text": "Nodes:", "font": font_mono_reg(24)},
                 {"type": "pill", "text": "4", "font": font_mono_bold(24), "bg": THEME["span"], "height": 48, "pad_x": 16, "shadow": False, "radius": 7},
                 {"type": "text", "text": "@", "font": font_mono_reg(24)},
-                {"type": "pill", "text": "$3.50/hr", "font": font_mono_bold(24), "bg": THEME["span"], "height": 48, "pad_x": 16, "shadow": False, "radius": 7},
+                {"type": "pill", "text": "$3.50 each", "font": font_mono_bold(24), "bg": THEME["span"], "height": 48, "pad_x": 16, "shadow": False, "radius": 7},
                 {"type": "text", "text": "|  Subtotal:", "font": font_mono_reg(24)},
                 {"type": "pill", "text": "$14.00 ✓", "font": font_mono_bold(24), "bg": THEME["list"], "height": 48, "pad_x": 16, "shadow": False, "radius": 7},
             ],
@@ -391,17 +391,17 @@ def render_scene(draw: ImageDraw.ImageDraw, scene_idx: int, local_f: int) -> Non
         )
 
         # Comparison Box
-        draw_studio_card(draw, (56, 636 + dy2, 1024, 1202 + dy2), "CROSS-FIELD INVARIANT: subtotal == nodes * hourly_rate", "VERIFIED: TRUE")
+        draw_studio_card(draw, (56, 636 + dy2, 1024, 1202 + dy2), "LIVE RESULT ON `hourly_rate` & `subtotal == nodes * rate`", "100% VS 89.7%")
 
         # Clairic Box
         draw.rounded_rectangle([88, 720 + dy2, 992, 896 + dy2], radius=12, fill=THEME["muted_bg"], outline=THEME["ink"], width=2)
-        draw_pill_centered(draw, 116, 768 + dy2, "@cf/cloudflare/clairic", THEME["null"], font=font_mono_bold(21), pad_x=16, height=46)
-        draw.text((116, 842 + dy2), "✗ Extracts numbers in isolation — cannot check if 4 * $3.50 == $14.00", font=font_mono_bold(20.5), fill=THEME["ink_muted"], anchor="lm")
+        draw_pill_centered(draw, 116, 768 + dy2, "@cf/cloudflare/clairic (89.7% Struct)", THEME["null"], font=font_mono_bold(21), pad_x=16, height=46)
+        draw.text((116, 842 + dy2), "✗ Guessed 3.5 but abstained (p_null: 0.991 -> null) · No native math solver", font=font_mono_bold(19.5), fill=THEME["ink_muted"], anchor="lm")
 
         # nullspan Box
         draw.rounded_rectangle([88, 922 + dy2, 992, 1168 + dy2], radius=12, fill=THEME["surface"], outline=THEME["ink"], width=3)
-        draw_pill_centered(draw, 116, 970 + dy2, "nullspan · Algebraic Constraint Verifier", THEME["list"], font=font_mono_bold(21), pad_x=16, height=46)
-        draw.text((116, 1040 + dy2), "✓ Evaluates constraint: 'subtotal == nodes * hourly_rate'", font=font_mono_bold(21.5), fill=THEME["ink"], anchor="lm")
+        draw_pill_centered(draw, 116, 970 + dy2, "nullspan · Algebraic Constraint Verifier (100% Struct)", THEME["list"], font=font_mono_bold(21), pad_x=16, height=46)
+        draw.text((116, 1040 + dy2), "✓ Extracts hourly_rate: 3.5 (p_null: 0.001) & verifies 4 * 3.5 == 14.0", font=font_mono_bold(20.0), fill=THEME["ink"], anchor="lm")
         draw_inline_row(
             draw,
             116,

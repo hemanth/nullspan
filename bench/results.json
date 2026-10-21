@@ -999,6 +999,129 @@
       "official_rank": 8
     },
     {
+      "id": "cloudflare-clairic-clef-live",
+      "name": "@cf/cloudflare/clairic + clef (Live Workers AI)",
+      "author": "Cloudflare",
+      "system_type": "System One Split API (Clairic + Clef 27B)",
+      "open_weights": false,
+      "params_m": 27000.0,
+      "footprint_mb": null,
+      "base_model": "@cf/cloudflare/clairic + @cf/cloudflare/clef (160 RPCs / 226 Passes)",
+      "runtime": "Cloudflare Workers AI Edge RPC (p50 308.6 ms/doc)",
+      "input_rate_per_1m_usd": 0.025,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 404,
+      "input_tokens_total": 69879,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0043,
+      "axes": {
+        "intelligence": 90.1,
+        "intelligence_ci95": [
+          87.5,
+          92.7
+        ],
+        "calibration": 93.8,
+        "speed": 51.5,
+        "cost": 67.7
+      },
+      "capability_score": 91.9,
+      "composite_score": 71.5,
+      "open_set_score": 89.7,
+      "sealed_set_score": 91.9,
+      "calibration_details": {
+        "null_auroc": 0.98443,
+        "null_ece": 0.06449,
+        "null_brier": 0.05851
+      },
+      "latency": {
+        "mean_ms": 141.4615,
+        "p50_ms": 95.0278,
+        "p95_ms": 325.787,
+        "p99_ms": 430.8539
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 83.8,
+          "n": 181
+        },
+        "math": {
+          "score": 100.0,
+          "n": 50
+        },
+        "choice": {
+          "score": 100.0,
+          "n": 33
+        },
+        "noul_open": {
+          "score": 100.0,
+          "n": 27
+        },
+        "score": {
+          "score": 89.0,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 92.4,
+          "n": 33
+        },
+        "noul_sealed": {
+          "score": 90.6,
+          "n": 32
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 85.8,
+          "n": 176
+        },
+        "Judge": {
+          "score": 94.5,
+          "n": 96
+        },
+        "Standard": {
+          "score": 93.4,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 95.0,
+          "n": 30
+        },
+        "Hard": {
+          "score": 89.5,
+          "n": 38
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 94.4,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 82.6,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 96.2,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 100.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 92.5,
+          "n": 60
+        },
+        "adversarial_stress": {
+          "score": 87.5,
+          "n": 8
+        }
+      },
+      "official_rank": 9
+    },
+    {
       "id": "gpt-5.4-nano-json",
       "name": "gpt-5.4-nano (JSON Decoder \u00b7 API)",
       "author": "OpenAI (Ref)",
@@ -1119,7 +1242,7 @@
           "n": 8
         }
       },
-      "official_rank": 9
+      "official_rank": 10
     },
     {
       "id": "claude-haiku-4.5-json",
@@ -1242,7 +1365,7 @@
           "n": 8
         }
       },
-      "official_rank": 10
+      "official_rank": 11
     },
     {
       "id": "bge-small-en-v1.5",
@@ -1365,7 +1488,7 @@
           "n": 8
         }
       },
-      "official_rank": 11
+      "official_rank": 12
     },
     {
       "id": "distilbert-base-control",
@@ -1488,7 +1611,7 @@
           "n": 8
         }
       },
-      "official_rank": 12
+      "official_rank": 13
     },
     {
       "id": "all-MiniLM-L12-v2",
@@ -1611,7 +1734,7 @@
           "n": 8
         }
       },
-      "official_rank": 13
+      "official_rank": 14
     },
     {
       "id": "all-mpnet-base-v2",
@@ -1734,7 +1857,7 @@
           "n": 8
         }
       },
-      "official_rank": 14
+      "official_rank": 15
     },
     {
       "id": "paraphrase-albert-small-v2",
@@ -1857,7 +1980,7 @@
           "n": 8
         }
       },
-      "official_rank": 15
+      "official_rank": 16
     },
     {
       "id": "paraphrase-MiniLM-L3-v2",
@@ -1980,7 +2103,7 @@
           "n": 8
         }
       },
-      "official_rank": 16
+      "official_rank": 17
     },
     {
       "id": "all-MiniLM-L6-v2",
@@ -2103,7 +2226,7 @@
           "n": 8
         }
       },
-      "official_rank": 17
+      "official_rank": 18
     }
   ],
   "tiers": {

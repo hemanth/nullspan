@@ -36,7 +36,8 @@ Modeled directly after [BenchmarkHeaven's JevBench](https://benchmarkheaven.com/
 | **5** | `nullspan-67M (ONNX FP32)` (Open) | **82.1** | **99.2** | `98.8%` `[97.5, 99.8]` | `99.7` | `63.0` | `78.7` | `$0.0014` | `10.832 ms` | `1.0000` / `0.0037` |
 | **6** | `H2O-Lightning-4B v1.1 (JevBench #1 Comp)` (Open) | **72.5** | **75.0** | `60.0%` `[57.8, 62.3]` | `90.0` | `92.6` | `60.3` | `$0.0211` | `29.285 ms` | `0.9080` / `0.0502` |
 | **7** | `basal-omni-1.0-ultra (JevBench #1 Cap)` (Open) | **71.8** | **82.5** | `74.1%` `[71.8, 76.3]` | `91.0` | `87.3` | `50.5` | `$0.0447` | `102.000 ms` | `0.9240` / `0.0449` |
-| **8** | `Jev 1.13.0 (TypeSafe AI · JevBench Ref)` (API) | **71.5** | **77.1** | `63.6%` `[61.2, 66.0]` | `90.6` | `91.5` | `54.7` | `$0.0323` | `239.102 ms` | `0.9120` / `0.0468` |
+| **8** | `@cf/cloudflare/clairic + clef (Live Workers AI)` (API) | **71.5** | **91.9** | `90.1%` `[87.5, 92.7]` | `93.8` | `51.5` | `67.7` | `$0.0043` | `95.028 ms` (`308.6 ms/doc`) | `0.9844` / `0.0645` |
+| **9** | `Jev 1.13.0 (TypeSafe AI · JevBench Ref)` (API) | **71.5** | **77.1** | `63.6%` `[61.2, 66.0]` | `90.6` | `91.5` | `54.7` | `$0.0323` | `239.102 ms` | `0.9120` / `0.0468` |
 | **9** | `gpt-5.4-nano (JSON Decoder · API)` (API) | **60.3** | **91.5** | `95.3%` `[93.3, 97.3]` | `87.7` | `43.6` | `46.5` | `$0.0380` | `415.927 ms` | `0.9830` / `0.1670` |
 | **10** | `claude-haiku-4.5 (JSON Decoder · API)` (API) | **49.7** | **92.3** | `96.3%` `[94.3, 98.0]` | `88.3` | `41.8` | `28.7` | `$0.2328` | `588.030 ms` | `0.9830` / `0.1610` |
 | **11** | `bge-small-en-v1.5 (Dense Span+Null)` (Open) | **42.0** | **53.3** | `17.5%` `[14.3, 20.8]` | `89.1` | `64.7` | `87.0` | `$0.0006` | `7.855 ms` | `0.6999` / `0.1065` |
@@ -51,6 +52,7 @@ Modeled directly after [BenchmarkHeaven's JevBench](https://benchmarkheaven.com/
 1. **Why Un-Finetuned Dense Bi-Encoders Fail (`9.9%–17.5%` Intelligence)**: Standard sentence/passage embedding models (`BAAI/bge-small-en-v1.5`, `all-mpnet-base-v2`, `all-MiniLM-L12-v2`, `all-MiniLM-L6-v2`, `paraphrase-albert-small-v2`, `paraphrase-MiniLM-L3-v2`) and raw `distilbert-base-uncased` can rank sentence similarity (`~45%–52%` on simple open spans), but cosine similarity alone **cannot** execute multi-number arithmetic (`ARITH_SUM`, `ARITH_MUL`), date duration deltas (`DATE_DURATION`), cross-field algebraic invariants (`subtotal == nodes * hourly_rate`), or calibrated `(p10, median, p90)` quantile estimation (`0.0%` on `Math` and `Score`).
 2. **Why `nullspan` Beats Pure Zero-Dep Rules on Sealed Open-Domain Prose (`88.2%` vs `32.4%` Sealed)**: On structured telemetry (`S = 336`), `nullspan-ZeroDep (Fast Engine)` achieves `100.0%` in `0.005 ms`. However, on the **Sealed Pool (`P = 68`)** containing Stanford SQuAD v2.0 adversarial unanswerable traps, lexical overlap drops to `32.4%` (`AUROC 0.506`), whereas `nullspan-67M (PyTorch FP32)` achieves **`94.1%` Sealed** (`98.8%` overall Intelligence, `99.7` Calibration, `AUROC 0.9999`) and `nullspan-67M-Int8 (ONNX WASM/CPU)` achieves **`88.2%` Sealed** (`98.0%` overall Intelligence, `99.3` Calibration) at **`3.98x` smaller disk footprint (`64.3 MB`)**.
 3. **Why `nullspan-Hybrid` Dominates the Pareto Frontier (`97.7` Composite)**: Routing structured telemetry through the zero-dependency fast path and delegating open-domain prose or ambiguous spans to the quantized `nullspan-67M-Int8` neural cross-encoder delivers `98.7` Capability at `0.005 ms` median latency and `$0.0003 / 1k` decisions—over **`120x` cheaper** and **`80,000x` faster at `p50`** than autoregressive JSON LLM decoders (`gpt-5.4-nano`, `claude-haiku-4.5`).
+4. **Live Head-to-Head vs Cloudflare Workers AI (`@cf/cloudflare/clairic` + `@cf/cloudflare/clef`, [`bench/eval_clairic_clef.py`](./eval_clairic_clef.py))**: Evaluated live across all `126` documents (`404` items), Cloudflare's split System One stack achieves **`90.1%` overall Intelligence (`[87.5, 92.7]`)** and **`92.5%` on Stanford SQuAD v2.0** (`0.988` AUROC vs `nullspan-67M`'s `0.999` AUROC), but drops to **`89.7%` on the Open Structured Pool (`82.6%` on `compute_ledger`)** due to `24` false-positive `p_null` abstentions on terse tabular headers (`provider` `p_null=0.742 -> null` on 13/16 invoices; `hourly_rate` `p_null=0.991 -> null` on 11/16 invoices) and requires **`160` HTTP RPC calls (`226` internal model passes, `69,879` billed input tokens)** at **`308.6 ms/doc` (`95.0 ms/item`) `p50` latency**.
 
 ---
 
@@ -63,6 +65,7 @@ Modeled directly after [BenchmarkHeaven's JevBench](https://benchmarkheaven.com/
 | `nullspan-67M (PyTorch FP32)` | **100.0%** | **92.6%** | `100.0%` | `84.8%` | `100.0%` | `100.0%` | `100.0%` | `100.0%` | `100.0%` |
 | `nullspan-67M-Int8 (ONNX WASM/CPU)` | **100.0%** | **88.2%** | `100.0%` | `84.8%` | `100.0%` | `90.6%` | `100.0%` | `100.0%` | `100.0%` |
 | `nullspan-67M (ONNX FP32)` | **100.0%** | **92.6%** | `100.0%` | `84.8%` | `100.0%` | `100.0%` | `100.0%` | `100.0%` | `100.0%` |
+| `@cf/cloudflare/clairic + clef (Live Workers AI)` | **89.7%** | **91.9%** | `83.8%` | `92.4%` | `100.0%` | `90.6%` | `100.0%` | `100.0%` | `89.0%` |
 | `H2O-Lightning-4B v1.1 (JevBench #1 Comp)` | **64.1%** | **59.0%** | `61.5%` | `58.2%` | `60.9%` | `68.1%` | `75.2%` | `57.6%` | `47.0%` |
 | `basal-omni-1.0-ultra (JevBench #1 Cap)` | **76.7%** | **73.1%** | `75.4%` | `73.8%` | `68.4%` | `72.5%` | `82.7%` | `69.1%` | `69.1%` |
 | `Jev 1.13.0 (TypeSafe AI · JevBench Ref)` | **68.9%** | **61.6%** | `66.2%` | `61.4%` | `54.5%` | `46.1%` | `79.0%` | `63.2%` | `63.3%` |
@@ -87,6 +90,7 @@ Modeled directly after [BenchmarkHeaven's JevBench](https://benchmarkheaven.com/
 | `nullspan-67M (PyTorch FP32)` | `100.0%` | `100.0%` | `100.0%` | `83.3%` | `100.0%` | `100.0%` | `100.0%` | `91.7%` | `100.0%` |
 | `nullspan-67M-Int8 (ONNX WASM/CPU)` | `100.0%` | `100.0%` | `100.0%` | `83.3%` | `92.1%` | `100.0%` | `100.0%` | `86.7%` | `100.0%` |
 | `nullspan-67M (ONNX FP32)` | `100.0%` | `100.0%` | `100.0%` | `83.3%` | `100.0%` | `100.0%` | `100.0%` | `91.7%` | `100.0%` |
+| `@cf/cloudflare/clairic + clef (Live Workers AI)` | `85.8%` | `93.4%` | `94.5%` | `95.0%` | `89.5%` | `94.4%` | `82.6%` | `92.5%` | `87.5%` |
 | `H2O-Lightning-4B v1.1 (JevBench #1 Comp)` | `88.2%` | `57.6%` | `61.0%` | `62.6%` | `54.3%` | `69.4%` | `59.2%` | `62.6%` | `54.3%` |
 | `basal-omni-1.0-ultra (JevBench #1 Cap)` | `96.5%` | `69.1%` | `65.2%` | `78.8%` | `74.0%` | `81.2%` | `71.5%` | `76.9%` | `74.0%` |
 | `Jev 1.13.0 (TypeSafe AI · JevBench Ref)` | `93.9%` | `63.2%` | `67.7%` | `68.7%` | `58.9%` | `74.2%` | `66.8%` | `61.6%` | `58.9%` |
