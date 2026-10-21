@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
-Render a 2x supersampled (2400x1520 -> 1200x760, 15fps, 60 frames) social media GIF
-comparing Cloudflare `@cf/cloudflare/clairic + Clef` vs `nullspan` in the EXACT
-`nullspan` studio visual theme (`docs/index.html` & `docs/nullspan-social-mobile.png`):
-- Warm paper canvas (`#FBFAF7`) + subtle dot grid + 8px top `#111111` bar
-- Solid black `nullspan` brand-mark + 3 semantic highlighter badges (`#FFE484`, `#F5D0CE`, `#C8F0D4`)
-- Crisp white (`#FFFFFF`) cards with `#111111` black header strips, `#F3F0E8` muted sub-boxes,
-  and hard `#111111` offset shadows (zero lavender/pastel card fills).
+Render a Mobile-First Portrait (1080x1350, 4:5 aspect ratio, 2x supersampled at 2160x2700)
+animated social media GIF comparing Cloudflare `@cf/cloudflare/clairic + Clef` vs `nullspan`.
+
+Designed specifically for mobile phone feeds (X/Twitter, LinkedIn, Bluesky):
+- Portrait 1080x1350 layout matching `docs/nullspan-social-mobile.png`
+- Large 20px-52px typography (zero tiny text)
+- Calm 12.0-second loop (120 frames @ 10 fps):
+  - Each of the 4 cards in the 2x2 grid stays active for 3.0 full seconds
+  - Each of the 3 Head-to-Head X-Ray scenes stays open for 4.0 full seconds with a progress bar
 """
 from __future__ import annotations
 
@@ -16,8 +18,8 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 S = 2
-W, H = 1200 * S, 760 * S
-OUT_W, OUT_H = 1200, 760
+OUT_W, OUT_H = 1080, 1350
+W, H = OUT_W * S, OUT_H * S
 
 HN_PATH = "/System/Library/Fonts/HelveticaNeue.ttc"
 JB_BOLD = "/Users/lika/Library/Fonts/JetBrainsMonoNerdFontMono-Bold.ttf"
@@ -43,13 +45,11 @@ def font_mono_reg(px: float) -> ImageFont.FreeTypeFont:
     return ImageFont.truetype(path, int(px * S))
 
 
-# Exact nullspan CSS tokens from docs/index.html & docs/social-poster.html
 THEME = {
     "bg": (251, 250, 247),           # --bg: #FBFAF7
-    "dot": (228, 224, 214),          # radial dot grid
+    "dot": (226, 222, 212),          # subtle dot grid
     "surface": (255, 255, 255),      # --surface: #FFFFFF
     "muted_bg": (243, 240, 232),     # --muted-bg: #F3F0E8
-    "border_subtle": (229, 225, 216),# --border-subtle: #E5E1D8
     "ink": (17, 17, 17),             # --ink: #111111
     "ink_muted": (82, 80, 74),       # --ink-muted: #52504A
     "span": (255, 228, 132),         # --accent-span: #FFE484
@@ -64,30 +64,27 @@ def draw_studio_card(
     header_text: str | None = None,
     header_right: str | None = None,
     active: bool = False,
-    radius: float = 8,
+    radius: float = 10,
+    header_h: float = 36,
 ) -> None:
-    """Draw a crisp white nullspan studio card with optional solid #111111 top header strip."""
     x0, y0, x1, y1 = [int(v * S) for v in box]
     r = int(radius * S)
-    so = int((4.5 if active else 3.0) * S)
-    bw = int((2.4 if active else 1.8) * S)
+    so = int((6.0 if active else 3.5) * S)
+    bw = int((3.0 if active else 2.0) * S)
 
-    # Hard offset ink shadow
     draw.rounded_rectangle([x0 + so, y0 + so, x1 + so, y1 + so], radius=r, fill=THEME["ink"])
-    # Crisp white card body
     draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=THEME["surface"], outline=THEME["ink"], width=bw)
 
     if header_text:
-        hh = int(28 * S)
-        # Top black bar matching SINGLE-PASS SYSTEM ONE X-RAY in social-poster.html
+        hh = int(header_h * S)
         draw.rounded_rectangle([x0, y0, x1, y0 + hh], radius=r, fill=THEME["ink"])
         draw.rectangle([x0, y0 + hh - r, x1, y0 + hh], fill=THEME["ink"])
-        hf = font_mono_bold(9.5)
-        draw.text((x0 + int(12 * S), y0 + int(7 * S)), header_text, font=hf, fill=THEME["bg"])
+        hf = font_mono_bold(13.0)
+        draw.text((x0 + int(16 * S), y0 + int(9 * S)), header_text, font=hf, fill=THEME["bg"])
         if header_right:
             rb = draw.textbbox((0, 0), header_right, font=hf)
             rw = rb[2] - rb[0]
-            draw.text((x1 - int(12 * S) - rw, y0 + int(7 * S)), header_right, font=hf, fill=THEME["span"])
+            draw.text((x1 - int(16 * S) - rw, y0 + int(9 * S)), header_right, font=hf, fill=THEME["span"])
 
 
 def draw_pill(
@@ -96,42 +93,33 @@ def draw_pill(
     y: float,
     text: str,
     bg: tuple[int, int, int],
-    fg: tuple[int, int, int],
+    fg: tuple[int, int, int] = THEME["ink"],
     border_color: tuple[int, int, int] = THEME["ink"],
     font: ImageFont.FreeTypeFont | None = None,
-    pad_x: float = 9,
-    pad_y: float = 4,
-    radius: float = 5,
+    pad_x: float = 12,
+    pad_y: float = 6,
+    radius: float = 6,
     shadow: bool = False,
 ) -> float:
     if font is None:
-        font = font_mono_bold(10.0)
+        font = font_mono_bold(13.5)
     bbox = draw.textbbox((0, 0), text, font=font)
     tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
     px, py = int(pad_x * S), int(pad_y * S)
     rx0, ry0 = int(x * S), int(y * S)
     rx1, ry1 = rx0 + tw + px * 2, ry0 + th + py * 2
     if shadow:
-        so = int(2.5 * S)
+        so = int(3.0 * S)
         draw.rounded_rectangle([rx0 + so, ry0 + so, rx1 + so, ry1 + so], radius=int(radius * S), fill=THEME["ink"])
     draw.rounded_rectangle(
         [rx0, ry0, rx1, ry1],
         radius=int(radius * S),
         fill=bg,
         outline=border_color,
-        width=max(1, int(1.6 * S)),
+        width=max(1, int(2.0 * S)),
     )
     draw.text((rx0 + px - bbox[0], ry0 + py - bbox[1]), text, font=font, fill=fg)
     return (rx1 - rx0) / S
-
-
-def draw_arrow(draw: ImageDraw.ImageDraw, x0: float, x1: float, y: float, active: bool) -> None:
-    col = THEME["ink"] if active else (175, 170, 160)
-    w = int((2.6 if active else 1.6) * S)
-    sx0, sx1, sy = int(x0 * S), int(x1 * S), int(y * S)
-    draw.line([(sx0, sy), (sx1, sy)], fill=col, width=w)
-    ah = int(4.5 * S)
-    draw.polygon([(sx1, sy), (sx1 - ah, sy - ah), (sx1 - ah, sy + ah)], fill=col)
 
 
 def main() -> None:
@@ -139,390 +127,371 @@ def main() -> None:
     out_gif = root / "docs" / "nullspan-vs-clairic.gif"
     space_gif = root / "space" / "nullspan-vs-clairic.gif"
     preview_png = root / "docs" / "nullspan-vs-clairic-preview.png"
-    frames_dir = Path("/tmp/nullspan_vs_clairic_frames")
+    frames_dir = Path("/tmp/nullspan_vs_clairic_mobile_frames")
     frames_dir.mkdir(parents=True, exist_ok=True)
+    for old_f in frames_dir.glob("frame_*.png"):
+        old_f.unlink()
 
-    # 4 Stage Cards matching the 3 semantic badges (Span #FFE484, List/Verified #C8F0D4, Null #F5D0CE)
     stages = [
         {
             "tag": "1 · ARCHITECTURE",
-            "badge": "1 PASS vs 2 SPLIT",
+            "badge": "1 PASS vs 2 RPCs",
             "badge_bg": THEME["span"],
-            "title": "Unified vs Split",
             "rows": [
-                ("Clairic + Clef", "2 Split RPCs", THEME["null"]),
-                ("nullspan 67M", "1 Encoder Pass", THEME["list"]),
+                ("Clairic + Clef", "2 Cloud Models", THEME["null"]),
+                ("nullspan 67M", "1 Unified Pass", THEME["list"]),
                 ("op_head Router", "10 System1 Ops", THEME["span"]),
-                ("Output Tokens", "0 Generated", THEME["list"]),
             ],
         },
         {
-            "tag": "2 · RUNTIME TIERS",
+            "tag": "2 · RUNTIME & OPENNESS",
             "badge": "WASM + ZERO-DEP",
             "badge_bg": THEME["list"],
-            "title": "Local vs Lock-In",
             "rows": [
-                ("Workers AI", "Closed Cloud", THEME["null"]),
+                ("Workers AI", "Closed Preview", THEME["null"]),
                 ("Browser WASM", "64.3 MB Int8", THEME["span"]),
-                ("PyTorch FP32", "Open MIT (HF)", THEME["list"]),
                 ("Zero-Dep Fast", "0 MB · 5 µs", THEME["list"]),
             ],
         },
         {
-            "tag": "3 · MATH & RANGES",
-            "badge": "VERIFIED MATH",
+            "tag": "3 · MATH & INVARIANTS",
+            "badge": "AUDITED MATH",
             "badge_bg": THEME["list"],
-            "title": "Audited Equations",
             "rows": [
                 ("Clairic Math", "No Cross-Check", THEME["null"]),
                 ("constraint", "nodes * rate", THEME["list"]),
                 ("verified Flag", "true (100% EM)", THEME["list"]),
-                ("quantile_head", "p10<=p50<=p90", THEME["span"]),
             ],
         },
         {
             "tag": "4 · ABSTENTION GATE",
             "badge": "P_NULL >= 0.5",
             "badge_bg": THEME["null"],
-            "title": "Reason + Entropy",
             "rows": [
                 ("Clairic Null", "Bare p_null", THEME["null"]),
                 ("null_head", "AUROC 0.9998", THEME["list"]),
-                ("Reason Tag", "unassigned_cve", THEME["null"]),
-                ("Span Entropy", "H = 0.03 bits", THEME["span"]),
+                ("Reason Tag", "unassigned_cve", THEME["span"]),
             ],
         },
     ]
 
-    kpis = [
-        ("98.7 vs 77.1", "Capability (50I:50C)", THEME["span"]),
-        ("97.7 vs 71.5", "Composite Score", THEME["list"]),
-        ("64.3 MB WASM", "Browser ONNX Int8", THEME["list"]),
-        ("$0.0003 / 1k", "100x Lower Cost", THEME["null"]),
-    ]
+    # 120 frames @ 10 fps = 12.0s calm loop (3.0s per card, 4.0s per scene)
+    total_frames = 120
+    fps = 10
 
-    code_lines = [
-        "import { extract } from 'nullspan'; // 1 pass",
-        "const out = extract(doc, { // Clairic + Clef:",
-        "  subtotal: { type:'number', constraint:'...' },",
-        "  severity: { type:'enum', options:['sev-1'] }",
-        "}); // => verified: true, 0 output tokens",
-    ]
-
-    total_frames = 60
     for idx in range(total_frames):
-        t = idx / float(total_frames)
-        active_stage = int((t * 4.0) % 4.0)
-        scene_idx = idx // 20  # 0, 1, 2
+        active_stage = idx // 30       # 30 frames = 3.0 seconds per stage card
+        scene_idx = idx // 40          # 40 frames = 4.0 seconds per bottom X-Ray scene
+        scene_progress = (idx % 40) / 39.0
 
         img = Image.new("RGB", (W, H), THEME["bg"])
         draw = ImageDraw.Draw(img)
 
-        # Subtle dot grid matching social-poster.html
+        # Dot grid
         step = int(20 * S)
-        r_dot = int(1.0 * S)
+        r_dot = int(1.1 * S)
         for gx in range(step, W, step):
             for gy in range(step, H, step):
                 draw.ellipse([gx - r_dot, gy - r_dot, gx + r_dot, gy + r_dot], fill=THEME["dot"])
 
-        # 8px solid #111111 top studio border
-        draw.rectangle([0, 0, W, int(6 * S)], fill=THEME["ink"])
+        # Top 8px solid #111111 border
+        draw.rectangle([0, 0, W, int(8 * S)], fill=THEME["ink"])
 
-        # Top Studio Header Bar (y = 16..54) matching social-poster.html & docs/index.html
-        cur_x = 32.0
+        # Top Studio Bar (y = 24..72)
+        cur_x = 40.0
         w_brand = draw_pill(
             draw,
             cur_x,
-            16,
+            24,
             "nullspan",
             THEME["ink"],
             THEME["bg"],
             THEME["ink"],
-            font_mono_bold(13.0),
-            pad_x=12,
-            pad_y=4.5,
-            radius=5,
+            font_mono_bold(19.0),
+            pad_x=14,
+            pad_y=6,
+            radius=6,
         )
-        cur_x += w_brand + 10
+        cur_x += w_brand + 12
         for b_txt, b_col in [
-            ("[START, END] POINTER", THEME["span"]),
+            ("[START, END] SPAN", THEME["span"]),
             ("CALIBRATED P_NULL", THEME["null"]),
-            ("VERIFIED INVARIANTS", THEME["list"]),
+            ("VERIFIED MATH", THEME["list"]),
         ]:
-            wb = draw_pill(draw, cur_x, 18, b_txt, b_col, THEME["ink"], THEME["ink"], font_mono_bold(9.5), pad_x=8, pad_y=3.5, radius=4)
-            cur_x += wb + 8
+            wb = draw_pill(draw, cur_x, 27, b_txt, b_col, THEME["ink"], THEME["ink"], font_mono_bold(13.0), pad_x=10, pad_y=5, radius=5)
+            cur_x += wb + 10
 
         draw_pill(
             draw,
-            838,
-            18,
-            "npm i nullspan  ·  pip install nullspan",
+            cur_x + 4,
+            27,
+            "67M · WASM · 0-DEP",
             THEME["surface"],
             THEME["ink"],
             THEME["ink"],
-            font_mono_bold(9.8),
+            font_mono_bold(13.0),
             pad_x=10,
-            pad_y=3.5,
-            radius=4,
+            pad_y=5,
+            radius=5,
         )
 
-        # Divider line under studio bar
-        draw.line([(int(32 * S), int(52 * S)), (int(1168 * S), int(52 * S))], fill=THEME["ink"], width=int(1.8 * S))
+        draw.line([(int(40 * S), int(76 * S)), (int(1040 * S), int(76 * S))], fill=THEME["ink"], width=int(2.0 * S))
 
-        # Hero Title with Inline Boxed Highlighter Tokens (y = 62..118)
-        draw.text((int(32 * S), int(64 * S)), "Unify", font=font_sans_bold(31), fill=THEME["ink"])
-        w1 = draw_pill(draw, 122, 61, "[Clairic Extraction]", THEME["span"], THEME["ink"], THEME["ink"], font_sans_bold(23), pad_x=10, pad_y=3, radius=6, shadow=True)
-        px_plus = 122 + w1 + 10
-        draw.text((int(px_plus * S), int(64 * S)), "+", font=font_sans_bold(31), fill=THEME["ink"])
-        w2 = draw_pill(draw, px_plus + 26, 61, "[Clef Decisions]", THEME["null"], THEME["ink"], THEME["ink"], font_sans_bold(23), pad_x=10, pad_y=3, radius=6, shadow=True)
-        px_in = px_plus + 26 + w2 + 12
-        draw.text((int(px_in * S), int(64 * S)), "in", font=font_sans_bold(31), fill=THEME["ink"])
-        draw_pill(draw, px_in + 36, 61, "1 Open WASM Pass.", THEME["list"], THEME["ink"], THEME["ink"], font_sans_bold(23), pad_x=10, pad_y=3, radius=6, shadow=True)
+        # Hero Headline (y = 92..210) — Huge 46px mobile-first text!
+        draw.text((int(40 * S), int(96 * S)), "Unify", font=font_sans_bold(46), fill=THEME["ink"])
+        w_c1 = draw_pill(draw, 172, 91, "[Clairic Extraction]", THEME["span"], THEME["ink"], THEME["ink"], font_sans_bold(36), pad_x=14, pad_y=4, radius=8, shadow=True)
+        x_plus = 172 + w_c1 + 16
+        draw.text((int(x_plus * S), int(96 * S)), "+", font=font_sans_bold(46), fill=THEME["ink"])
+        draw_pill(draw, x_plus + 40, 91, "[Clef Decisions]", THEME["null"], THEME["ink"], THEME["ink"], font_sans_bold(36), pad_x=14, pad_y=4, radius=8, shadow=True)
+
+        draw.text((int(40 * S), int(162 * S)), "in", font=font_sans_bold(46), fill=THEME["ink"])
+        w_p1 = draw_pill(draw, 96, 157, "1 Open WASM Pass", THEME["list"], THEME["ink"], THEME["ink"], font_sans_bold(36), pad_x=14, pad_y=4, radius=8, shadow=True)
+        draw.text((int((96 + w_p1 + 16) * S), int(162 * S)), "with 0 Output Tokens.", font=font_sans_bold(42), fill=THEME["ink"])
 
         draw.text(
-            (int(32 * S), int(103 * S)),
-            "Cloudflare splits System One across 2 closed Workers AI models. nullspan runs all 10 ops + math verification in 1 local pass:",
-            font=font_sans_med(13.5),
+            (int(40 * S), int(224 * S)),
+            "Cloudflare splits System One across 2 closed Workers AI models. nullspan unifies both + audits math:",
+            font=font_sans_med(19.5),
             fill=THEME["ink_muted"],
         )
 
-        # 4-Stage Pipeline Row (y = 132..424)
-        card_y0, card_y1 = 132, 424
-        xs = [(32, 290), (324, 582), (616, 874), (908, 1168)]
-        arrows = [(293, 321), (585, 613), (877, 905)]
-        for ai, (ax0, ax1) in enumerate(arrows):
-            draw_arrow(draw, ax0, ax1, 278, active=(ai == active_stage))
-
-        for si, (cx0, cx1) in enumerate(xs):
+        # 2x2 Comparison Grid (y = 264..744) — Each card is 486px wide x 226px tall!
+        grid_coords = [
+            (40, 264, 526, 492),
+            (554, 264, 1040, 492),
+            (40, 514, 526, 742),
+            (554, 514, 1040, 742),
+        ]
+        for si, (cx0, cy0, cx1, cy1) in enumerate(grid_coords):
             st = stages[si]
             is_act = si == active_stage
             draw_studio_card(
                 draw,
-                (cx0, card_y0, cx1, card_y1),
+                (cx0, cy0, cx1, cy1),
                 header_text=st["tag"],
-                header_right="● ACTIVE" if is_act else None,
+                header_right="● ACTIVE" if is_act else st["badge"],
                 active=is_act,
+                header_h=36,
             )
 
-            # Subheader title + semantic highlighter badge matching social-poster.html
-            draw.text((int((cx0 + 14) * S), int((card_y0 + 38) * S)), st["title"], font=font_sans_bold(16.0), fill=THEME["ink"])
-            bf = font_mono_bold(8.5)
-            bb = draw.textbbox((0, 0), st["badge"], font=bf)
-            bw_px = (bb[2] - bb[0]) / S + 14
-            draw_pill(draw, cx1 - 12 - bw_px, card_y0 + 37, st["badge"], st["badge_bg"], THEME["ink"], THEME["ink"], bf, pad_x=6, pad_y=2.5, radius=4)
-
             for ri, (rleft, rright, pill_col) in enumerate(st["rows"]):
-                ry = card_y0 + 74 + ri * 52
+                ry = cy0 + 48 + ri * 56
                 is_cf_row = ri == 0
-                row_hi = is_act and (ri == 1 + int((t * 12) % 3))
-                row_bg = THEME["muted_bg"] if is_cf_row else (THEME["span"] if row_hi else THEME["surface"])
+                row_hi = is_act and (ri > 0)
+                row_bg = THEME["muted_bg"] if is_cf_row else (THEME["span"] if (is_act and ri == 1) else THEME["surface"])
                 draw.rounded_rectangle(
-                    [int((cx0 + 12) * S), int(ry * S), int((cx1 - 12) * S), int((ry + 40) * S)],
-                    radius=int(6 * S),
+                    [int((cx0 + 14) * S), int(ry * S), int((cx1 - 14) * S), int((ry + 46) * S)],
+                    radius=int(7 * S),
                     fill=row_bg,
                     outline=THEME["ink"],
-                    width=int((2.0 if row_hi else 1.3) * S),
+                    width=int((2.4 if row_hi else 1.5) * S),
                 )
                 draw.text(
-                    (int((cx0 + 20) * S), int((ry + 12) * S)),
+                    (int((cx0 + 24) * S), int((ry + 12) * S)),
                     rleft,
-                    font=font_mono_bold(9.6),
+                    font=font_mono_bold(15.0),
                     fill=THEME["ink_muted"] if is_cf_row else THEME["ink"],
                 )
-                # Right-aligned semantic pill inside the row
-                rf = font_mono_bold(8.8)
+                rf = font_mono_bold(13.5)
                 rb = draw.textbbox((0, 0), rright, font=rf)
-                rw_px = (rb[2] - rb[0]) / S + 12
+                rw_px = (rb[2] - rb[0]) / S + 20
                 draw_pill(
                     draw,
-                    cx1 - 18 - rw_px,
-                    ry + 8,
+                    cx1 - 22 - rw_px,
+                    ry + 7,
                     rright,
-                    THEME["surface"] if row_hi else pill_col,
+                    pill_col,
                     THEME["ink"],
                     THEME["ink"],
                     rf,
-                    pad_x=6,
-                    pad_y=2.5,
-                    radius=4,
+                    pad_x=9,
+                    pad_y=4,
+                    radius=5,
                 )
 
-        # Bottom Left Card (x = 32..756, y = 444..734): Single-Pass System One X-Ray vs Clairic + Clef
-        bot_y0, bot_y1 = 444, 734
+        # Head-to-Head X-Ray Card (y = 768..1176) — Full 1000px width, 4.0s per scene!
+        x_y0, x_y1 = 768, 1176
         draw_studio_card(
             draw,
-            (32, bot_y0, 756, bot_y1),
+            (40, x_y0, 1040, x_y1),
             header_text="HEAD-TO-HEAD X-RAY  ·  @cf/cloudflare/clairic + Clef  vs  nullspan",
-            header_right="0 OUTPUT TOKENS",
+            header_right=f"SCENE {scene_idx + 1}/3",
+            active=True,
+            header_h=38,
         )
 
-        # Scene selector pills on muted strip
+        # 3 Large Scene Tabs with live progress bar inside the active tab
         scene_tabs = [
             ("1 · UNIFIED PASS (INC-40928)", THEME["span"]),
-            ("2 · INVARIANT MATH (#88310)", THEME["list"]),
-            ("3 · JEVBENCH 4-AXIS SCORES", THEME["null"]),
+            ("2 · AUDITED MATH (#88310)", THEME["list"]),
+            ("3 · JEVBENCH LEADERBOARD", THEME["null"]),
         ]
-        cur_tx = 46.0
+        tab_w = 312
         for tab_i, (tab_lbl, tab_col) in enumerate(scene_tabs):
+            tx0 = 58 + tab_i * (tab_w + 14)
+            ty0 = x_y0 + 50
+            tx1 = tx0 + tab_w
+            ty1 = ty0 + 38
             is_tab = tab_i == scene_idx
-            pw = draw_pill(
-                draw,
-                cur_tx,
-                bot_y0 + 36,
-                tab_lbl,
-                tab_col if is_tab else THEME["muted_bg"],
-                THEME["ink"],
-                THEME["ink"],
-                font_mono_bold(9.0),
-                pad_x=8,
-                pad_y=3.0,
-                radius=4,
-                shadow=is_tab,
+            draw.rounded_rectangle(
+                [int(tx0 * S), int(ty0 * S), int(tx1 * S), int(ty1 * S)],
+                radius=int(6 * S),
+                fill=tab_col if is_tab else THEME["muted_bg"],
+                outline=THEME["ink"],
+                width=int((2.4 if is_tab else 1.5) * S),
             )
-            cur_tx += pw + 10
+            if is_tab:
+                # Progress bar along bottom of active tab
+                prog_w = int((tab_w - 8) * scene_progress * S)
+                draw.rectangle(
+                    [int((tx0 + 4) * S), int((ty1 - 5) * S), int((tx0 + 4) * S) + prog_w, int((ty1 - 2) * S)],
+                    fill=THEME["ink"],
+                )
+            tf = font_mono_bold(13.0)
+            tb = draw.textbbox((0, 0), tab_lbl, font=tf)
+            tw_t = tb[2] - tb[0]
+            draw.text((int(tx0 * S) + (int(tab_w * S) - tw_t) // 2, int((ty0 + 8) * S)), tab_lbl, font=tf, fill=THEME["ink"])
 
-        paper = (46, bot_y0 + 66, 742, bot_y1 - 14)
+        # Inner Stage Sheet (y = x_y0 + 100 .. x_y1 - 16)
+        sheet = (58, x_y0 + 100, 1022, x_y1 - 16)
         draw.rounded_rectangle(
-            [int(v * S) for v in paper],
-            radius=int(7 * S),
+            [int(v * S) for v in sheet],
+            radius=int(8 * S),
             fill=THEME["muted_bg"],
             outline=THEME["ink"],
-            width=int(1.6 * S),
+            width=int(1.8 * S),
         )
 
         if scene_idx == 0:
-            # Highlighted document strip + 2-call vs 1-pass comparison
-            doc_box = (58, bot_y0 + 76, 730, bot_y0 + 114)
-            draw.rounded_rectangle([int(v * S) for v in doc_box], radius=int(5 * S), fill=THEME["surface"], outline=THEME["ink"], width=int(1.3 * S))
-            draw.text((int(68 * S), int((bot_y0 + 88) * S)), "Incident", font=font_mono_reg(9.8), fill=THEME["ink"])
-            draw_pill(draw, 130, bot_y0 + 83, "INC-40928 [9,18]", THEME["span"], THEME["ink"], THEME["ink"], font_mono_bold(9.0), pad_x=6, pad_y=2)
-            draw.text((int(258 * S), int((bot_y0 + 88) * S)), "credit", font=font_mono_reg(9.8), fill=THEME["ink"])
-            draw_pill(draw, 304, bot_y0 + 83, "$1240.50 + $310.25", THEME["span"], THEME["ink"], THEME["ink"], font_mono_bold(9.0), pad_x=6, pad_y=2)
-            draw_pill(draw, 456, bot_y0 + 83, "sev-1 [80,85]", THEME["list"], THEME["ink"], THEME["ink"], font_mono_bold(9.0), pad_x=6, pad_y=2)
-            draw_pill(draw, 566, bot_y0 + 83, "CVE unassigned (p_null:0.99)", THEME["null"], THEME["ink"], THEME["ink"], font_mono_bold(8.8), pad_x=6, pad_y=2)
+            # Scene 1: 2 Cloud Calls vs 1 Local Pass (Large 16px-18px fonts)
+            cf_box = (74, x_y0 + 114, 1006, x_y0 + 224)
+            draw.rounded_rectangle([int(v * S) for v in cf_box], radius=int(7 * S), fill=THEME["surface"], outline=THEME["ink"], width=int(1.6 * S))
+            draw_pill(draw, 88, x_y0 + 124, "CLOUDFLARE: @cf/cloudflare/clairic + Clef", THEME["null"], THEME["ink"], THEME["ink"], font_mono_bold(13.5), pad_x=10, pad_y=4)
+            draw.text((int(520 * S), int((x_y0 + 129) * S)), "2 Separate Closed Cloud Calls · No Browser Mode", font=font_sans_bold(17.0), fill=THEME["ink_muted"])
+            draw.text((int(88 * S), int((x_y0 + 166) * S)), "Call 1 (Clairic):  incident_id='INC-40928',  total_credit=1550.75,  cve_id=null (bare p_null)", font=font_mono_bold(14.5), fill=THEME["ink_muted"])
+            draw.text((int(88 * S), int((x_y0 + 194) * S)), "Call 2 (Clef):     severity='sev-1' (0.98),  data_loss=false  [Requires 2nd Model RPC]", font=font_mono_bold(14.5), fill=THEME["ink_muted"])
 
-            # Row 1: Cloudflare Clairic + Clef
-            cf_row = (58, bot_y0 + 122, 730, bot_y0 + 178)
-            draw.rounded_rectangle([int(v * S) for v in cf_row], radius=int(5 * S), fill=THEME["surface"], outline=THEME["ink"], width=int(1.3 * S))
-            draw_pill(draw, 68, bot_y0 + 130, "CLOUDFLARE: Clairic + Clef", THEME["null"], THEME["ink"], THEME["ink"], font_mono_bold(8.8), pad_x=6, pad_y=2)
-            draw.text((int(268 * S), int((bot_y0 + 133) * S)), "Requires 2 Separate Closed Workers AI Calls · No Browser Mode", font=font_mono_bold(9.2), fill=THEME["ink_muted"])
-            draw.text((int(68 * S), int((bot_y0 + 155) * S)), "RPC 1 (Clairic): spans + bare p_null   |   RPC 2 (Clef): severity='sev-1', data_loss=false", font=font_mono_reg(9.4), fill=THEME["ink_muted"])
+            ns_box = (74, x_y0 + 236, 1006, x_y1 - 28)
+            draw.rounded_rectangle([int(v * S) for v in ns_box], radius=int(7 * S), fill=THEME["surface"], outline=THEME["ink"], width=int(2.6 * S))
+            draw_pill(draw, 88, x_y0 + 246, "NULLSPAN: 1 Unified Forward Pass", THEME["list"], THEME["ink"], THEME["ink"], font_mono_bold(13.5), pad_x=10, pad_y=4)
+            draw.text((int(465 * S), int((x_y0 + 251) * S)), "All 10 Ops in 1 Pass · Runs in Browser WASM & Python", font=font_sans_bold(17.0), fill=THEME["ink"])
 
-            # Row 2: nullspan unified pass
-            ns_row = (58, bot_y0 + 186, 730, bot_y1 - 22)
-            draw.rounded_rectangle([int(v * S) for v in ns_row], radius=int(5 * S), fill=THEME["surface"], outline=THEME["ink"], width=int(2.0 * S))
-            draw_pill(draw, 68, bot_y0 + 194, "NULLSPAN: 1 Unified Pass", THEME["list"], THEME["ink"], THEME["ink"], font_mono_bold(8.8), pad_x=6, pad_y=2)
-            draw.text((int(258 * S), int((bot_y0 + 197) * S)), "5 Parallel Heads · 10 Routed Ops · Runs in Browser WASM & Python", font=font_mono_bold(9.2), fill=THEME["ink"])
-            draw.text((int(68 * S), int((bot_y0 + 220) * S)), "incident_id: 'INC-40928' (H=0.03b) · total_credit: $1550.75 (ARITH_SUM) · severity: 'sev-1' (0.99)", font=font_mono_bold(9.3), fill=THEME["ink"])
-            draw.text((int(68 * S), int((bot_y0 + 242) * S)), "cve_id: null (p_null: 0.994 · abstention_reason: 'unassigned_placeholder' · 0% FPHR)", font=font_mono_bold(9.3), fill=THEME["ink"])
+            # Highlighted badges row inside nullspan box
+            draw_pill(draw, 88, x_y0 + 288, "SPAN: 'INC-40928' [9,18] (H=0.03b)", THEME["span"], THEME["ink"], THEME["ink"], font_mono_bold(13.5), pad_x=10, pad_y=4)
+            draw_pill(draw, 435, x_y0 + 288, "ARITH_SUM: $1,550.75 ✓", THEME["list"], THEME["ink"], THEME["ink"], font_mono_bold(13.5), pad_x=10, pad_y=4)
+            draw_pill(draw, 695, x_y0 + 288, "ENUM: 'sev-1' (0.99)", THEME["list"], THEME["ink"], THEME["ink"], font_mono_bold(13.5), pad_x=10, pad_y=4)
+
+            draw_pill(draw, 88, x_y0 + 332, "NULL_HEAD: cve_id = null  (p_null: 0.994 · reason: 'unassigned_placeholder' · 0% FPHR)", THEME["null"], THEME["ink"], THEME["ink"], font_mono_bold(13.5), pad_x=10, pad_y=4)
 
         elif scene_idx == 1:
-            # Scene 1: Cross-Field Algebraic Invariant Verification
-            cf_box = (58, bot_y0 + 78, 386, bot_y1 - 24)
-            ns_box = (400, bot_y0 + 78, 730, bot_y1 - 24)
-            draw.rounded_rectangle([int(v * S) for v in cf_box], radius=int(6 * S), fill=THEME["surface"], outline=THEME["ink"], width=int(1.4 * S))
-            draw.rounded_rectangle([int(v * S) for v in ns_box], radius=int(6 * S), fill=THEME["surface"], outline=THEME["ink"], width=int(2.2 * S))
+            # Scene 2: Cross-Field Algebraic Invariant Verification (Side by Side, Large 16px text)
+            cf_box = (74, x_y0 + 114, 528, x_y1 - 28)
+            ns_box = (552, x_y0 + 114, 1006, x_y1 - 28)
+            draw.rounded_rectangle([int(v * S) for v in cf_box], radius=int(7 * S), fill=THEME["surface"], outline=THEME["ink"], width=int(1.6 * S))
+            draw.rounded_rectangle([int(v * S) for v in ns_box], radius=int(7 * S), fill=THEME["surface"], outline=THEME["ink"], width=int(2.6 * S))
 
-            draw_pill(draw, 70, bot_y0 + 88, "@cf/cloudflare/clairic", THEME["null"], THEME["ink"], THEME["ink"], font_mono_bold(9.2))
-            cf_lines = [
-                ("nodes: 4  |  rate: $3.50", THEME["muted_bg"]),
+            draw_pill(draw, 90, x_y0 + 126, "@cf/cloudflare/clairic", THEME["null"], THEME["ink"], THEME["ink"], font_mono_bold(14.5), pad_x=10, pad_y=5)
+            cf_rows = [
+                ("nodes: 4  ·  rate: $3.50", THEME["muted_bg"]),
                 ("subtotal: $14.00 (unverified)", THEME["muted_bg"]),
-                ("constraint: NOT SUPPORTED", THEME["null"]),
-                ("verified: N/A (blind to math)", THEME["null"]),
-                ("promo_rebate: bare p_null only", THEME["null"]),
+                ("✗ constraint: NOT SUPPORTED", THEME["null"]),
+                ("✗ verified: N/A (blind to math)", THEME["null"]),
+                ("✗ promo_rebate: bare p_null", THEME["null"]),
             ]
-            for cli, (cl, bg_c) in enumerate(cf_lines):
-                cy = bot_y0 + 120 + cli * 28
-                draw_pill(draw, 70, cy, cl, bg_c, THEME["ink"], THEME["ink"], font_mono_bold(8.8), pad_x=7, pad_y=2.5)
+            for cri, (ctxt, cbg) in enumerate(cf_rows):
+                draw_pill(draw, 90, x_y0 + 172 + cri * 40, ctxt, cbg, THEME["ink"], THEME["ink"], font_mono_bold(14.0), pad_x=10, pad_y=4)
 
-            draw_pill(draw, 412, bot_y0 + 88, "nullspan (Audits the Math)", THEME["list"], THEME["ink"], THEME["ink"], font_mono_bold(9.2))
-            ns_lines = [
+            draw_pill(draw, 568, x_y0 + 126, "nullspan (Audits the Math)", THEME["list"], THEME["ink"], THEME["ink"], font_mono_bold(14.5), pad_x=10, pad_y=5)
+            ns_rows = [
                 ("nodes: 4 [55,56] · rate: $3.50", THEME["span"]),
                 ("subtotal: $14.00 [SPAN_NUMBER]", THEME["span"]),
-                ("constraint: subtotal==nodes*rate", THEME["list"]),
-                ("verified: true · invariants_passed", THEME["list"]),
-                ("promo_rebate: null (ignores $0.00)", THEME["null"]),
+                ("✓ constraint: subtotal==nodes*rate", THEME["list"]),
+                ("✓ verified: true (invariants_passed)", THEME["list"]),
+                ("✓ promo_rebate: null (ignores $0.00)", THEME["null"]),
             ]
-            for nli, (nl, bg_c) in enumerate(ns_lines):
-                ny = bot_y0 + 120 + nli * 28
-                draw_pill(draw, 412, ny, nl, bg_c, THEME["ink"], THEME["ink"], font_mono_bold(8.8), pad_x=7, pad_y=2.5)
+            for nri, (ntxt, nbg) in enumerate(ns_rows):
+                draw_pill(draw, 568, x_y0 + 172 + nri * 40, ntxt, nbg, THEME["ink"], THEME["ink"], font_mono_bold(14.0), pad_x=10, pad_y=4)
 
         else:
-            # Scene 2: JevBench 4-Axis Leaderboard Bars (using only #FFE484, #C8F0D4, #F5D0CE)
+            # Scene 3: JevBench 4-Axis Leaderboard Bars (Big, Mobile-Legible 16px-18px Bars)
             bars = [
-                ("nullspan-Hybrid (Fast + ONNX Int8)", 97.7, 98.7, "$0.0003/1k · 0.005ms", THEME["list"]),
-                ("nullspan-67M (PyTorch FP32 · Open)", 83.3, 99.2, "$0.0015/1k · 5.58ms", THEME["span"]),
-                ("nullspan-67M-Int8 (Browser WASM)", 83.0, 98.7, "$0.0008/1k · 12.3ms", THEME["span"]),
-                ("H2O-Lightning-4B (JevBench #1 GPU)", 72.5, 75.0, "$0.0211/1k · 29.3ms", THEME["surface"]),
-                ("Jev 1.13.0 / Clef-Class Cloud API", 71.5, 77.1, "$0.0323/1k · 239ms", THEME["null"]),
+                ("nullspan-Hybrid (Fast + WASM)", 97.7, 98.7, "$0.0003/1k · 5 µs", THEME["list"]),
+                ("nullspan-67M (PyTorch FP32)", 83.3, 99.2, "$0.0015/1k · 5.6 ms", THEME["span"]),
+                ("nullspan-67M-Int8 (Browser WASM)", 83.0, 98.7, "$0.0008/1k · 64 MB", THEME["span"]),
+                ("H2O-Lightning-4B (JevBench #1)", 72.5, 75.0, "$0.0211/1k · 4B GPU", THEME["surface"]),
+                ("Jev 1.13.0 / Clef-Class API", 71.5, 77.1, "$0.0323/1k · 239 ms", THEME["null"]),
             ]
             for bi, (bname, comp, cap, meta_s, bcol) in enumerate(bars):
-                by = bot_y0 + 80 + bi * 36
-                draw.text((int(60 * S), int((by + 6) * S)), bname, font=font_mono_bold(9.4), fill=THEME["ink"])
-                bar_x0, bar_x1 = 308, 548
+                by = x_y0 + 118 + bi * 52
+                draw.text((int(76 * S), int((by + 8) * S)), bname, font=font_mono_bold(15.0), fill=THEME["ink"])
+                bar_x0, bar_x1 = 420, 770
                 draw.rounded_rectangle(
-                    [int(bar_x0 * S), int((by + 2) * S), int(bar_x1 * S), int((by + 25) * S)],
-                    radius=int(4 * S),
+                    [int(bar_x0 * S), int((by + 2) * S), int(bar_x1 * S), int((by + 38) * S)],
+                    radius=int(6 * S),
                     fill=THEME["surface"],
                     outline=THEME["ink"],
-                    width=int(1.3 * S),
+                    width=int(1.8 * S),
                 )
                 fill_w = int((bar_x1 - bar_x0) * (comp / 100.0))
                 draw.rounded_rectangle(
-                    [int(bar_x0 * S), int((by + 2) * S), int((bar_x0 + fill_w) * S), int((by + 25) * S)],
-                    radius=int(4 * S),
+                    [int(bar_x0 * S), int((by + 2) * S), int((bar_x0 + fill_w) * S), int((by + 38) * S)],
+                    radius=int(6 * S),
                     fill=bcol,
                     outline=THEME["ink"],
-                    width=int(1.4 * S),
+                    width=int(2.0 * S),
                 )
-                draw.text((int((bar_x0 + 8) * S), int((by + 6) * S)), f"Comp {comp:.1f}  ·  Cap {cap:.1f}", font=font_mono_bold(8.8), fill=THEME["ink"])
-                draw.text((int(556 * S), int((by + 6) * S)), meta_s, font=font_mono_bold(9.0), fill=THEME["ink_muted"])
+                draw.text((int((bar_x0 + 14) * S), int((by + 9) * S)), f"Composite {comp:.1f}  ·  Cap {cap:.1f}", font=font_mono_bold(14.0), fill=THEME["ink"])
+                draw.text((int(784 * S), int((by + 9) * S)), meta_s, font=font_mono_bold(14.0), fill=THEME["ink_muted"])
 
-        # Bottom Right Card (x = 780..1168, y = 444..734): JevBench Metrics & Unified Schema
-        draw_studio_card(
+        # Bottom 3 KPI Cards (y = 1196..1278) matching docs/nullspan-social-mobile.png
+        kpi_boxes = [
+            (40, 1196, 360, 1276, "Capability Score", "50% Intel + 50% Calib", "98.7 vs 77.1", THEME["span"]),
+            (380, 1196, 700, 1276, "In-Browser WASM", "Int8 ONNX SIMD", "64.3 MB", THEME["list"]),
+            (720, 1196, 1040, 1276, "100x Lower Cost", "Zero Output Tokens", "$0.0003/1k", THEME["null"]),
+        ]
+        for kx0, ky0, kx1, ky1, ktitle, ksub, kval, kcol in kpi_boxes:
+            draw_studio_card(draw, (kx0, ky0, kx1, ky1), active=False, radius=8)
+            draw.text((int((kx0 + 16) * S), int((ky0 + 16) * S)), ktitle, font=font_sans_bold(18.0), fill=THEME["ink"])
+            draw.text((int((kx0 + 16) * S), int((ky0 + 44) * S)), ksub, font=font_mono_reg(12.5), fill=THEME["ink_muted"])
+            vf = font_mono_bold(16.5)
+            vb = draw.textbbox((0, 0), kval, font=vf)
+            vw_px = (vb[2] - vb[0]) / S + 20
+            draw_pill(draw, kx1 - 14 - vw_px, ky0 + 20, kval, kcol, THEME["ink"], THEME["ink"], vf, pad_x=10, pad_y=6, radius=6)
+
+        # Bottom Footer Strip (y = 1294..1334)
+        draw_pill(
             draw,
-            (780, bot_y0, 1168, bot_y1),
-            header_text="JEVBENCH METRICS & UNIFIED SCHEMA",
-            header_right="MIT OPEN",
+            40,
+            1294,
+            "npm i nullspan  ·  pip install nullspan",
+            THEME["ink"],
+            THEME["bg"],
+            THEME["ink"],
+            font_mono_bold(14.5),
+            pad_x=16,
+            pad_y=6,
+            radius=6,
         )
-
-        for ki, (kval, klabel, kcol) in enumerate(kpis):
-            kx = 794 + (ki % 2) * 182
-            ky = bot_y0 + 38 + (ki // 2) * 60
-            draw.rounded_rectangle(
-                [int(kx * S), int(ky * S), int((kx + 174) * S), int((ky + 52) * S)],
-                radius=int(6 * S),
-                fill=THEME["muted_bg"],
-                outline=THEME["ink"],
-                width=int(1.5 * S),
-            )
-            draw_pill(draw, kx + 8, ky + 6, kval, kcol, THEME["ink"], THEME["ink"], font_sans_bold(14.5), pad_x=7, pad_y=2, radius=4)
-            draw.text((int((kx + 10) * S), int((ky + 34) * S)), klabel, font=font_mono_bold(8.8), fill=THEME["ink_muted"])
-
-        code_box = (794, bot_y0 + 164, 1154, bot_y1 - 14)
-        draw.rounded_rectangle(
-            [int(v * S) for v in code_box],
-            radius=int(6 * S),
-            fill=THEME["muted_bg"],
-            outline=THEME["ink"],
-            width=int(1.6 * S),
+        draw.text(
+            (int(490 * S), int(1301 * S)),
+            "hemanth.github.io/nullspan/bench.html  ·  hf.co/gnumanth/nullspan",
+            font=font_mono_bold(14.0),
+            fill=THEME["ink"],
         )
-        for li, cline in enumerate(code_lines):
-            draw.text((int(806 * S), int((bot_y0 + 172 + li * 21) * S)), cline, font=font_mono_bold(9.2), fill=THEME["ink"])
 
         out_frame = img.resize((OUT_W, OUT_H), Image.Resampling.LANCZOS)
         out_frame.save(frames_dir / f"frame_{idx:03d}.png")
 
-    Image.open(frames_dir / "frame_005.png").save(preview_png)
-    Image.open(frames_dir / "frame_025.png").save(root / "docs" / "nullspan-vs-clairic-s2.png")
-    Image.open(frames_dir / "frame_045.png").save(root / "docs" / "nullspan-vs-clairic-s3.png")
+    Image.open(frames_dir / "frame_010.png").save(preview_png)
+    Image.open(frames_dir / "frame_050.png").save(root / "docs" / "nullspan-vs-clairic-s2.png")
+    Image.open(frames_dir / "frame_090.png").save(root / "docs" / "nullspan-vs-clairic-s3.png")
 
     subprocess.run(
         [
             "ffmpeg",
             "-y",
             "-framerate",
-            "15",
+            str(fps),
             "-i",
             str(frames_dir / "frame_%03d.png"),
             "-vf",
@@ -534,7 +503,7 @@ def main() -> None:
         check=True,
     )
     space_gif.write_bytes(out_gif.read_bytes())
-    print(f"Rendered {out_gif} ({out_gif.stat().st_size / 1024:.1f} KB)")
+    print(f"Rendered {out_gif} ({out_gif.stat().st_size / 1024:.1f} KB, {total_frames / fps:.1f}s loop)")
 
 
 if __name__ == "__main__":
