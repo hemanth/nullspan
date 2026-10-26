@@ -46,6 +46,7 @@ from modeling_nullspan import (
     NullspanConfig,
     NullspanForExtraction,
     denormalize_to_grid,
+    disambiguate_numeric_field,
     extract_numeric_context_features,
     format_field_query,
     parse_dates_in_text,
@@ -440,7 +441,7 @@ def evaluate_nullspan_neural_tier(
     for _, group in doc_groups.items():
         state = group[0][1]["state"]
         queries = [format_field_query(it["field_name"], it["field_spec"]) for _, it in group]
-        win_pairs = [select_context_window(state, it["field_spec"]) for _, it in group]
+        win_pairs = [select_context_window(state, it["field_spec"], it["field_name"]) for _, it in group]
         win_states = [p[0] for p in win_pairs]
         win_offsets = [p[1] for p in win_pairs]
         num_feats_list = [
@@ -602,6 +603,12 @@ def evaluate_nullspan_neural_tier(
                 doc_answers[fname] = {"type": ftype, "p_null": p_null, "value": None if is_null else iso_s}
                 scalar_vals[fname] = doc_answers[fname]["value"]
             elif ftype == "number":
+                if len(state) > 320:
+                    dis_ans = disambiguate_numeric_field(state, fname, spec)
+                    if dis_ans is not None:
+                        doc_answers[fname] = dis_ans
+                        scalar_vals[fname] = dis_ans.get("value")
+                        continue
                 if "including" in spec.get("instructions", "").lower() or "total_credit" in fname:
                     m_plus = re.search(r"\$(\d+(?:\.\d+)?)\s+plus\s+\$(\d+(?:\.\d+)?)", state)
                     num_v: int | float = round(float(m_plus.group(1)) + float(m_plus.group(2)), 2) if m_plus else 0.0

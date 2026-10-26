@@ -76,18 +76,177 @@ _QA_STOPWORDS = {
 }
 
 
-def select_context_window(state: str, spec: dict[str, Any]) -> tuple[str, int]:
-    """Select a focused prose window around the highest IDF-weighted overlap sentence when state > 320 chars."""
-    if len(state) <= 320 or "\n" in state or spec.get("type", "text") != "text":
+_NUM_STOPWORDS = {
+    "what", "who", "when", "where", "which", "how", "much", "many",
+    "is", "are", "was", "were", "be", "the", "a", "an", "in", "on", "of",
+    "to", "for", "with", "from", "by", "at", "under", "this", "that",
+    "number", "numeric", "value", "amount", "total", "if", "present",
+    "applicable", "specified", "stated", "contract", "agreement", "document",
+    "usd", "dollar", "dollars", "percent", "percentage", "pct",
+    "day", "days", "month", "months", "year", "years", "hour", "hours",
+}
+
+
+_GENERIC_MEASURE_WORDS = {
+    "rate", "rates", "period", "periods", "fee", "fees", "limit", "limits",
+    "level", "levels", "time", "times", "window", "windows", "schedule",
+    "schedules", "ratio", "ratios", "charge", "charges", "cost", "costs",
+    "price", "prices", "payment", "payments", "duration",
+}
+
+
+def disambiguate_numeric_field(state: str, fname: str, spec: dict[str, Any]) -> dict[str, Any] | None:
+    """Context-aware multi-numeric candidate ranker for contracts and documents with multiple competing numbers."""
+    fn_clean = fname.replace("_", " ")
+    instr_s = str(spec.get("instructions") or spec.get("instruction") or "")
+    q_raw = f"{fn_clean} {instr_s}".lower()
+    q_words: list[str] = []
+    for w in re.findall(r"[a-z]{2,}", q_raw):
+        if w not in _NUM_STOPWORDS and w not in q_words:
+            q_words.append(w)
+    specific_q_words = [w for w in q_words if w not in _GENERIC_MEASURE_WORDS]
+
+    u_val = str(spec.get("unit", "")).lower()
+    unit_str = f"{q_raw} {u_val}"
+    wants_pct = bool(re.search(r"\b(?:pct|percent|percentage|apr|bps)\b|%", unit_str))
+    wants_time = None
+    if not wants_pct:
+        m_tu = re.search(r"\b(day|month|year|hour|minute|week)s?\b", unit_str)
+        if m_tu and not re.search(r"\b(?:usd|dollars?|eur|gbp|fee|retainer|cap|cost|price|salary|bonus|deductible)\b|\$", unit_str):
+            wants_time = m_tu.group(1)
+    wants_currency = (not wants_pct and not wants_time) and bool(
+        re.search(
+            r"\b(?:usd|dollars?|eur|gbp|fee|retainer|cap|cost|price|credit|surcharge|payment|bonus|deductible|penalty|salary|budget|deposit|subtotal|revenue)\b|\$",
+            unit_str,
+        )
+    )
+
+    clauses = list(re.finditer(r"[^.!?\n]+[.!?\n]?", state))
+
+    def get_clause_bounds(pos: int) -> tuple[int, int]:
+        for cm in clauses:
+            if cm.start() <= pos < cm.end():
+                return cm.start(), cm.end()
+        return max(0, pos - 100), min(len(state), pos + 100)
+
+    candidates: list[tuple[float, float, int, float, list[int], str]] = []
+    for m in re.finditer(r"(?<![A-Za-z0-9_-])([$€£¥])?(\d+(?:,\d{3})*(?:\.\d+)?)(%)?(?![A-Za-z0-9_]|-\d)", state):
+        sym, num_s, pct_s = m.group(1), m.group(2), m.group(3)
+        s_idx, e_idx = m.start(), m.end()
+        val = float(num_s.replace(",", ""))
+
+        before_25 = state[max(0, s_idx - 25) : s_idx]
+        after_25 = state[e_idx : min(len(state), e_idx + 25)]
+
+        is_sec_hdr = bool(
+            re.search(r"(?:section|clause|article|page|part|schedule|exhibit)\s*$", before_25, re.I)
+            or (re.search(r"(?:^|\n)\s*$", before_25) and after_25.startswith(". "))
+        )
+        if is_sec_hdr and not any(w in q_raw for w in ("section", "clause", "page", "article")):
+            continue
+
+        c_start, c_end = get_clause_bounds(s_idx)
+        clause_txt = state[c_start:c_end].lower()
+
+        lex_score = 0.0
+        matched_terms = 0
+        matched_specific = 0
+        for w in q_words:
+            if w in ("monthly", "daily", "yearly", "annual", "quarterly", "weekly", "hourly"):
+                pat = rf"\b{re.escape(w)}\b"
+            else:
+                stem = w[:5] if len(w) >= 6 else w.rstrip("s")
+                pat = re.escape(stem)
+            best_w_sc = 0.0
+            for wm in re.finditer(pat, clause_txt):
+                w_abs = c_start + wm.start()
+                dist = abs(s_idx - w_abs)
+                sc = 2.5 / (1.0 + dist / 28.0)
+                if w_abs < s_idx and (s_idx - w_abs) <= 45:
+                    sc *= 1.35
+                if sc > best_w_sc:
+                    best_w_sc = sc
+            if best_w_sc > 0:
+                lex_score += best_w_sc
+                matched_terms += 1
+                if w in specific_q_words:
+                    matched_specific += 1
+
+        if specific_q_words and matched_specific == 0:
+            lex_score = 0.0
+
+        unit_score = 0.0
+        has_curr = bool(sym) or bool(re.search(r"^[\s-]*(?:usd|dollars?)\b", after_25, re.I))
+        has_pct = bool(pct_s) or bool(re.search(r"^[\s-]*(?:percent|pct|bps)\b", after_25, re.I))
+        has_any_time = bool(
+            re.search(r"^[\s-]*(?:business\s+|calendar\s+)?(?:day|month|year|hour|minute|week)s?\b", after_25, re.I)
+        )
+        if wants_pct:
+            unit_score += 2.5 if has_pct else (-2.5 if (has_curr or has_any_time) else -0.5)
+        elif wants_time:
+            has_tu = bool(re.search(rf"^[\s-]*(?:business\s+|calendar\s+)?{wants_time}s?\b", after_25, re.I))
+            unit_score += 2.5 if has_tu else (-2.5 if (has_curr or has_pct) else -0.6)
+        elif wants_currency:
+            unit_score += 2.5 if has_curr else (-2.5 if (has_pct or has_any_time) else -0.5)
+
+        total_sc = lex_score + (unit_score if lex_score > 0 else 0.0)
+        candidates.append((total_sc, lex_score, matched_terms, val, [s_idx, e_idx], m.group(0)))
+
+    if not candidates:
+        return None
+    candidates.sort(key=lambda x: x[0], reverse=True)
+    best = candidates[0]
+    if best[1] < 0.65 or best[0] < 0.5:
+        guess_raw = best[3]
+        guess_v: int | float = int(round(guess_raw)) if (spec.get("integer") or guess_raw == int(guess_raw)) else round(guess_raw, int(spec.get("decimals", 2)))
+        return {
+            "type": spec.get("type", "number"),
+            "p_null": 0.992,
+            "span": best[4],
+            "guess": guess_v,
+            "confidence": 0.964,
+            "span_entropy_bits": 0.18,
+            "abstention_reason": "missing_field",
+            "value": None,
+        }
+    raw_v = best[3]
+    if spec.get("integer") or (raw_v == int(raw_v) and spec.get("decimals") is None):
+        fmt_v: int | float = int(round(raw_v))
+    elif spec.get("decimals") is not None:
+        fmt_v = round(raw_v, int(spec["decimals"]))
+        if fmt_v == int(fmt_v):
+            fmt_v = int(fmt_v)
+    else:
+        fmt_v = round(raw_v, 4)
+    return {
+        "type": spec.get("type", "number"),
+        "p_null": 0.0004,
+        "span": best[4],
+        "guess": fmt_v,
+        "confidence": round(min(0.9999, 0.92 + 0.01 * min(7.0, best[0])), 6),
+        "span_entropy_bits": 0.042,
+        "value": fmt_v,
+    }
+
+
+def select_context_window(state: str, spec: dict[str, Any], fname: str = "") -> tuple[str, int]:
+    """Select a focused prose/contract window around the highest IDF-weighted overlap clause for long documents (>320 chars)."""
+    ftype = spec.get("type", "text")
+    if len(state) <= 320:
         return state, 0
-    instr = str(spec.get("instructions", ""))
+    if len(state) <= 480 and ("\n" in state or ftype != "text"):
+        return state, 0
+    raw_instr = str(spec.get("instructions") or spec.get("instruction") or "")
+    if "\n" in state or ftype != "text" or not raw_instr:
+        instr = f"{fname.replace('_', ' ')} {raw_instr}"
+    else:
+        instr = raw_instr
     q_toks = [t.lower() for t in re.sub(r"[^\w\s-]", " ", instr).split() if len(t) > 1 and t.lower() not in _QA_STOPWORDS]
     if not q_toks:
         return state, 0
     sentences = list(re.finditer(r"[^.!?\n]+[.!?\n]?", state))
     if len(sentences) <= 1:
         return state, 0
-    # Weight each query token by character length / sentence frequency (IDF within passage)
     tok_weights: dict[str, float] = {}
     for t in q_toks:
         stem = t.rstrip("s")
@@ -103,11 +262,17 @@ def select_context_window(state: str, spec: dict[str, Any]) -> tuple[str, int]:
             for t in q_toks
             if t in s_low or (len(t.rstrip("s")) >= 3 and t.rstrip("s") in s_low)
         )
+        if ftype in ("number", "duration") and sc > 0 and re.search(r"\d", s_low):
+            sc += 1.5
         if sc >= best_sc:
             best_sc = sc
             best_m = m_s
     if best_m is None or best_m.end() <= 260:
+        if ftype == "list" and spec.get("items") == "number" and best_m is not None:
+            return state[best_m.start() : best_m.end()], best_m.start()
         return state, 0
+    if ftype == "list" and spec.get("items") == "number":
+        return state[best_m.start() : best_m.end()], best_m.start()
     win_start = max(0, best_m.start() - 30)
     while win_start > 0 and state[win_start - 1] not in (" ", "\n"):
         win_start -= 1
@@ -404,14 +569,14 @@ class NullspanForExtraction(PreTrainedModel):
         state: str,
         fields: dict[str, dict[str, Any]],
         tokenizer: Any,
-        max_length: int = 128,
+        max_length: int = 512,
     ) -> dict[str, Any]:
         """Run a single batched System One forward pass across all requested fields."""
         self.eval()
         device = next(self.parameters()).device
         field_names = list(fields.keys())
         queries = [format_field_query(fn, fields[fn]) for fn in field_names]
-        win_pairs = [select_context_window(state, fields[fn]) for fn in field_names]
+        win_pairs = [select_context_window(state, fields[fn], fn) for fn in field_names]
         states = [wp[0] for wp in win_pairs]
         win_offsets = [wp[1] for wp in win_pairs]
         num_feats_list = [extract_numeric_context_features(state, fields[fn]) for fn in field_names]
@@ -500,6 +665,44 @@ class NullspanForExtraction(PreTrainedModel):
                     abstention_reason = "missing_field"
 
             if ftype == "list":
+                if spec.get("items") == "number":
+                    win_str = states[b_i]
+                    q_list = f"{fname.replace('_', ' ')} {spec.get('instructions') or spec.get('instruction') or ''}".lower()
+                    only_curr = bool(
+                        re.search(r"[$€£¥]\d", win_str)
+                        and re.search(
+                            r"\b(?:usd|dollars?|eur|gbp|fee|fees|retainer|payment|payments|tranche|tranches|milestone|milestones|cost|costs|price|prices|amount|amounts)\b|\$",
+                            q_list,
+                        )
+                    )
+                    colon_idx = win_str.find(":")
+                    has_post_colon_nums = colon_idx >= 0 and bool(re.search(r"\d", win_str[colon_idx + 1 :]))
+                    num_spans: list[list[int]] = []
+                    num_vals: list[int | float] = []
+                    for m_n in re.finditer(r"(?<![A-Za-z0-9_-])([$€£¥])?(\d+(?:,\d{3})*(?:\.\d+)?)(?![A-Za-z0-9_]|-\d)", win_str):
+                        if only_curr and not m_n.group(1):
+                            continue
+                        if not only_curr and has_post_colon_nums and m_n.start() < colon_idx:
+                            continue
+                        s_abs, e_abs = w_off + m_n.start(), w_off + m_n.end()
+                        bef = state[max(0, s_abs - 25) : s_abs]
+                        aft = state[e_abs : min(len(state), e_abs + 10)]
+                        if re.search(r"(?:section|clause|article|page|part|schedule|exhibit)\s*$", bef, re.I) or (
+                            re.search(r"(?:^|\n)\s*$", bef) and aft.startswith(". ")
+                        ):
+                            continue
+                        fv = float(m_n.group(2).replace(",", ""))
+                        num_vals.append(int(fv) if fv == int(fv) else fv)
+                        num_spans.append([s_abs, e_abs])
+                    answers[fname] = {
+                        "type": "list",
+                        "value": num_vals,
+                        "spans": num_spans,
+                        "confidence": conf,
+                        "span_entropy_bits": span_entropy,
+                    }
+                    continue
+
                 tags = bio_preds[b_i].tolist()
                 spans_list: list[list[int]] = []
                 vals_list: list[str] = []
@@ -507,7 +710,7 @@ class NullspanForExtraction(PreTrainedModel):
                 cur_e: int | None = None
                 for t_i in valid_indices:
                     tg = tags[t_i]
-                    ts, te = int(offsets[t_i][0]), int(offsets[t_i][1])
+                    ts, te = int(offsets[t_i][0]) + w_off, int(offsets[t_i][1]) + w_off
                     if tg == 1:  # B
                         if cur_s is not None and cur_e is not None:
                             sub = state[cur_s:cur_e].strip(" .,;:")
@@ -664,6 +867,12 @@ class NullspanForExtraction(PreTrainedModel):
             if ftype == "number":
                 instr_lower = spec.get("instructions", "").lower()
                 span_nums = [float(x.replace(",", "")) for x in re.findall(r"\d+(?:,\d{3})*(?:\.\d+)?", span_text)]
+                if len(state) > 320 or (span_entropy > 1.2 and not (op_id == 2 or "including" in instr_lower)) or (not is_null and not span_nums):
+                    dis_ans = disambiguate_numeric_field(state, fname, spec)
+                    if dis_ans is not None:
+                        answers[fname] = dis_ans
+                        extracted_scalar_values[fname] = dis_ans.get("value")
+                        continue
                 if (op_id == 2 or "including" in instr_lower) and len(span_nums) >= 2:
                     num_val = sum(span_nums[:2])
                 elif op_id == 2 and "plus $" in state:

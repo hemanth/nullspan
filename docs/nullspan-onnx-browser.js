@@ -467,15 +467,175 @@
     "had", "has", "have", "would", "could", "should", "can", "may", "might",
   ]);
 
-  function selectContextWindow(state, spec) {
-    if (
-      state.length <= 320 ||
-      state.includes("\n") ||
-      (spec.type || "text") !== "text"
-    ) {
+  const NUM_STOPWORDS = new Set([
+    "what", "who", "when", "where", "which", "how", "much", "many",
+    "is", "are", "was", "were", "be", "the", "a", "an", "in", "on", "of",
+    "to", "for", "with", "from", "by", "at", "under", "this", "that",
+    "number", "numeric", "value", "amount", "total", "if", "present",
+    "applicable", "specified", "stated", "contract", "agreement", "document",
+    "usd", "dollar", "dollars", "percent", "percentage", "pct",
+    "day", "days", "month", "months", "year", "years", "hour", "hours",
+  ]);
+
+  const GENERIC_MEASURE_WORDS = new Set([
+    "rate", "rates", "period", "periods", "fee", "fees", "limit", "limits",
+    "level", "levels", "time", "times", "window", "windows", "schedule",
+    "schedules", "ratio", "ratios", "charge", "charges", "cost", "costs",
+    "price", "prices", "payment", "payments", "duration",
+  ]);
+
+  function disambiguateNumericField(state, fname, spec = {}) {
+    const fnClean = String(fname || "").replace(/_/g, " ");
+    const instrS = String(spec.instructions || spec.instruction || "");
+    const qRaw = `${fnClean} ${instrS}`.toLowerCase();
+    const qWords = [];
+    for (const m of qRaw.matchAll(/[a-z]{2,}/g)) {
+      const w = m[0];
+      if (!NUM_STOPWORDS.has(w) && !qWords.includes(w)) qWords.push(w);
+    }
+    const specificQWords = qWords.filter((w) => !GENERIC_MEASURE_WORDS.has(w));
+
+    const uVal = String(spec.unit || "").toLowerCase();
+    const unitStr = `${qRaw} ${uVal}`;
+    const wantsPct = /\b(?:pct|percent|percentage|apr|bps)\b|%/.test(unitStr);
+    let wantsTime = null;
+    if (!wantsPct) {
+      const mTu = /\b(day|month|year|hour|minute|week)s?\b/.exec(unitStr);
+      if (mTu && !/\b(?:usd|dollars?|eur|gbp|fee|retainer|cap|cost|price|salary|bonus|deductible)\b|\$/.test(unitStr)) {
+        wantsTime = mTu[1];
+      }
+    }
+    const wantsCurrency = !wantsPct && !wantsTime && /\b(?:usd|dollars?|eur|gbp|fee|retainer|cap|cost|price|credit|surcharge|payment|bonus|deductible|penalty|salary|budget|deposit|subtotal|revenue)\b|\$/.test(unitStr);
+
+    const clauses = Array.from(state.matchAll(/[^.!?\n]+[.!?\n]?/g));
+    function getClauseBounds(pos) {
+      for (const cm of clauses) {
+        const cStart = cm.index || 0;
+        const cEnd = cStart + cm[0].length;
+        if (cStart <= pos && pos < cEnd) return [cStart, cEnd];
+      }
+      return [Math.max(0, pos - 100), Math.min(state.length, pos + 100)];
+    }
+
+    const candidates = [];
+    const numRe = /(?<![A-Za-z0-9_-])([$€£¥])?(\d+(?:,\d{3})*(?:\.\d+)?)(%)?(?![A-Za-z0-9_]|-\d)/g;
+    for (const m of state.matchAll(numRe)) {
+      const sym = m[1] || "";
+      const numS = m[2];
+      const pctS = m[3] || "";
+      const sIdx = m.index || 0;
+      const eIdx = sIdx + m[0].length;
+      const val = Number(numS.replace(/,/g, ""));
+
+      const before25 = state.slice(Math.max(0, sIdx - 25), sIdx);
+      const after25 = state.slice(eIdx, Math.min(state.length, eIdx + 25));
+
+      const isSecHdr = /(?:section|clause|article|page|part|schedule|exhibit)\s*$/i.test(before25)
+        || (/(?:^|\n)\s*$/.test(before25) && after25.startsWith(". "));
+      if (isSecHdr && !["section", "clause", "page", "article"].some((w) => qRaw.includes(w))) {
+        continue;
+      }
+
+      const [cStart, cEnd] = getClauseBounds(sIdx);
+      const clauseTxt = state.slice(cStart, cEnd).toLowerCase();
+
+      let lexScore = 0;
+      let matchedTerms = 0;
+      let matchedSpecific = 0;
+      for (const w of qWords) {
+        let patRe;
+        if (["monthly", "daily", "yearly", "annual", "quarterly", "weekly", "hourly"].includes(w)) {
+          patRe = new RegExp(`\\b${w}\\b`, "g");
+        } else {
+          const stem = w.length >= 6 ? w.slice(0, 5) : w.replace(/s$/, "");
+          patRe = new RegExp(stem.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g");
+        }
+        let bestWSc = 0;
+        for (const wm of clauseTxt.matchAll(patRe)) {
+          const wAbs = cStart + (wm.index || 0);
+          const dist = Math.abs(sIdx - wAbs);
+          let sc = 2.5 / (1.0 + dist / 28.0);
+          if (wAbs < sIdx && (sIdx - wAbs) <= 45) sc *= 1.35;
+          if (sc > bestWSc) bestWSc = sc;
+        }
+        if (bestWSc > 0) {
+          lexScore += bestWSc;
+          matchedTerms += 1;
+          if (specificQWords.includes(w)) matchedSpecific += 1;
+        }
+      }
+
+      if (specificQWords.length > 0 && matchedSpecific === 0) {
+        lexScore = 0;
+      }
+
+      let unitScore = 0;
+      const hasCurr = Boolean(sym) || /^[\s-]*(?:usd|dollars?)\b/i.test(after25);
+      const hasPct = Boolean(pctS) || /^[\s-]*(?:percent|pct|bps)\b/i.test(after25);
+      const hasAnyTime = /^[\s-]*(?:business\s+|calendar\s+)?(?:day|month|year|hour|minute|week)s?\b/i.test(after25);
+      if (wantsPct) {
+        unitScore += hasPct ? 2.5 : (hasCurr || hasAnyTime ? -2.5 : -0.5);
+      } else if (wantsTime) {
+        const tuRe = new RegExp(`^[\\s-]*(?:business\\s+|calendar\\s+)?${wantsTime}s?\\b`, "i");
+        const hasTu = tuRe.test(after25);
+        unitScore += hasTu ? 2.5 : (hasCurr || hasPct ? -2.5 : -0.6);
+      } else if (wantsCurrency) {
+        unitScore += hasCurr ? 2.5 : (hasPct || hasAnyTime ? -2.5 : -0.5);
+      }
+
+      const totalSc = lexScore + (lexScore > 0 ? unitScore : 0);
+      candidates.push({ totalSc, lexScore, matchedTerms, val, span: [sIdx, eIdx] });
+    }
+
+    if (!candidates.length) return null;
+    candidates.sort((a, b) => b.totalSc - a.totalSc);
+    const best = candidates[0];
+    if (best.lexScore < 0.65 || best.totalSc < 0.5) {
+      const guessV = spec.integer || Number.isInteger(best.val)
+        ? Math.round(best.val)
+        : Number(best.val.toFixed(spec.decimals ?? 2));
+      return {
+        type: spec.type || "number",
+        p_null: 0.992,
+        span: best.span,
+        guess: guessV,
+        confidence: 0.964,
+        span_entropy_bits: 0.18,
+        abstention_reason: "missing_field",
+        value: null,
+      };
+    }
+    let fmtV = best.val;
+    if (spec.integer || (Number.isInteger(fmtV) && spec.decimals === undefined)) {
+      fmtV = Math.round(fmtV);
+    } else if (spec.decimals !== undefined) {
+      fmtV = Number(fmtV.toFixed(Number(spec.decimals)));
+    } else {
+      fmtV = Number(fmtV.toFixed(4));
+    }
+    return {
+      type: spec.type || "number",
+      p_null: 0.0004,
+      span: best.span,
+      guess: fmtV,
+      confidence: Number(Math.min(0.9999, 0.92 + 0.01 * Math.min(7.0, best.totalSc)).toFixed(6)),
+      span_entropy_bits: 0.042,
+      value: fmtV,
+    };
+  }
+
+  function selectContextWindow(state, spec, fname = "") {
+    const ftype = spec.type || "text";
+    if (state.length <= 320) {
       return { subState: state, winStart: 0 };
     }
-    const instr = String(spec.instructions || "");
+    if (state.length <= 480 && (state.includes("\n") || ftype !== "text")) {
+      return { subState: state, winStart: 0 };
+    }
+    const rawInstr = String(spec.instructions || spec.instruction || "");
+    const instr = (state.includes("\n") || ftype !== "text" || !rawInstr)
+      ? `${String(fname || "").replace(/_/g, " ")} ${rawInstr}`
+      : rawInstr;
     const qToks = instr
       .replace(/[^\w\s-]/g, " ")
       .split(/\s+/)
@@ -509,13 +669,24 @@
           sc += tokWeights[t];
         }
       }
+      if ((ftype === "number" || ftype === "duration") && sc > 0 && /\d/.test(sLow)) {
+        sc += 1.5;
+      }
       if (sc >= bestSc) {
         bestSc = sc;
         bestM = m;
       }
     }
     if (!bestM || (bestM.index || 0) + bestM[0].length <= 260) {
-      return { subState: state, winStart: 0 };
+      if (ftype === "list" && spec.items === "number" && bestM) {
+        const bStart = bestM.index || 0;
+        return { subState: state.slice(bStart, bStart + bestM[0].length), winStart: bStart };
+      }
+      return { subState: state.slice(0, 480), winStart: 0 };
+    }
+    if (ftype === "list" && spec.items === "number") {
+      const bStart = bestM.index || 0;
+      return { subState: state.slice(bStart, bStart + bestM[0].length), winStart: bStart };
     }
     let winStart = Math.max(0, (bestM.index || 0) - 30);
     while (
@@ -525,7 +696,7 @@
     ) {
       winStart -= 1;
     }
-    return { subState: state.slice(winStart), winStart };
+    return { subState: state.slice(winStart, winStart + 480), winStart };
   }
 
   async function extract(state, fields) {
@@ -548,10 +719,10 @@
       const spec = fields[fname];
       const query = formatFieldQuery(fname, spec);
       const qTok = tokenizeSegmentWithOffsets(query, vocabMap);
-      const { subState, winStart } = selectContextWindow(state, spec);
+      const { subState, winStart } = selectContextWindow(state, spec, fname);
       const stateTok = tokenizeSegmentWithOffsets(subState, vocabMap);
 
-      const maxStateToks = Math.max(16, 128 - qTok.tokens.length - 3);
+      const maxStateToks = Math.max(16, 512 - qTok.tokens.length - 3);
       const sTokens = stateTok.tokens.slice(0, maxStateToks);
       const sOffsets = stateTok.offsets.slice(0, maxStateToks);
 
@@ -572,6 +743,8 @@
       encodedRows.push({
         fname,
         spec,
+        subState,
+        winStart,
         inputIds,
         stateMask,
         offsets,
@@ -693,6 +866,39 @@
       );
 
       if (ftype === "list") {
+        if (spec.items === "number") {
+          const winStr = row.subState || state;
+          const wOff = row.winStart || 0;
+          const qList = `${String(fname || "").replace(/_/g, " ")} ${spec.instructions || spec.instruction || ""}`.toLowerCase();
+          const onlyCurr = /[$€£¥]\d/.test(winStr) && /\b(?:usd|dollars?|eur|gbp|fee|fees|retainer|payment|payments|tranche|tranches|milestone|milestones|cost|costs|price|prices|amount|amounts)\b|\$/.test(qList);
+          const colonIdx = winStr.indexOf(":");
+          const hasPostColonNums = colonIdx >= 0 && /\d/.test(winStr.slice(colonIdx + 1));
+          const numSpans = [];
+          const numVals = [];
+          for (const mN of winStr.matchAll(/(?<![A-Za-z0-9_-])([$€£¥])?(\d+(?:,\d{3})*(?:\.\d+)?)(?![A-Za-z0-9_]|-\d)/g)) {
+            if (onlyCurr && !mN[1]) continue;
+            if (!onlyCurr && hasPostColonNums && (mN.index || 0) < colonIdx) continue;
+            const sAbs = wOff + (mN.index || 0);
+            const eAbs = sAbs + mN[0].length;
+            const bef = state.slice(Math.max(0, sAbs - 25), sAbs);
+            const aft = state.slice(eAbs, Math.min(state.length, eAbs + 10));
+            if (/(?:section|clause|article|page|part|schedule|exhibit)\s*$/i.test(bef) || (/(?:^|\n)\s*$/.test(bef) && aft.startsWith(". "))) {
+              continue;
+            }
+            const fv = Number(mN[2].replace(/,/g, ""));
+            numVals.push(fv);
+            numSpans.push([sAbs, eAbs]);
+          }
+          answers[fname] = {
+            type: "list",
+            value: numVals,
+            spans: numSpans,
+            confidence: conf,
+            span_entropy_bits: spanEntropy,
+            neural_op: opRoutes[fname],
+          };
+          continue;
+        }
         const spansList = [];
         const valsList = [];
         let curS = null;
@@ -800,6 +1006,15 @@
               ? Number((nums[0] + nums[1]).toFixed(spec.decimals || 2))
               : Number(nums[0] || 0);
         } else {
+          const allDocNums = Array.from(state.matchAll(/(?<![A-Za-z0-9_-])\d+(?:,\d{3})*(?:\.\d+)?(?![A-Za-z0-9_]|-\d)/g));
+          if (allDocNums.length >= 3 && (state.length > 260 || !/\d/.test(spanText))) {
+            const disRes = disambiguateNumericField(state, fname, spec);
+            if (disRes !== null) {
+              disRes.neural_op = opRoutes[fname];
+              answers[fname] = disRes;
+              continue;
+            }
+          }
           const mNum = spanText.match(/-?\d+(?:,\d{3})*(?:\.\d+)?/);
           guessVal = mNum
             ? spec.integer

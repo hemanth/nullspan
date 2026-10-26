@@ -82,3 +82,46 @@ test('verifies cross-field algebraic invariants, estimates cluster throughput, a
   });
   assert.equal(advRes.answers.cve_id.value, null);
 });
+
+test('disambiguates multi-numeric fields and numeric lists across long multi-section contracts', () => {
+  const contract =
+    'MASTER SERVICES AGREEMENT (Ref: MSA-2026-88412)\n' +
+    'Effective Date: March 15, 2026. This Agreement is entered into between Acme Cloud Corp and Zenith Global Logistics across 14 regional warehouses and 320 edge gateways.\n\n' +
+    '1. TERM AND RENEWAL\n' +
+    'The initial term of this Agreement shall be 36 months commencing on the Effective Date, after which it shall automatically renew for successive 12-month periods unless either party provides written notice at least 90 days prior to the end of the then-current term.\n\n' +
+    '2. SERVICE LEVEL COMMITMENTS & UPTIME\n' +
+    'Provider guarantees a monthly platform availability of 99.95% across all production endpoints, measured over each 30-day billing cycle. Scheduled maintenance windows shall not exceed 4 hours per quarter with at least 48 hours advance notice.\n\n' +
+    '3. DATA RETENTION, SECURITY & AUDIT LOGS\n' +
+    'Provider shall maintain AES-256 encryption at rest and TLS 1.3 in transit across 100% of customer payloads. Hot telemetry records shall be retained for 90 days in active storage, while cold compliance archives shall be retained for 7 years. Immutable security audit logs must be preserved and queryable for 180 days from event generation.\n\n' +
+    '4. FEES, RETAINER & MILESTONE SCHEDULE\n' +
+    'Client shall pay a base monthly retainer of $14,500 USD due on the 1st of each calendar month. In addition, implementation milestone payments shall be billed in 3 tranches: $25,000 upon kickoff, $40,000 upon UAT sign-off, and $35,000 upon production cutover.\n\n' +
+    '5. LATE PAYMENT, INTEREST & GRACE PERIOD\n' +
+    'Undisputed invoices not paid within the 30-day net payment window shall accrue late interest at a rate of 1.5% per month (or 18% annualized, whichever is lower) following a 10-day cure and grace period.\n\n' +
+    '6. LIMITATION OF LIABILITY & INDEMNIFICATION\n' +
+    'Except for breaches of confidentiality or gross negligence, neither party aggregate cumulative liability under this Agreement shall exceed the Liability Cap of $250,000 USD. Cyber-breach secondary indemnification is sub-limited to $120,000 per incident.\n\n' +
+    '7. EARLY TERMINATION & LIQUIDATED DAMAGES\n' +
+    'If Client terminates this Agreement for convenience prior to the completion of the first 24 months, Client shall pay an early termination fee of $45,000 USD within 15 days of termination notice.';
+
+  const res = extract(contract, {
+    initial_term_months: { type: 'number', instructions: 'Initial contract term duration in months' },
+    monthly_retainer: { type: 'number', instructions: 'Base monthly retainer fee in USD' },
+    audit_log_sla_days: { type: 'number', instructions: 'Security audit log retention period in days' },
+    liability_cap: { type: 'number', instructions: 'Aggregate cumulative liability cap in USD' },
+    late_interest_pct: { type: 'number', instructions: 'Monthly late payment interest rate percentage' },
+    grace_period_days: { type: 'number', instructions: 'Late payment cure and grace period in days' },
+    early_termination_fee: { type: 'number', instructions: 'Early termination fee in USD' },
+    royalty_rate_pct: { type: 'number', instructions: 'Revenue share royalty rate percentage' },
+    milestone_payments: { type: 'list', items: 'number', instructions: 'Tranche dollar amounts for implementation milestone payments' },
+  }).answers;
+
+  assert.equal(res.initial_term_months.value, 36);
+  assert.equal(res.monthly_retainer.value, 14500);
+  assert.equal(res.audit_log_sla_days.value, 180);
+  assert.equal(res.liability_cap.value, 250000);
+  assert.equal(res.late_interest_pct.value, 1.5);
+  assert.equal(res.grace_period_days.value, 10);
+  assert.equal(res.early_termination_fee.value, 45000);
+  assert.equal(res.royalty_rate_pct.value, null);
+  assert.ok(res.royalty_rate_pct.p_null > 0.9);
+  assert.deepEqual(res.milestone_payments.value, [25000, 40000, 35000]);
+});
