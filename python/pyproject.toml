@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "nullspan"
-version = "1.0.0"
+version = "1.1.0"
 description = "Calibrated p_null abstention, grounded [start, end] span extraction, arithmetic, and distribution forecasting in a single forward pass."
 readme = "README.md"
 requires-python = ">=3.9"

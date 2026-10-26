@@ -33,6 +33,7 @@ class NullspanConfig(PretrainedConfig):
         dropout: float = 0.1,
         null_temperature: float = 1.0,
         span_temperature: float = 1.0,
+        max_length: int = 512,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
@@ -43,6 +44,7 @@ class NullspanConfig(PretrainedConfig):
         self.dropout = dropout
         self.null_temperature = null_temperature
         self.span_temperature = span_temperature
+        self.max_length = max_length
 
 
 def format_field_query(field_name: str, spec: dict[str, Any]) -> str:
@@ -51,7 +53,7 @@ def format_field_query(field_name: str, spec: dict[str, Any]) -> str:
     items = spec.get("items", "")
     options = spec.get("options", [])
     constraint = spec.get("constraint", "")
-    instr = spec.get("instructions", "")
+    instr = spec.get("instructions") or spec.get("instruction") or ""
     parts = [f"field: {field_name}", f"type: {ftype}"]
     if unit:
         parts.append(f"unit: {unit}")

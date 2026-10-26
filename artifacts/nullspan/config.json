@@ -10,6 +10,7 @@
   "dropout": 0.1,
   "dtype": "float32",
   "hidden_size": 768,
+  "max_length": 512,
   "model_type": "nullspan",
   "null_temperature": 1.0,
   "num_bio_labels": 3,
