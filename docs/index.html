@@ -1215,7 +1215,19 @@
 
       if (activeEngineMode === 'onnx' && window.NullspanOnnxBrowser) {
         try {
-          const { result, diagnostics } = await window.NullspanOnnxBrowser.extract(state, fields);
+          const outOnnx = await window.NullspanOnnxBrowser.extract(state, fields, (fp) => {
+            if (activeEngineMode === 'onnx') {
+              engineStatusPill.textContent = `Running ONNX Int8 Worker (${fp.index}/${fp.total} · ${fp.fieldName})...`;
+            }
+          });
+          if (!outOnnx || outOnnx.cancelled || activeEngineMode !== 'onnx') {
+            return;
+          }
+          const { result, diagnostics } = outOnnx;
+          const meta = window.NullspanOnnxBrowser.getMetadata();
+          if (meta) {
+            engineStatusPill.textContent = `Active: ${meta.modelId} (${meta.modelSizeMb} MB · ${meta.provider})`;
+          }
           metricFields.textContent = `Fields: ${Object.keys(fields).length} (ONNX Int8)`;
           metricLatency.textContent = `Pass Latency: ${diagnostics.inferenceMs} ms`;
           renderGroundedState(state, result.answers);

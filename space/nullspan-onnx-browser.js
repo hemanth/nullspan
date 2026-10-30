@@ -16,7 +16,12 @@
   const TOKENIZER_URL = "./tokenizer.json";
   const ORT_CDN_URL =
     "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js";
-  const CACHE_NAME = "nullspan-onnx-cache-v4";
+  const LEGACY_CACHES = [
+    "nullspan-onnx-cache-v1",
+    "nullspan-onnx-cache-v2",
+    "nullspan-onnx-cache-v3",
+    "nullspan-onnx-cache-v4",
+  ];
 
   const OP_NAMES = [
     "SPAN_TEXT",
@@ -31,108 +36,273 @@
     "ENUM_CLASSIFY",
   ];
 
-  let ortSession = null;
+  let onnxWorker = null;
+  let workerReady = false;
   let vocabMap = null;
   let modelMetadata = null;
   let loadingPromise = null;
+  let workerMsgSeq = 0;
+  let latestExtractRunId = 0;
+  let extractQueue = Promise.resolve();
+  const pendingCalls = new Map();
+  let activeLoadProgressCb = null;
 
-  function ensureOrtLoaded() {
-    if (global.ort) return Promise.resolve(global.ort);
-    return new Promise((resolve, reject) => {
-      const s = document.createElement("script");
-      s.src = ORT_CDN_URL;
-      s.async = true;
-      s.onload = () => {
-        if (global.ort) {
-          global.ort.env.wasm.wasmPaths =
-            "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/";
-          resolve(global.ort);
-        } else {
-          reject(new Error("onnxruntime-web loaded but window.ort is undefined"));
-        }
-      };
-      s.onerror = () => reject(new Error("Failed to load onnxruntime-web from CDN"));
-      document.head.appendChild(s);
-    });
+  function cleanupLegacyCaches() {
+    if (typeof caches !== "undefined" && caches && typeof caches.delete === "function") {
+      for (const name of LEGACY_CACHES) {
+        caches.delete(name).catch(() => {});
+      }
+    }
   }
 
-  async function fetchWithProgressAndCache(url, onProgress) {
-    let cache = null;
-    if ("caches" in global) {
-      try {
-        cache = await caches.open(CACHE_NAME);
-        const cachedResp = await cache.match(url);
-        if (cachedResp) {
-          const buf = await cachedResp.arrayBuffer();
-          if (onProgress) {
-            onProgress({
-              phase: "cached",
-              loadedMb: (buf.byteLength / (1024 * 1024)).toFixed(1),
-              totalMb: (buf.byteLength / (1024 * 1024)).toFixed(1),
-              pct: 100,
-            });
-          }
-          return new Uint8Array(buf);
-        }
-      } catch (_e) {
-        // Fallback to network fetch if CacheStorage is restricted
-      }
-    }
+  function createOnnxWorker() {
+    if (onnxWorker) return onnxWorker;
+    cleanupLegacyCaches();
 
-    const resp = await fetch(url, { mode: "cors" });
-    if (!resp.ok) {
-      throw new Error("HTTP " + resp.status + " fetching " + url);
-    }
-    const contentLength = Number(resp.headers.get("content-length")) || 347000000;
-    const totalMb = (contentLength / (1024 * 1024)).toFixed(1);
+    const workerSrc = `
+      "use strict";
+      const ORT_CDN_URL = ${JSON.stringify(ORT_CDN_URL)};
+      const IDB_NAME = "nullspan-onnx-idb-v1";
+      const IDB_STORE = "models";
+      let ortReady = false;
+      let ortSession = null;
+      let loadedMeta = null;
 
-    if (!resp.body || !resp.body.getReader) {
-      const buf = await resp.arrayBuffer();
-      if (cache) {
-        try {
-          await cache.put(url, new Response(buf.slice(0)));
-        } catch (_e) {}
-      }
-      return new Uint8Array(buf);
-    }
-
-    const reader = resp.body.getReader();
-    const chunks = [];
-    let received = 0;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      chunks.push(value);
-      received += value.byteLength;
-      if (onProgress) {
-        const pct = Math.min(99, Math.round((received / contentLength) * 100));
-        onProgress({
-          phase: "downloading",
-          loadedMb: (received / (1024 * 1024)).toFixed(1),
-          totalMb,
-          pct,
+      function openModelDb() {
+        return new Promise((resolve, reject) => {
+          if (typeof indexedDB === "undefined") return reject(new Error("IndexedDB unavailable"));
+          const req = indexedDB.open(IDB_NAME, 1);
+          req.onupgradeneeded = () => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains(IDB_STORE)) {
+              db.createObjectStore(IDB_STORE);
+            }
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error || new Error("IndexedDB open failed"));
         });
       }
-    }
 
-    const full = new Uint8Array(received);
-    let offset = 0;
-    for (const chunk of chunks) {
-      full.set(chunk, offset);
-      offset += chunk.byteLength;
-    }
+      async function idbGetBlob(key) {
+        try {
+          const db = await openModelDb();
+          return await new Promise((resolve) => {
+            const tx = db.transaction(IDB_STORE, "readonly");
+            const req = tx.objectStore(IDB_STORE).get(key);
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = () => resolve(null);
+          });
+        } catch (_e) {
+          return null;
+        }
+      }
 
-    if (cache) {
-      try {
-        await cache.put(
-          url,
-          new Response(full.buffer.slice(0), {
-            headers: { "Content-Type": "application/octet-stream" },
-          })
-        );
-      } catch (_e) {}
-    }
-    return full;
+      async function idbPutBlob(key, blob) {
+        try {
+          const db = await openModelDb();
+          await new Promise((resolve) => {
+            const tx = db.transaction(IDB_STORE, "readwrite");
+            tx.objectStore(IDB_STORE).put(blob, key);
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = () => resolve(false);
+          });
+        } catch (_e) {}
+      }
+
+      function ensureOrtInWorker() {
+        if (ortReady && self.ort) return;
+        importScripts(ORT_CDN_URL);
+        if (!self.ort) throw new Error("onnxruntime-web failed to initialize in Web Worker");
+        self.ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/";
+        self.ort.env.wasm.numThreads = 1;
+        self.ort.env.wasm.proxy = false;
+        ortReady = true;
+      }
+
+      async function fetchModelBytesSingleBuffer(url, reportProgress) {
+        const cached = await idbGetBlob(url);
+        if (cached && cached.size > 1000000) {
+          const buf = await cached.arrayBuffer();
+          const mb = (buf.byteLength / (1024 * 1024)).toFixed(1);
+          reportProgress({ phase: "cached", loadedMb: mb, totalMb: mb, pct: 100 });
+          return new Uint8Array(buf);
+        }
+
+        const resp = await fetch(url, { mode: "cors" });
+        if (!resp.ok) throw new Error("HTTP " + resp.status + " fetching " + url);
+        const contentLength = Number(resp.headers.get("content-length")) || 346134000;
+        const totalMb = (contentLength / (1024 * 1024)).toFixed(1);
+
+        if (!resp.body || !resp.body.getReader) {
+          const buf = await resp.arrayBuffer();
+          const arr = new Uint8Array(buf);
+          await idbPutBlob(url, new Blob([arr], { type: "application/octet-stream" }));
+          return arr;
+        }
+
+        const reader = resp.body.getReader();
+        let cap = contentLength;
+        let bytes = new Uint8Array(cap);
+        let received = 0;
+        let lastReportTs = 0;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (received + value.byteLength > cap) {
+            cap = Math.max(received + value.byteLength, Math.ceil(cap * 1.25));
+            const grown = new Uint8Array(cap);
+            grown.set(bytes.subarray(0, received), 0);
+            bytes = grown;
+          }
+          bytes.set(value, received);
+          received += value.byteLength;
+          const now = performance.now();
+          if (now - lastReportTs >= 120) {
+            lastReportTs = now;
+            reportProgress({
+              phase: "downloading",
+              loadedMb: (received / (1024 * 1024)).toFixed(1),
+              totalMb,
+              pct: Math.min(99, Math.round((received / contentLength) * 100)),
+            });
+          }
+        }
+
+        const finalBytes = received === bytes.byteLength ? bytes : bytes.subarray(0, received);
+        await idbPutBlob(url, new Blob([finalBytes], { type: "application/octet-stream" }));
+        return finalBytes;
+      }
+
+      self.onmessage = async (ev) => {
+        const msg = ev.data || {};
+        const { id, cmd } = msg;
+        try {
+          if (cmd === "load") {
+            if (ortSession && loadedMeta) {
+              self.postMessage({ id, ok: true, result: loadedMeta });
+              return;
+            }
+            const t0 = performance.now();
+            const reportProgress = (p) => self.postMessage({ type: "progress", progress: p });
+            reportProgress({ phase: "init", loadedMb: "0.0", totalMb: "330.1", pct: 2 });
+            ensureOrtInWorker();
+
+            let modelBytes = await fetchModelBytesSingleBuffer(msg.modelUrl, reportProgress);
+            const sizeMbNum = Number((modelBytes.byteLength / (1024 * 1024)).toFixed(2));
+            reportProgress({
+              phase: "compiling",
+              loadedMb: sizeMbNum.toFixed(1),
+              totalMb: sizeMbNum.toFixed(1),
+              pct: 99,
+            });
+
+            ortSession = await self.ort.InferenceSession.create(modelBytes, {
+              executionProviders: ["wasm"],
+              graphOptimizationLevel: "basic",
+              enableCpuMemArena: false,
+              enableMemPattern: false,
+            });
+            modelBytes = null;
+
+            loadedMeta = {
+              modelId: "gnumanth/nullspan (ONNX Int8 Quantized)",
+              provider: self.ort.env.wasm.numThreads > 1 ? "wasm-simd-mt (" + self.ort.env.wasm.numThreads + "t)" : "wasm-simd-worker",
+              modelSizeMb: sizeMbNum,
+              loadMs: Math.round(performance.now() - t0),
+            };
+            reportProgress({
+              phase: "ready",
+              loadedMb: sizeMbNum.toFixed(1),
+              totalMb: sizeMbNum.toFixed(1),
+              pct: 100,
+              metadata: loadedMeta,
+            });
+            self.postMessage({ id, ok: true, result: loadedMeta });
+            return;
+          }
+
+          if (cmd === "run_single") {
+            if (!ortSession) throw new Error("ONNX session is not initialized");
+            const { inputIds, stateMask, numFeats } = msg;
+            const L = inputIds.length;
+            const flatIds = new BigInt64Array(L);
+            const flatAttn = new BigInt64Array(L);
+            const flatState = new BigInt64Array(L);
+            for (let t = 0; t < L; t++) {
+              flatIds[t] = BigInt(inputIds[t]);
+              flatAttn[t] = 1n;
+              flatState[t] = BigInt(stateMask[t]);
+            }
+            const flatFeats = new Float32Array(8);
+            for (let f = 0; f < 8; f++) flatFeats[f] = numFeats[f];
+
+            const out = await ortSession.run({
+              input_ids: new self.ort.Tensor("int64", flatIds, [1, L]),
+              attention_mask: new self.ort.Tensor("int64", flatAttn, [1, L]),
+              state_mask: new self.ort.Tensor("int64", flatState, [1, L]),
+              num_feats: new self.ort.Tensor("float32", flatFeats, [1, 8]),
+            });
+
+            const res = {
+              nullLogit: Number(out.null_logits.data[0]),
+              startLogits: new Float32Array(out.start_logits.data),
+              endLogits: new Float32Array(out.end_logits.data),
+              bioLogits: new Float32Array(out.bio_logits.data),
+              opLogits: new Float32Array(out.op_logits.data),
+              quantilePreds: new Float32Array(out.quantile_preds.data),
+            };
+            self.postMessage({ id, ok: true, result: res }, [
+              res.startLogits.buffer,
+              res.endLogits.buffer,
+              res.bioLogits.buffer,
+              res.opLogits.buffer,
+              res.quantilePreds.buffer,
+            ]);
+            return;
+          }
+
+          throw new Error("Unknown worker command: " + cmd);
+        } catch (err) {
+          self.postMessage({ id, ok: false, error: err && err.message ? err.message : String(err) });
+        }
+      };
+    `;
+
+    const blob = new Blob([workerSrc], { type: "application/javascript" });
+    const workerUrl = URL.createObjectURL(blob);
+    onnxWorker = new Worker(workerUrl);
+    onnxWorker.onmessage = (ev) => {
+      const data = ev.data || {};
+      if (data.type === "progress") {
+        if (activeLoadProgressCb) activeLoadProgressCb(data.progress);
+        return;
+      }
+      const pending = pendingCalls.get(data.id);
+      if (!pending) return;
+      pendingCalls.delete(data.id);
+      if (data.ok) pending.resolve(data.result);
+      else pending.reject(new Error(data.error || "Worker error"));
+    };
+    onnxWorker.onerror = (err) => {
+      for (const [, pending] of pendingCalls) {
+        pending.reject(new Error(err && err.message ? err.message : "ONNX Web Worker crashed"));
+      }
+      pendingCalls.clear();
+      onnxWorker = null;
+      workerReady = false;
+      loadingPromise = null;
+    };
+    return onnxWorker;
+  }
+
+  function callWorker(cmd, payload) {
+    const w = createOnnxWorker();
+    const id = ++workerMsgSeq;
+    return new Promise((resolve, reject) => {
+      pendingCalls.set(id, { resolve, reject });
+      w.postMessage(Object.assign({ id, cmd }, payload || {}));
+    });
   }
 
   /**
@@ -404,57 +574,24 @@
   }
 
   async function loadModel(onProgress) {
-    if (ortSession && vocabMap) return modelMetadata;
+    if (workerReady && vocabMap && modelMetadata) return modelMetadata;
+    activeLoadProgressCb = onProgress || null;
     if (loadingPromise) return loadingPromise;
 
     loadingPromise = (async () => {
-      const t0 = performance.now();
-      if (onProgress) {
-        onProgress({ phase: "init", loadedMb: "0.0", totalMb: "330.1", pct: 2 });
-      }
-      const ort = await ensureOrtLoaded();
-
       const tokResp = await fetch(TOKENIZER_URL);
+      if (!tokResp.ok) {
+        throw new Error("HTTP " + tokResp.status + " fetching " + TOKENIZER_URL);
+      }
       const tokJson = await tokResp.json();
       vocabMap = tokJson.model && tokJson.model.vocab ? tokJson.model.vocab : {};
 
-      const modelBytes = await fetchWithProgressAndCache(HF_ONNX_URL, onProgress);
-      if (onProgress) {
-        onProgress({
-          phase: "compiling",
-          loadedMb: (modelBytes.byteLength / (1024 * 1024)).toFixed(1),
-          totalMb: (modelBytes.byteLength / (1024 * 1024)).toFixed(1),
-          pct: 99,
-        });
-      }
-
-      let providerUsed = "wasm-simd";
-      try {
-        ortSession = await ort.InferenceSession.create(modelBytes.buffer, {
-          executionProviders: ["wasm"],
-          graphOptimizationLevel: "all",
-        });
-      } catch (err) {
-        throw new Error("ONNX session creation failed: " + err.message);
-      }
-
-      const loadMs = Math.round(performance.now() - t0);
-      modelMetadata = {
-        modelId: "gnumanth/nullspan (ONNX Int8 Quantized)",
-        provider: providerUsed,
-        modelSizeMb: Number((modelBytes.byteLength / (1024 * 1024)).toFixed(2)),
+      const modelUrl = global.NULLSPAN_ONNX_URL || HF_ONNX_URL;
+      const workerMeta = await callWorker("load", { modelUrl });
+      workerReady = true;
+      modelMetadata = Object.assign({}, workerMeta, {
         vocabSize: Object.keys(vocabMap).length,
-        loadMs,
-      };
-      if (onProgress) {
-        onProgress({
-          phase: "ready",
-          loadedMb: modelMetadata.modelSizeMb.toFixed(1),
-          totalMb: modelMetadata.modelSizeMb.toFixed(1),
-          pct: 100,
-          metadata: modelMetadata,
-        });
-      }
+      });
       return modelMetadata;
     })();
 
@@ -463,6 +600,8 @@
     } catch (e) {
       loadingPromise = null;
       throw e;
+    } finally {
+      activeLoadProgressCb = null;
     }
   }
 
@@ -645,7 +784,8 @@
   function selectContextWindow(state, spec, fname = "") {
     const ftype = spec.type || "text";
     const isNumList = ftype === "list" && spec.items === "number";
-    if (!isNumList && state.length <= 1850) {
+    const isMultiSection = state.includes("\n") && state.length > 420;
+    if (!isNumList && !isMultiSection && state.length <= 1850) {
       return { subState: state, winStart: 0 };
     }
     const rawInstr = String(spec.instructions || spec.instruction || "");
@@ -697,6 +837,14 @@
       const bStart = bestM.index || 0;
       return { subState: state.slice(bStart, bStart + bestM[0].length), winStart: bStart };
     }
+    if (state.includes("\n") && state.length > 420 && bestM && bestSc >= 2.0) {
+      let cStart = Math.max(0, (bestM.index || 0) - 120);
+      while (cStart > 0 && state[cStart - 1] !== " " && state[cStart - 1] !== "\n") {
+        cStart -= 1;
+      }
+      const cLen = Math.max(bestM[0].length + 180, 420);
+      return { subState: state.slice(cStart, cStart + cLen), winStart: cStart };
+    }
     if (!bestM || (bestM.index || 0) + bestM[0].length <= 1600) {
       return { subState: state.slice(0, 1850), winStart: 0 };
     }
@@ -711,18 +859,17 @@
     return { subState: state.slice(winStart, winStart + 1850), winStart };
   }
 
-  async function extract(state, fields) {
-    if (!ortSession || !vocabMap) {
+  async function extract(state, fields, onFieldProgress) {
+    const runId = ++latestExtractRunId;
+    if (!workerReady || !vocabMap) {
       await loadModel();
     }
-    const ort = global.ort;
     const t0 = performance.now();
     const fieldNames = Object.keys(fields);
     const B = fieldNames.length;
 
     const clsId = vocabMap["[CLS]"] !== undefined ? vocabMap["[CLS]"] : 101;
     const sepId = vocabMap["[SEP]"] !== undefined ? vocabMap["[SEP]"] : 102;
-    const padId = vocabMap["[PAD]"] !== undefined ? vocabMap["[PAD]"] : 0;
 
     const encodedRows = [];
     let maxL = 0;
@@ -765,43 +912,30 @@
       });
     }
 
-    const flatIds = new BigInt64Array(B * maxL);
-    const flatAttn = new BigInt64Array(B * maxL);
-    const flatState = new BigInt64Array(B * maxL);
-    const flatFeats = new Float32Array(B * 8);
-
-    for (let b = 0; b < B; b++) {
-      const row = encodedRows[b];
-      for (let t = 0; t < maxL; t++) {
-        if (t < row.inputIds.length) {
-          flatIds[b * maxL + t] = BigInt(row.inputIds[t]);
-          flatAttn[b * maxL + t] = 1n;
-          flatState[b * maxL + t] = BigInt(row.stateMask[t]);
-        } else {
-          flatIds[b * maxL + t] = BigInt(padId);
-          flatAttn[b * maxL + t] = 0n;
-          flatState[b * maxL + t] = 0n;
+    const rowOuts = new Array(B);
+    const runTask = extractQueue.then(async () => {
+      for (let b = 0; b < B; b++) {
+        if (runId !== latestExtractRunId) {
+          return { cancelled: true };
         }
+        const row = encodedRows[b];
+        if (onFieldProgress) {
+          onFieldProgress({ index: b + 1, total: B, fieldName: row.fname });
+        }
+        rowOuts[b] = await callWorker("run_single", {
+          inputIds: row.inputIds,
+          stateMask: row.stateMask,
+          numFeats: row.numFeats,
+        });
       }
-      for (let f = 0; f < 8; f++) {
-        flatFeats[b * 8 + f] = row.numFeats[f];
-      }
+      return { cancelled: false };
+    });
+    extractQueue = runTask.catch(() => {});
+
+    const status = await runTask;
+    if (status && status.cancelled) {
+      return { cancelled: true };
     }
-
-    const feeds = {
-      input_ids: new ort.Tensor("int64", flatIds, [B, maxL]),
-      attention_mask: new ort.Tensor("int64", flatAttn, [B, maxL]),
-      state_mask: new ort.Tensor("int64", flatState, [B, maxL]),
-      num_feats: new ort.Tensor("float32", flatFeats, [B, 8]),
-    };
-
-    const out = await ortSession.run(feeds);
-    const nullLogits = out.null_logits.data;
-    const startLogits = out.start_logits.data;
-    const endLogits = out.end_logits.data;
-    const bioLogits = out.bio_logits.data;
-    const opLogits = out.op_logits.data;
-    const quantilePreds = out.quantile_preds.data;
 
     // Run Zero-Dep engine for deterministic date/arithmetic post-normalization helpers
     const fallbackOut = global.NullspanExtract
@@ -814,19 +948,17 @@
 
     for (let b = 0; b < B; b++) {
       const row = encodedRows[b];
+      const rOut = rowOuts[b];
       const fname = row.fname;
       const spec = row.spec;
       const ftype = spec.type || "text";
-      const L = maxL;
 
-      const nullLogit = Number(nullLogits[b]);
+      const nullLogit = Number(rOut.nullLogit);
       let pNull = Number((1 / (1 + Math.exp(-nullLogit))).toFixed(8));
       let isNull = pNull > 0.5;
 
-      const startSlice = startLogits.slice(b * L, (b + 1) * L);
-      const endSlice = endLogits.slice(b * L, (b + 1) * L);
-      const sp = softmax(startSlice);
-      const ep = softmax(endSlice);
+      const sp = softmax(rOut.startLogits);
+      const ep = softmax(rOut.endLogits);
 
       const validIndices = [];
       for (let t = 0; t < row.inputIds.length; t++) {
@@ -863,7 +995,7 @@
       let bestOp = 0;
       let bestOpLogit = -Infinity;
       for (let k = 0; k < 10; k++) {
-        const v = Number(opLogits[b * 10 + k]);
+        const v = Number(rOut.opLogits[k]);
         if (v > bestOpLogit) {
           bestOpLogit = v;
           bestOp = k;
@@ -917,9 +1049,9 @@
         let curS = null;
         let curE = null;
         for (const tIdx of validIndices) {
-          const b0 = Number(bioLogits[(b * L + tIdx) * 3 + 0]);
-          const b1 = Number(bioLogits[(b * L + tIdx) * 3 + 1]);
-          const b2 = Number(bioLogits[(b * L + tIdx) * 3 + 2]);
+          const b0 = Number(rOut.bioLogits[tIdx * 3 + 0]);
+          const b1 = Number(rOut.bioLogits[tIdx * 3 + 1]);
+          const b2 = Number(rOut.bioLogits[tIdx * 3 + 2]);
           const tag = b1 >= b0 && b1 >= b2 ? 1 : b2 >= b0 && b2 >= b1 ? 2 : 0;
           const [ts, te] = row.offsets[tIdx];
           if (tag === 1) {
@@ -967,9 +1099,9 @@
 
       if (ftype === "estimate" || ftype === "forecast") {
         const qRaw = [
-          Number(quantilePreds[b * 3 + 0]),
-          Number(quantilePreds[b * 3 + 1]),
-          Number(quantilePreds[b * 3 + 2]),
+          Number(rOut.quantilePreds[0]),
+          Number(rOut.quantilePreds[1]),
+          Number(rOut.quantilePreds[2]),
         ].sort((a, c) => a - c);
         const p10V = denormalizeToGrid(qRaw[0], spec);
         const medV = denormalizeToGrid(qRaw[1], spec);
@@ -1183,7 +1315,7 @@
   global.NullspanOnnxBrowser = {
     loadModel,
     extract,
-    isLoaded: () => Boolean(ortSession && vocabMap),
+    isLoaded: () => Boolean(workerReady && vocabMap),
     getMetadata: () => modelMetadata,
     HF_ONNX_URL,
   };
