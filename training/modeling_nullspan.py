@@ -68,7 +68,11 @@ def format_field_query(field_name: str, spec: dict[str, Any]) -> str:
     options = spec.get("options", [])
     constraint = spec.get("constraint", "")
     instr = str(spec.get("instructions") or spec.get("instruction") or "").strip()
-    is_interrogative = "?" in instr or bool(re.match(r"^(?:what|who|when|where|which|whom|whose|why|how)\b", instr, re.I))
+    is_interrogative = (
+        "?" in instr
+        or bool(re.match(r"^(?:what|who|when|where|which|whom|whose|why|how)\b", instr, re.I))
+        or (field_name in ("answer", "qa", "question") and len(instr.split()) >= 4)
+    )
     if ftype == "text" and not unit and not items and not options and not constraint and is_interrogative:
         return instr
     parts = [f"field: {field_name}", f"type: {ftype}"]
@@ -335,18 +339,18 @@ def resolve_clause_boolean(
 
 def apply_qa_precondition_guard(query_str: str, state: str, p_null: float) -> float:
     """Epistemic precondition check for open-domain extractive queries with exclusion modifiers or missing years."""
-    if "|" in query_str or p_null < 0.03:
+    if "|" in query_str or p_null < 0.18:
         return p_null
     ql = query_str.lower()
     sl = state.lower()
     boost = 0.0
     for pat in ("other than ", "besides ", "apart from "):
         if pat in ql and not any(p in sl for p in ("other than ", "besides ", "apart from ", "also ", "another ")):
-            boost += 0.48
+            boost += 0.38
     for ym in re.finditer(r"\b(1[0-9]{3}|20[0-9]{2})\b", query_str):
         yr = ym.group(1)
         if yr not in sl and (yr[:3] + "0s") not in sl:
-            boost += 0.48
+            boost += 0.38
     if boost > 0.0:
         return round(min(0.995, p_null + boost), 6)
     return p_null
@@ -653,8 +657,16 @@ class NullspanForExtraction(PreTrainedModel):
             nn.Dropout(config.dropout),
             nn.Linear(h // 2, 1),
         )
-        # 2. Pristine QA span pointer (qa_span_head) + adapted structured schema pointer (span_head + span_query_proj)
+        # 2. Pristine QA span pointer (qa_span_head) + dedicated QA abstention verifier (qa_null_head)
+        #    + adapted structured schema pointer (span_head + span_query_proj)
         self.qa_span_head = nn.Linear(h, 2)
+        self.qa_null_head = nn.Sequential(
+            nn.Linear(4 * h + 5, 256),
+            nn.LayerNorm(256),
+            nn.GELU(),
+            nn.Dropout(config.dropout),
+            nn.Linear(256, 1),
+        )
         self.span_head = nn.Linear(h, 2)
         self.span_query_proj = nn.Sequential(
             nn.Linear(h, h // 2),
@@ -677,6 +689,9 @@ class NullspanForExtraction(PreTrainedModel):
             nn.Linear(128, 3),
         )
         self.post_init()
+        with torch.no_grad():
+            nn.init.zeros_(self.qa_null_head[-1].weight)
+            nn.init.zeros_(self.qa_null_head[-1].bias)
 
         if pretrained_qa_head is not None and pretrained_qa_head.weight.shape == self.span_head.weight.shape:
             with torch.no_grad():
@@ -771,9 +786,34 @@ class NullspanForExtraction(PreTrainedModel):
         null_in = torch.cat([cls_out, span_vec, cls_out * span_vec, q_vec * span_vec, scalar_null_feats], dim=-1)
         schema_null_logit = self.null_head(null_in).squeeze(-1) + 0.35 * span_margin
 
+        qa_s_un = qa_span_logits[:, :, 0] + mask_bias
+        qa_e_un = qa_span_logits[:, :, 1] + mask_bias
+        qa_e_pad = F.pad(qa_e_un.unsqueeze(1), (0, 24), value=-1e4)
+        qa_max_valid_e = F.max_pool1d(qa_e_pad, kernel_size=25, stride=1).squeeze(1)
+        qa_best_valid_span = (qa_s_un + qa_max_valid_e).max(dim=-1).values
+        qa_cls_null = qa_span_logits[:, 0, 0] + qa_span_logits[:, 0, 1]
+        valid_qa_margin = qa_cls_null - qa_best_valid_span
+
+        raw_cls = raw_seq_out[:, 0, :]
+        raw_q_vec = (raw_seq_out * q_mask.unsqueeze(-1)).sum(dim=1) / q_mask.sum(dim=1, keepdim=True).clamp(min=1.0)
+        qa_s_attn = F.softmax(qa_s_un, dim=-1)
+        qa_e_attn = F.softmax(qa_e_un, dim=-1)
+        qa_span_vec = torch.bmm(0.5 * (qa_s_attn + qa_e_attn).unsqueeze(1), raw_seq_out).squeeze(1)
+        qa_scalars = torch.stack(
+            [
+                valid_qa_margin * 0.125,
+                span_margin * 0.125,
+                qa_cls_null * 0.125,
+                qa_s_attn.max(dim=-1).values,
+                qa_e_attn.max(dim=-1).values,
+            ],
+            dim=-1,
+        )
+        qa_null_in = torch.cat([raw_cls, qa_span_vec, raw_cls * raw_q_vec, raw_q_vec * qa_span_vec, qa_scalars], dim=-1)
+
         qa_bias = float(getattr(self.config, "qa_null_bias", 0.0))
         qa_scale = float(getattr(self.config, "qa_null_scale", 0.45))
-        qa_null_logit = (span_margin + qa_bias) * qa_scale
+        qa_null_logit = (valid_qa_margin + qa_bias) * qa_scale + self.qa_null_head(qa_null_in).squeeze(-1)
 
         unscaled_null_logits = (1.0 - schema_flag) * qa_null_logit + schema_flag * schema_null_logit
 

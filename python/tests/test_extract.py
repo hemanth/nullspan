@@ -256,10 +256,39 @@ class TestNullspan(unittest.TestCase):
         self.assertIn("france", str(res_hf["region_country"]["value"]).lower())
         self.assertIsNone(res_hf["unanswerable_king"]["value"])
 
-        if onnx_int8.exists():
+        import importlib.util
+
+        if onnx_int8.exists() and importlib.util.find_spec("onnxruntime") is not None:
             res_ox = extract(state=prose, fields=fields, backend="onnx", model_id=str(artifact_dir))["answers"]
             self.assertIn("france", str(res_ox["region_country"]["value"]).lower())
             self.assertIsNone(res_ox["unanswerable_king"]["value"])
+
+    def test_systemone_decide_if_available(self) -> None:
+        from nullspan import decide
+
+        artifact_dir = ROOT / "artifacts" / "nullspan"
+        if not (artifact_dir / "systemone_decision.pt").exists():
+            self.skipTest("Local System One decision checkpoint not built yet")
+
+        out = decide(
+            state={"invoice": {"id": "INV-42", "total_usd": 1200.0}, "po": {"id": "PO-42", "total_usd": 1200.0}},
+            questions={
+                "exact_match": {
+                    "type": "noul",
+                    "instructions": "Does the invoice total match the purchase order total?",
+                    "criteria": {"false": "Totals differ.", "true": "Totals match."},
+                },
+                "disposition": {
+                    "type": "choice",
+                    "instructions": "Select payment disposition.",
+                    "criteria": {"approve": "Totals match.", "hold": "Discrepancy found."},
+                },
+            },
+            model_id=str(artifact_dir),
+        )
+        self.assertEqual(out["usage"]["output_tokens"], 0)
+        self.assertIn("exact_match", out["answers"])
+        self.assertEqual(out["answers"]["disposition"]["choice"], "approve")
 
 
 if __name__ == "__main__":

@@ -657,7 +657,7 @@
         <span><code>p_null</code> Chance the field is missing (≥ 50% → returns <code>null</code>)</span>
         <span><code>verified=true</code> Cross-field math formula passed</span>
         <span><code>H=0.00b</code> Uncertainty in bits (closer to <code>0b</code> = more certain)</span>
-        <span><code>Tier 2 vs Tier 1</code> Run instantly in pure JS (Tier 2) or stream the 344M Int8 ONNX neural network into your browser (Tier 1 · 330.1 MB)</span>
+        <span><code>Tier 2 vs Tier 1</code> Run instantly in pure JS (Tier 2) or stream the 345M Int8 ONNX neural network into your browser (Tier 1 · 331.1 MB)</span>
       </div>
     </section>
 
@@ -665,7 +665,7 @@
       <div class="preset-buttons">
         <span style="font-family: var(--mono); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 4px;">Browser Runtime Tier:</span>
         <button class="preset-btn active" id="engine-btn-fast" type="button">⚡ Tier 2: Zero-Dep Fast Engine (Sub-ms)</button>
-        <button class="preset-btn" id="engine-btn-onnx" type="button">🧠 Tier 1: In-Browser Neural ONNX (WASM SIMD · 330.1 MB Int8)</button>
+        <button class="preset-btn" id="engine-btn-onnx" type="button">🧠 Tier 1: In-Browser Neural ONNX (WASM SIMD · 331.1 MB Int8)</button>
       </div>
       <div class="metrics-strip">
         <span id="engine-status-pill" style="font-weight: 700;">Active: Zero-Dep Fast Engine (0 B weights)</span>
@@ -824,7 +824,7 @@
           <a href="./bench.html" style="font-family: var(--mono); font-size: 0.78rem; font-weight: 800; padding: 5px 12px; border: 1.5px solid var(--border); border-radius: 4px; background: var(--accent-span); color: var(--ink); text-decoration: none;">Open Interactive 19-System JevBench Explorer →</a>
         </div>
         <p style="margin: 0 0 12px 0; font-size: 0.85rem; color: var(--ink-muted);">
-          <strong>How nullspan compares to Cloudflare Clairic + Clef, TypeSafe Jev &amp; JevBench Leaders:</strong> Evaluated using the official <a href="https://benchmarkheaven.com/jev-models" target="_blank" rel="noopener" style="color: var(--ink);">JevBench 4-axis methodology</a> (<strong>Intelligence <code>I</code></strong>, <strong>Calibration <code>C</code></strong>, <strong>Speed <code>S</code></strong>, <strong>Cost <code>K</code></strong>) across <strong>500 zero-leakage observations</strong> (<code>336</code> Open structured + <code>164</code> Sealed: <code>60</code> SQuAD v2.0, <code>96</code> Multi-Numeric Contracts, <code>8</code> Adversarial), <strong>nullspan-344M (PyTorch FP32 / 330.1 MB Int8 ONNX)</strong> achieves <strong>98.4 / 98.3 Capability</strong> (<code>98.0% / 97.8%</code> Intelligence, <code>98.8 / 98.9</code> Calibration, <code>100.0%</code> on Multi-Numeric Contracts) and <strong>78.7 / 78.4 Composite</strong> at <strong>$0.0008–$0.0017 / 1k decisions</strong>—surpassing live <strong>@cf/cloudflare/clairic + clef</strong> (<code>93.2 Capability / 72.1 Composite</code>, <code>91.6% Intelligence</code>, <code>$0.0041/1k</code>, <code>91.3 ms p50</code>), <strong>H2O-Lightning-4B v1.1</strong> (<code>75.0 Capability / 72.5 Composite</code>), <strong>basal-omni-1.0-ultra (31B)</strong> (<code>82.5 Capability / 71.8 Composite</code>), and <strong>Jev 1.13.0</strong> (<code>77.1 Capability / 71.5 Composite</code>).
+          <strong>How nullspan compares to Cloudflare Clairic + Clef, TypeSafe Jev &amp; JevBench Leaders:</strong> Evaluated on <strong>Google Cloud NVIDIA L4 GPU</strong> using the official <a href="https://benchmarkheaven.com/jev-models" target="_blank" rel="noopener" style="color: var(--ink);">JevBench 4-axis methodology</a> (<strong>Intelligence <code>I</code></strong>, <strong>Calibration <code>C</code></strong>, <strong>Speed <code>S</code></strong>, <strong>Cost <code>K</code></strong>) across <strong>500 zero-leakage observations</strong> (<code>336</code> Open structured + <code>164</code> Sealed: <code>60</code> SQuAD v2.0, <code>96</code> Multi-Numeric Contracts, <code>8</code> Adversarial), <strong>nullspan-345M (PyTorch FP32 CUDA / 331.1 MB Int8 ONNX)</strong> achieves <strong>98.2 Capability</strong> (<code>98.0% / 97.8%</code> Intelligence, <code>98.5 / 98.6</code> Calibration, <code>100.0%</code> on Multi-Numeric Contracts) and <strong>81.3 / 78.1 Composite</strong> (<code>10.3 ms</code> CUDA <code>p50</code>) at <strong>$0.0008–$0.0017 / 1k decisions</strong>—surpassing live <strong>@cf/cloudflare/clairic + clef</strong> (<code>93.2 Capability / 72.1 Composite</code>, <code>91.6% Intelligence</code>, <code>$0.0041/1k</code>, <code>91.3 ms p50</code>), <strong>H2O-Lightning-4B v1.1</strong> (<code>75.0 Capability / 72.5 Composite</code>), <strong>basal-omni-1.0-ultra (31B)</strong> (<code>82.5 Capability / 71.8 Composite</code>), and <strong>Jev 1.13.0</strong> (<code>77.1 Capability / 71.5 Composite</code>).
         </p>
         <div class="table-wrap" style="margin-bottom: 18px;">
         <table class="bench-table">
@@ -843,56 +843,46 @@
           <tbody>
             <tr>
               <td><strong>1. nullspan-Hybrid (Fast + ONNX Int8)</strong></td>
-              <td><strong>97.2</strong></td>
-              <td><strong>98.3</strong></td>
+              <td><strong>95.7</strong></td>
+              <td><strong>98.2</strong></td>
               <td><strong>97.8% [96.6, 99.0]</strong></td>
-              <td><strong>98.8 (ECE 0.0110)</strong></td>
-              <td><strong>98.6 · 0.013 ms</strong></td>
+              <td><strong>98.6 (ECE 0.0139)</strong></td>
+              <td><strong>92.7 · 0.040 ms</strong></td>
               <td><strong>93.8 · $0.0003</strong></td>
               <td><strong>100.0% / 93.3% (Contracts 100%)</strong></td>
             </tr>
             <tr>
               <td><strong>2. nullspan-ZeroDep (Fast Engine · 0 MB)</strong></td>
-              <td><strong>95.9</strong></td>
+              <td><strong>94.7</strong></td>
               <td><strong>92.9</strong></td>
               <td>90.8% [88.2, 93.4]</td>
               <td>95.0 (ECE 0.0487)</td>
-              <td><strong>98.7 · 0.013 ms</strong></td>
+              <td><strong>93.5 · 0.034 ms</strong></td>
               <td><strong>99.8 · $0.0001</strong></td>
               <td><strong>100.0% / 72.0% (Contracts 100%)</strong></td>
             </tr>
             <tr>
-              <td><strong>3. nullspan-344M (PyTorch FP32 · 1,313 MB)</strong></td>
-              <td><strong>78.7</strong></td>
-              <td><strong>98.4</strong></td>
+              <td><strong>3. nullspan-345M (PyTorch FP32 · NVIDIA L4 CUDA)</strong></td>
+              <td><strong>81.3</strong></td>
+              <td><strong>98.2</strong></td>
               <td><strong>98.0% [96.8, 99.2]</strong></td>
-              <td><strong>98.8 (ECE 0.0121)</strong></td>
-              <td>57.2 · 32.367 ms</td>
+              <td><strong>98.5 (ECE 0.0142)</strong></td>
+              <td><strong>63.2 · 10.297 ms</strong></td>
               <td>76.8 · $0.0017</td>
               <td><strong>100.0% / 93.9% (Contracts 100%)</strong></td>
             </tr>
             <tr>
-              <td><strong>4. nullspan-344M-Int8 (ONNX Browser/CPU · 330.1 MB)</strong></td>
-              <td><strong>78.4</strong></td>
-              <td><strong>98.3</strong></td>
+              <td><strong>4. nullspan-345M-Int8 (ONNX Browser/CPU · 331.1 MB)</strong></td>
+              <td><strong>78.1</strong></td>
+              <td><strong>98.2</strong></td>
               <td><strong>97.8% [96.6, 99.0]</strong></td>
-              <td><strong>98.9 (ECE 0.0095)</strong></td>
-              <td>53.2 · 68.483 ms</td>
+              <td><strong>98.6 (ECE 0.0127)</strong></td>
+              <td>52.7 · 75.933 ms</td>
               <td>84.2 · $0.0008</td>
               <td><strong>100.0% / 93.3% (Contracts 100%)</strong></td>
             </tr>
             <tr>
-              <td><strong>5. nullspan-344M (ONNX FP32 · 1,314 MB)</strong></td>
-              <td><strong>75.5</strong></td>
-              <td><strong>98.4</strong></td>
-              <td><strong>98.0% [96.8, 99.2]</strong></td>
-              <td><strong>98.8 (ECE 0.0121)</strong></td>
-              <td>50.5 · 113.137 ms</td>
-              <td>78.0 · $0.0015</td>
-              <td><strong>100.0% / 93.9% (Contracts 100%)</strong></td>
-            </tr>
-            <tr>
-              <td><strong>6. H2O-Lightning-4B v1.1 (JevBench #1 Composite · 4B GPU)</strong></td>
+              <td><strong>5. H2O-Lightning-4B v1.1 (JevBench #1 Composite · 4B GPU)</strong></td>
               <td>72.5</td>
               <td>75.0</td>
               <td>60.0% [57.8, 62.3]</td>
@@ -902,7 +892,7 @@
               <td>64.1% / 59.0%</td>
             </tr>
             <tr>
-              <td><strong>7. @cf/cloudflare/clairic + clef (Live Workers AI · 180 RPCs)</strong></td>
+              <td><strong>6. @cf/cloudflare/clairic + clef (Live Workers AI · 180 RPCs)</strong></td>
               <td>72.1</td>
               <td>93.2</td>
               <td>91.6% [89.2, 93.9]</td>
@@ -912,7 +902,7 @@
               <td>89.7% / 95.4% (Contracts 97.9%)</td>
             </tr>
             <tr>
-              <td><strong>8. basal-omni-1.0-ultra (JevBench #1 Capability · 31B GPU)</strong></td>
+              <td><strong>7. basal-omni-1.0-ultra (JevBench #1 Capability · 31B GPU)</strong></td>
               <td>71.8</td>
               <td>82.5</td>
               <td>74.1% [71.8, 76.3]</td>
@@ -922,7 +912,7 @@
               <td>76.7% / 73.1%</td>
             </tr>
             <tr>
-              <td><strong>9. Jev 1.13.0 (TypeSafe AI · Official JevBench Ref API)</strong></td>
+              <td><strong>8. Jev 1.13.0 (TypeSafe AI · Official JevBench Ref API)</strong></td>
               <td>71.5</td>
               <td>77.1</td>
               <td>63.6% [61.2, 66.0]</td>
@@ -930,6 +920,16 @@
               <td>91.5 · 239.1 ms</td>
               <td>54.7 · $0.0323</td>
               <td>68.9% / 61.6%</td>
+            </tr>
+            <tr>
+              <td><strong>9. nullspan-345M (ONNX FP32 CPU · 1,318 MB)</strong></td>
+              <td><strong>71.2</strong></td>
+              <td><strong>98.2</strong></td>
+              <td><strong>98.0% [96.8, 99.2]</strong></td>
+              <td><strong>98.5 (ECE 0.0142)</strong></td>
+              <td>43.5 · 424.943 ms</td>
+              <td>78.0 · $0.0015</td>
+              <td><strong>100.0% / 93.9% (Contracts 100%)</strong></td>
             </tr>
             <tr>
               <td><strong>10–12. gpt-5.4-nano / claude-haiku-4.5 (JSON Decoder APIs)</strong></td>
@@ -954,17 +954,57 @@
           </tbody>
         </table>
         </div>
+        <h2 style="margin-top: 14px;">External Public Benchmarks · LocalLLaMA/typed-decisions · Benchmark Heaven (JevBench) · Stanford SQuAD v2.0</h2>
+        <p style="margin: 0 0 12px 0; font-size: 0.85rem; color: var(--ink-muted);">
+          Evaluated on <strong>Google Cloud NVIDIA L4 GPU</strong> with strictly zero test-set contamination via <code>bench/eval_public_benchmarks.py</code>: <strong>NullspanSystemOneEngine (435M DeBERTa-v3 Cross-Encoder, 0 output tokens)</strong> scores <strong>75.40% accuracy</strong> (<code>KL 0.1515</code>, <code>Brier 0.0770</code>, <code>ECE 0.0944</code>; <code>#2</code> vs the Hub <code>.eval_results</code> widget, Table 2 general+train cross-encoder) on <a href="https://huggingface.co/datasets/LocalLLaMA/typed-decisions" target="_blank" rel="noopener" style="color: var(--ink);"><code>LocalLLaMA/typed-decisions</code></a> across 2,000 test decisions and hits <strong>100.0% (48/48) on JevBench Easy</strong> (<code>100.0%</code> strict schema validity, <code>64.8 ms p50</code>, <code>$0.00667/1k</code>), while <strong>NullspanForExtraction (345.3M)</strong> reaches <strong>87.00% Exact Match / 89.36% F1</strong> on 500 zero-overlap Stanford SQuAD v2.0 items.
+        </p>
+        <div class="table-wrap" style="margin-bottom: 18px;">
+        <table class="bench-table">
+          <thead>
+            <tr>
+              <th>Public Benchmark</th>
+              <th>Official Split &amp; Scale</th>
+              <th>Primary Score</th>
+              <th>Calibration &amp; Schema Validity</th>
+              <th>NVIDIA L4 Latency &amp; Cost</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong><a href="https://huggingface.co/datasets/LocalLLaMA/typed-decisions" target="_blank" rel="noopener" style="color: var(--ink);">LocalLLaMA/typed-decisions</a></strong></td>
+              <td><code>test</code> · 400 cases (2,000 decisions)</td>
+              <td><strong>75.40% Accuracy</strong> (noul 82.7%, choice 75.0%, score 70.3%)</td>
+              <td><strong>KL 0.1515 · Brier 0.0770 · ECE 0.0944</strong></td>
+              <td><strong>78.0 ms/dec · 0 output tokens</strong></td>
+            </tr>
+            <tr>
+              <td><strong><a href="https://github.com/fstandhartinger/jevbench" target="_blank" rel="noopener" style="color: var(--ink);">Benchmark Heaven / fstandhartinger/jevbench</a></strong></td>
+              <td>Public Suite · 231 items (<code>/v1/systemone</code>)</td>
+              <td><strong>100.0% Easy (48/48)</strong> · 62.50% Orig · 37.84% Hard</td>
+              <td><strong>100.0% Strict Valid</strong> (Easy ECE 0.0605)</td>
+              <td><strong>64.8 ms p50 · $0.00667 / 1k</strong></td>
+            </tr>
+            <tr>
+              <td><strong><a href="https://huggingface.co/datasets/rajpurkar/squad_v2" target="_blank" rel="noopener" style="color: var(--ink);">Stanford rajpurkar/squad_v2</a></strong></td>
+              <td>Zero-Overlap <code>validation</code> · 500 items</td>
+              <td><strong>87.00% Exact Match · 89.36% F1</strong></td>
+              <td>HasAns F1 <strong>91.52%</strong> · NoAns EM <strong>87.20%</strong></td>
+              <td><strong>10.3 ms p50 · $0.0017 / 1k</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
         <h2 style="margin-top: 14px;">Multi-Tier Scientific Evaluation Matrix (95% Bootstrap CIs, B=1,000 · Open · Contracts · Adversarial · SQuAD v2.0)</h2>
         <p style="margin: 0 0 12px 0; font-size: 0.85rem; color: var(--ink-muted);">
-          <strong>Plain-English Takeaway:</strong> Across Open structured telemetry (<code>N=336</code>), unseen Multi-Numeric Commercial Contracts (<code>N=96</code> across 12 agreements), and adversarial prompt-injection stress tests (<code>N=8</code>), all three tiers achieve <strong>100.0% accuracy</strong>—meaning you can run the <strong>0 MB Zero-Dep Fast Engine</strong> at <code>0.013 ms/field</code>. For open-domain reading comprehension and unanswerable prose traps (<strong>Stanford SQuAD v2.0</strong>), the GCP V100-trained <strong>344M Neural Model (PyTorch FP32 / 330.1 MB Int8 ONNX)</strong> lifts accuracy to <strong>83.3% / 81.7% (AUROC 0.998)</strong>.
+          <strong>Plain-English Takeaway:</strong> Across Open structured telemetry (<code>N=336</code>), unseen Multi-Numeric Commercial Contracts (<code>N=96</code> across 12 agreements), and adversarial prompt-injection stress tests (<code>N=8</code>), all three tiers achieve <strong>100.0% accuracy</strong>—meaning you can run the <strong>0 MB Zero-Dep Fast Engine</strong> at <code>0.034 ms/field</code>. For open-domain reading comprehension and unanswerable prose traps (<strong>Stanford SQuAD v2.0</strong>), the GPU-aligned <strong>345M Neural Model (PyTorch FP32 / 331.1 MB Int8 ONNX)</strong> reaches <strong>87.0% EM / 89.4% F1</strong> on the 500-item validation suite (<code>83.3% / 81.7%</code> on Sealed NullspanBench, <code>AUROC 0.995</code>).
         </p>
         <div class="table-wrap">
         <table class="bench-table">
           <thead>
             <tr>
               <th>Evaluation Axis / Metric</th>
-              <th>Tier 1A: PyTorch FP32 (344M Neural)</th>
-              <th>Tier 1B: ONNX Int8 Quantized (330.1 MB Browser/Edge)</th>
+              <th>Tier 1A: PyTorch FP32 (345.3M · L4 CUDA)</th>
+              <th>Tier 1B: ONNX Int8 Quantized (331.1 MB Browser/Edge)</th>
               <th>Tier 2: Zero-Dep Fast Engine (Sub-ms)</th>
             </tr>
           </thead>
@@ -983,8 +1023,8 @@
             </tr>
             <tr>
               <td>3. Overall Null Calibration (AUROC / ECE · N=500)</td>
-              <td><strong>0.9983 / 0.01215</strong></td>
-              <td><strong>0.9974 / 0.00950</strong></td>
+              <td><strong>0.9933 / 0.01420</strong></td>
+              <td><strong>0.9951 / 0.01270</strong></td>
               <td><strong>0.9824 / 0.04866</strong></td>
             </tr>
             <tr>
@@ -1000,16 +1040,16 @@
               <td><strong>100.0% (0.0% FPHR)</strong></td>
             </tr>
             <tr>
-              <td>6. Stanford SQuAD v2.0 Open-Domain QA + Unanswerable (N=60 · Zero-Overlap)</td>
-              <td><strong>83.33% · AUROC 0.998</strong></td>
-              <td><strong>81.67% · AUROC 0.997</strong></td>
+              <td>6. Stanford SQuAD v2.0 Open-Domain QA + Unanswerable (Zero-Overlap)</td>
+              <td><strong>87.00% EM / 89.36% F1 (N=500) · 83.33% Sealed</strong></td>
+              <td><strong>81.67% Sealed · AUROC 0.995</strong></td>
               <td><strong>23.33% (Lexical Baseline)</strong></td>
             </tr>
             <tr>
               <td>Model Footprint &amp; Latency (p50 / p95 per field · 0 Output Tokens)</td>
-              <td><strong>1,313.1 MB · 32.4 / 91.8 ms</strong></td>
-              <td><strong>330.1 MB (3.98x) · 68.5 / 262.7 ms</strong></td>
-              <td><strong>0 MB · 0.013 / 0.287 ms</strong></td>
+              <td><strong>1,317.6 MB · 10.3 / 11.4 ms (L4 CUDA)</strong></td>
+              <td><strong>331.1 MB (3.98x) · 75.9 / 115.8 ms</strong></td>
+              <td><strong>0 MB · 0.034 / 0.312 ms</strong></td>
             </tr>
           </tbody>
         </table>

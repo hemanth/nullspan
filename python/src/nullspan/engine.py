@@ -9,6 +9,7 @@ from typing import Any
 
 DEFAULT_HF_REPO = "gnumanth/nullspan"
 _HF_CACHE: dict[str, tuple[Any, Any]] = {}
+_S1_CACHE: dict[str, Any] = {}
 
 MONTH_MAP = {
     "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
@@ -956,3 +957,28 @@ def extract(
     if not isinstance(state_or_fields, str) or not isinstance(fields, dict):
         raise ValueError("Pass (state: str, fields: dict) or (fields: dict) to create an extractor.")
     return _run_extraction(state_or_fields, fields, **options)
+
+
+def decide(
+    state: Any,
+    questions: dict[str, dict[str, Any]],
+    *,
+    model_id: str = DEFAULT_HF_REPO,
+    device: str | None = None,
+) -> dict[str, Any]:
+    """Evaluate typed System One decisions (`noul`, `choice`, `score`) in one bidirectional encoder pass (`output_tokens = 0`)."""
+    from .systemone import NullspanSystemOneEngine
+
+    cache_key = f"{model_id}:{device or 'auto'}"
+    if cache_key not in _S1_CACHE:
+        if os.path.isdir(model_id):
+            local_dir = model_id
+        else:
+            from huggingface_hub import snapshot_download
+
+            local_dir = snapshot_download(
+                repo_id=model_id,
+                allow_patterns=["systemone/*", "systemone_decision.pt"],
+            )
+        _S1_CACHE[cache_key] = NullspanSystemOneEngine.load_from_dir(local_dir, device=device)
+    return _S1_CACHE[cache_key].decide(state=state, questions=questions)

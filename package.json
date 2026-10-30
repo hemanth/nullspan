@@ -1,7 +1,7 @@
 {
   "name": "nullspan",
-  "version": "1.2.0",
-  "description": "Calibrated p_null abstention, grounded [start, end] span extraction, arithmetic, and distribution forecasting in a single forward pass with zero output tokens.",
+  "version": "1.2.1",
+  "description": "Calibrated p_null abstention, grounded [start, end] span extraction, System One typed decisions, arithmetic, and distribution forecasting in a single forward pass with zero output tokens.",
   "type": "module",
   "main": "./js/src/index.js",
   "types": "./js/src/index.d.ts",
@@ -16,9 +16,9 @@
     "python/src"
   ],
   "scripts": {
-    "test": "node --test js/test/index.test.js && python3 -m unittest discover -s python/tests -v",
+    "test": "node --test js/test/index.test.js && PYTHONPATH=python/src python3 -m unittest discover -s python/tests -v",
     "test:js": "node --test js/test/index.test.js",
-    "test:py": "python3 -m unittest discover -s python/tests -v",
+    "test:py": "PYTHONPATH=python/src python3 -m unittest discover -s python/tests -v",
     "dataset": "python3 training/generate_dataset.py"
   },
   "keywords": [
@@ -28,7 +28,11 @@
     "abstention",
     "p-null",
     "calibrated-probabilities",
-    "distilbert",
+    "typed-decisions",
+    "jevbench",
+    "electra",
+    "deberta",
+    "onnx",
     "forecast",
     "estimate",
     "structured-extraction"

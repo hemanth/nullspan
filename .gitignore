@@ -9,5 +9,8 @@ node_modules/
 .DS_Store
 *.safetensors
 *.bin
+*.pt
 .env
+.gcp_session.env
 artifacts/nullspan/onnx/
+artifacts/nullspan/systemone/

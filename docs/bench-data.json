@@ -2,16 +2,16 @@
   "benchmark_name": "NullspanBench (JevBench-Compatible Decision & Extraction Leaderboard)",
   "benchmark_version": "3.2.0-jevbench",
   "draw_id": "S+P (draw v3.2-nullspan-20261030)",
-  "timestamp": "2026-10-30T10:18:35Z",
+  "timestamp": "2026-10-30T13:11:15Z",
   "n_total_observations": 500,
   "n_open_observations": 336,
   "n_sealed_observations": 164,
   "environment": {
-    "os": "Darwin 25.5.0 (arm64)",
-    "python": "3.14.8",
-    "pytorch": "2.12.1",
-    "onnxruntime": "1.31.0",
-    "accelerator": "NVIDIA Tesla V100-SXM2-16GB (GCP Train) + Apple Silicon MPS/CPU (Local Eval)"
+    "os": "Linux 6.8.0-1070-gcp (x86_64)",
+    "python": "3.10.12",
+    "pytorch": "2.9.1+cu129",
+    "onnxruntime": "1.23.2",
+    "accelerator": "NVIDIA L4 (GCP CUDA Eval)"
   },
   "systems": [
     {
@@ -20,8 +20,8 @@
       "author": "gnumanth",
       "system_type": "Hybrid System One Router",
       "open_weights": true,
-      "params_m": 344.2,
-      "footprint_mb": 330.1,
+      "params_m": 345.3,
+      "footprint_mb": 331.1,
       "base_model": "Zero-Dep Router + gnumanth/nullspan Int8",
       "runtime": "Tiered JS/Python + ONNX Runtime",
       "input_rate_per_1m_usd": 0.002,
@@ -36,24 +36,24 @@
           96.6,
           99.0
         ],
-        "calibration": 98.8,
-        "speed": 98.6,
+        "calibration": 98.6,
+        "speed": 92.7,
         "cost": 93.8
       },
-      "capability_score": 98.3,
-      "composite_score": 97.2,
+      "capability_score": 98.2,
+      "composite_score": 95.7,
       "open_set_score": 100.0,
       "sealed_set_score": 93.3,
       "calibration_details": {
-        "null_auroc": 0.9977,
-        "null_ece": 0.011,
-        "null_brier": 0.01306
+        "null_auroc": 0.99629,
+        "null_ece": 0.01392,
+        "null_brier": 0.01516
       },
       "latency": {
-        "mean_ms": 14.3016,
-        "p50_ms": 0.013,
-        "p95_ms": 108.7561,
-        "p99_ms": 178.0133
+        "mean_ms": 16.8098,
+        "p50_ms": 0.0397,
+        "p95_ms": 126.6229,
+        "p99_ms": 209.086
       },
       "by_request_type": {
         "span_open": {
@@ -77,11 +77,11 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 95.4,
+          "score": 96.3,
           "n": 108
         },
         "noul_sealed": {
-          "score": 86.4,
+          "score": 84.1,
           "n": 44
         }
       },
@@ -101,11 +101,11 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 95.6,
+          "score": 96.5,
           "n": 113
         },
         "Hard": {
-          "score": 88.0,
+          "score": 86.0,
           "n": 50
         },
         "Judge": {
@@ -168,11 +168,11 @@
           93.4
         ],
         "calibration": 95.0,
-        "speed": 98.7,
+        "speed": 93.5,
         "cost": 99.8
       },
       "capability_score": 92.9,
-      "composite_score": 95.9,
+      "composite_score": 94.7,
       "open_set_score": 100.0,
       "sealed_set_score": 72.0,
       "calibration_details": {
@@ -181,10 +181,10 @@
         "null_brier": 0.05142
       },
       "latency": {
-        "mean_ms": 0.0632,
-        "p50_ms": 0.0127,
-        "p95_ms": 0.2868,
-        "p99_ms": 0.3604
+        "mean_ms": 0.1345,
+        "p50_ms": 0.0342,
+        "p95_ms": 0.6895,
+        "p99_ms": 0.8689
       },
       "by_request_type": {
         "span_open": {
@@ -278,12 +278,12 @@
     },
     {
       "id": "nullspan-fp32",
-      "name": "nullspan-344M (PyTorch FP32)",
+      "name": "nullspan-345M (PyTorch FP32)",
       "author": "gnumanth",
       "system_type": "System One Encoder (5-Head, 512-ctx)",
       "open_weights": true,
-      "params_m": 344.2,
-      "footprint_mb": 1313.1,
+      "params_m": 345.3,
+      "footprint_mb": 1317.2,
       "base_model": "ahotrod/electra_large_discriminator_squad2_512 + SchemaAdapter",
       "runtime": "PyTorch MPS/CUDA/CPU FP32",
       "input_rate_per_1m_usd": 0.012,
@@ -298,24 +298,24 @@
           96.8,
           99.2
         ],
-        "calibration": 98.8,
-        "speed": 57.2,
+        "calibration": 98.5,
+        "speed": 63.2,
         "cost": 76.8
       },
-      "capability_score": 98.4,
-      "composite_score": 78.7,
+      "capability_score": 98.2,
+      "composite_score": 81.3,
       "open_set_score": 100.0,
       "sealed_set_score": 93.9,
       "calibration_details": {
-        "null_auroc": 0.99829,
-        "null_ece": 0.01215,
-        "null_brier": 0.01245
+        "null_auroc": 0.99327,
+        "null_ece": 0.01419,
+        "null_brier": 0.01532
       },
       "latency": {
-        "mean_ms": 47.0471,
-        "p50_ms": 32.3672,
-        "p95_ms": 91.8385,
-        "p99_ms": 108.335
+        "mean_ms": 16.9035,
+        "p50_ms": 10.2968,
+        "p95_ms": 33.0811,
+        "p99_ms": 37.3921
       },
       "by_request_type": {
         "span_open": {
@@ -409,12 +409,12 @@
     },
     {
       "id": "nullspan-onnx-int8",
-      "name": "nullspan-344M-Int8 (ONNX WASM/CPU)",
+      "name": "nullspan-345M-Int8 (ONNX WASM/CPU)",
       "author": "gnumanth",
       "system_type": "Quantized ONNX WASM/CPU (512-ctx)",
       "open_weights": true,
-      "params_m": 344.2,
-      "footprint_mb": 330.1,
+      "params_m": 345.3,
+      "footprint_mb": 331.1,
       "base_model": "gnumanth/nullspan (Int8 Dynamic)",
       "runtime": "ONNX Runtime Int8 (Browser WASM / Edge)",
       "input_rate_per_1m_usd": 0.006,
@@ -429,24 +429,24 @@
           96.6,
           99.0
         ],
-        "calibration": 98.9,
-        "speed": 53.2,
+        "calibration": 98.6,
+        "speed": 52.7,
         "cost": 84.2
       },
-      "capability_score": 98.3,
-      "composite_score": 78.4,
+      "capability_score": 98.2,
+      "composite_score": 78.1,
       "open_set_score": 100.0,
       "sealed_set_score": 93.3,
       "calibration_details": {
-        "null_auroc": 0.99737,
-        "null_ece": 0.0095,
-        "null_brier": 0.01314
+        "null_auroc": 0.99511,
+        "null_ece": 0.01267,
+        "null_brier": 0.01523
       },
       "latency": {
-        "mean_ms": 107.1327,
-        "p50_ms": 68.4825,
-        "p95_ms": 262.6889,
-        "p99_ms": 311.1327
+        "mean_ms": 108.0495,
+        "p50_ms": 75.9329,
+        "p95_ms": 207.004,
+        "p99_ms": 369.9251
       },
       "by_request_type": {
         "span_open": {
@@ -470,11 +470,11 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 95.4,
+          "score": 96.3,
           "n": 108
         },
         "noul_sealed": {
-          "score": 86.4,
+          "score": 84.1,
           "n": 44
         }
       },
@@ -494,11 +494,11 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 95.6,
+          "score": 96.5,
           "n": 113
         },
         "Hard": {
-          "score": 88.0,
+          "score": 86.0,
           "n": 50
         },
         "Judge": {
@@ -537,137 +537,6 @@
         }
       },
       "official_rank": 4
-    },
-    {
-      "id": "nullspan-onnx-fp32",
-      "name": "nullspan-344M (ONNX FP32)",
-      "author": "gnumanth",
-      "system_type": "System One Encoder (ONNX, 512-ctx)",
-      "open_weights": true,
-      "params_m": 344.2,
-      "footprint_mb": 1313.6,
-      "base_model": "gnumanth/nullspan (ONNX Opset 17)",
-      "runtime": "ONNX Runtime FP32",
-      "input_rate_per_1m_usd": 0.011,
-      "output_rate_per_1m_usd": 0.0,
-      "n_observations": 500,
-      "input_tokens_total": 69943,
-      "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0015,
-      "axes": {
-        "intelligence": 98.0,
-        "intelligence_ci95": [
-          96.8,
-          99.2
-        ],
-        "calibration": 98.8,
-        "speed": 50.5,
-        "cost": 78.0
-      },
-      "capability_score": 98.4,
-      "composite_score": 75.5,
-      "open_set_score": 100.0,
-      "sealed_set_score": 93.9,
-      "calibration_details": {
-        "null_auroc": 0.99829,
-        "null_ece": 0.01215,
-        "null_brier": 0.01245
-      },
-      "latency": {
-        "mean_ms": 134.8996,
-        "p50_ms": 113.1368,
-        "p95_ms": 225.285,
-        "p99_ms": 513.2005
-      },
-      "by_request_type": {
-        "span_open": {
-          "score": 100.0,
-          "n": 181
-        },
-        "math": {
-          "score": 100.0,
-          "n": 51
-        },
-        "choice": {
-          "score": 100.0,
-          "n": 41
-        },
-        "noul_open": {
-          "score": 100.0,
-          "n": 27
-        },
-        "score": {
-          "score": 100.0,
-          "n": 48
-        },
-        "span_sealed": {
-          "score": 96.3,
-          "n": 108
-        },
-        "noul_sealed": {
-          "score": 86.4,
-          "n": 44
-        }
-      },
-      "by_tier_open": {
-        "Easy": {
-          "score": 100.0,
-          "n": 176
-        },
-        "Judge": {
-          "score": 100.0,
-          "n": 96
-        },
-        "Standard": {
-          "score": 100.0,
-          "n": 64
-        }
-      },
-      "by_tier_sealed": {
-        "Standard": {
-          "score": 96.5,
-          "n": 113
-        },
-        "Hard": {
-          "score": 88.0,
-          "n": 50
-        },
-        "Judge": {
-          "score": 100.0,
-          "n": 1
-        }
-      },
-      "by_domain": {
-        "incident_report": {
-          "score": 100.0,
-          "n": 160
-        },
-        "compute_ledger": {
-          "score": 100.0,
-          "n": 144
-        },
-        "cluster_throughput_comps": {
-          "score": 100.0,
-          "n": 16
-        },
-        "edge_traffic_forecast": {
-          "score": 100.0,
-          "n": 16
-        },
-        "squad_v2_open_qa": {
-          "score": 83.3,
-          "n": 60
-        },
-        "contract_extraction": {
-          "score": 100.0,
-          "n": 96
-        },
-        "adversarial_stress": {
-          "score": 100.0,
-          "n": 8
-        }
-      },
-      "official_rank": 5
     },
     {
       "id": "h2o-lightning-4b",
@@ -794,7 +663,7 @@
           "n": 300
         }
       },
-      "official_rank": 6
+      "official_rank": 5
     },
     {
       "id": "cloudflare-clairic-clef-live",
@@ -925,7 +794,7 @@
           "n": 8
         }
       },
-      "official_rank": 7
+      "official_rank": 6
     },
     {
       "id": "basal-omni-1.0-ultra",
@@ -1052,7 +921,7 @@
           "n": 300
         }
       },
-      "official_rank": 8
+      "official_rank": 7
     },
     {
       "id": "jev-1.13.0-ref",
@@ -1179,7 +1048,269 @@
           "n": 300
         }
       },
+      "official_rank": 8
+    },
+    {
+      "id": "nullspan-onnx-fp32",
+      "name": "nullspan-345M (ONNX FP32)",
+      "author": "gnumanth",
+      "system_type": "System One Encoder (ONNX, 512-ctx)",
+      "open_weights": true,
+      "params_m": 345.3,
+      "footprint_mb": 1317.6,
+      "base_model": "gnumanth/nullspan (ONNX Opset 17)",
+      "runtime": "ONNX Runtime FP32",
+      "input_rate_per_1m_usd": 0.011,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 500,
+      "input_tokens_total": 69943,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0015,
+      "axes": {
+        "intelligence": 98.0,
+        "intelligence_ci95": [
+          96.8,
+          99.2
+        ],
+        "calibration": 98.5,
+        "speed": 43.5,
+        "cost": 78.0
+      },
+      "capability_score": 98.2,
+      "composite_score": 71.2,
+      "open_set_score": 100.0,
+      "sealed_set_score": 93.9,
+      "calibration_details": {
+        "null_auroc": 0.99327,
+        "null_ece": 0.01419,
+        "null_brier": 0.01532
+      },
+      "latency": {
+        "mean_ms": 491.2899,
+        "p50_ms": 424.9432,
+        "p95_ms": 1074.4535,
+        "p99_ms": 1256.8557
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 100.0,
+          "n": 181
+        },
+        "math": {
+          "score": 100.0,
+          "n": 51
+        },
+        "choice": {
+          "score": 100.0,
+          "n": 41
+        },
+        "noul_open": {
+          "score": 100.0,
+          "n": 27
+        },
+        "score": {
+          "score": 100.0,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 96.3,
+          "n": 108
+        },
+        "noul_sealed": {
+          "score": 86.4,
+          "n": 44
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 100.0,
+          "n": 176
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 96
+        },
+        "Standard": {
+          "score": 100.0,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 96.5,
+          "n": 113
+        },
+        "Hard": {
+          "score": 88.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 1
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 100.0,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 100.0,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 100.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 100.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 83.3,
+          "n": 60
+        },
+        "contract_extraction": {
+          "score": 100.0,
+          "n": 96
+        },
+        "adversarial_stress": {
+          "score": 100.0,
+          "n": 8
+        }
+      },
       "official_rank": 9
+    },
+    {
+      "id": "deberta-v3-base-squad2",
+      "name": "deberta-v3-base-squad2 (184M SQuAD2 QA)",
+      "author": "deepset",
+      "system_type": "Open Weights \u00b7 Extractive QA Cross-Encoder",
+      "open_weights": true,
+      "params_m": 183.8,
+      "footprint_mb": 701.3,
+      "base_model": "deepset/deberta-v3-base-squad2",
+      "runtime": "PyTorch MPS/CPU (512-ctx)",
+      "input_rate_per_1m_usd": 0.032,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 500,
+      "input_tokens_total": 57964,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0037,
+      "axes": {
+        "intelligence": 48.1,
+        "intelligence_ci95": [
+          43.9,
+          52.4
+        ],
+        "calibration": 63.4,
+        "speed": 65.1,
+        "cost": 69.2
+      },
+      "capability_score": 55.8,
+      "composite_score": 60.3,
+      "open_set_score": 48.6,
+      "sealed_set_score": 47.3,
+      "calibration_details": {
+        "null_auroc": 0.82087,
+        "null_ece": 0.39493,
+        "null_brier": 0.31346
+      },
+      "latency": {
+        "mean_ms": 9.6505,
+        "p50_ms": 7.2341,
+        "p95_ms": 24.8532,
+        "p99_ms": 26.2559
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 56.4,
+          "n": 181
+        },
+        "math": {
+          "score": 4.9,
+          "n": 51
+        },
+        "choice": {
+          "score": 65.9,
+          "n": 41
+        },
+        "noul_open": {
+          "score": 100.0,
+          "n": 27
+        },
+        "score": {
+          "score": 15.1,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 35.2,
+          "n": 108
+        },
+        "noul_sealed": {
+          "score": 84.1,
+          "n": 44
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 64.2,
+          "n": 176
+        },
+        "Judge": {
+          "score": 9.6,
+          "n": 96
+        },
+        "Standard": {
+          "score": 64.1,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 33.6,
+          "n": 113
+        },
+        "Hard": {
+          "score": 78.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 50.0,
+          "n": 1
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 50.0,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 57.6,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 1.3,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 0.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 80.0,
+          "n": 60
+        },
+        "contract_extraction": {
+          "score": 27.6,
+          "n": 96
+        },
+        "adversarial_stress": {
+          "score": 37.5,
+          "n": 8
+        }
+      },
+      "official_rank": 10
     },
     {
       "id": "gpt-5.4-nano-json",
@@ -1307,137 +1438,6 @@
         },
         "adversarial_stress": {
           "score": 87.5,
-          "n": 8
-        }
-      },
-      "official_rank": 10
-    },
-    {
-      "id": "deberta-v3-base-squad2",
-      "name": "deberta-v3-base-squad2 (184M SQuAD2 QA)",
-      "author": "deepset",
-      "system_type": "Open Weights \u00b7 Extractive QA Cross-Encoder",
-      "open_weights": true,
-      "params_m": 183.8,
-      "footprint_mb": 701.3,
-      "base_model": "deepset/deberta-v3-base-squad2",
-      "runtime": "PyTorch MPS/CPU (512-ctx)",
-      "input_rate_per_1m_usd": 0.032,
-      "output_rate_per_1m_usd": 0.0,
-      "n_observations": 500,
-      "input_tokens_total": 57964,
-      "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0037,
-      "axes": {
-        "intelligence": 48.1,
-        "intelligence_ci95": [
-          43.9,
-          52.4
-        ],
-        "calibration": 63.4,
-        "speed": 55.7,
-        "cost": 69.2
-      },
-      "capability_score": 55.8,
-      "composite_score": 58.0,
-      "open_set_score": 48.6,
-      "sealed_set_score": 47.3,
-      "calibration_details": {
-        "null_auroc": 0.82087,
-        "null_ece": 0.39493,
-        "null_brier": 0.31346
-      },
-      "latency": {
-        "mean_ms": 48.5912,
-        "p50_ms": 42.4964,
-        "p95_ms": 111.7974,
-        "p99_ms": 162.0547
-      },
-      "by_request_type": {
-        "span_open": {
-          "score": 56.4,
-          "n": 181
-        },
-        "math": {
-          "score": 4.9,
-          "n": 51
-        },
-        "choice": {
-          "score": 65.9,
-          "n": 41
-        },
-        "noul_open": {
-          "score": 100.0,
-          "n": 27
-        },
-        "score": {
-          "score": 15.1,
-          "n": 48
-        },
-        "span_sealed": {
-          "score": 35.2,
-          "n": 108
-        },
-        "noul_sealed": {
-          "score": 84.1,
-          "n": 44
-        }
-      },
-      "by_tier_open": {
-        "Easy": {
-          "score": 64.2,
-          "n": 176
-        },
-        "Judge": {
-          "score": 9.6,
-          "n": 96
-        },
-        "Standard": {
-          "score": 64.1,
-          "n": 64
-        }
-      },
-      "by_tier_sealed": {
-        "Standard": {
-          "score": 33.6,
-          "n": 113
-        },
-        "Hard": {
-          "score": 78.0,
-          "n": 50
-        },
-        "Judge": {
-          "score": 50.0,
-          "n": 1
-        }
-      },
-      "by_domain": {
-        "incident_report": {
-          "score": 50.0,
-          "n": 160
-        },
-        "compute_ledger": {
-          "score": 57.6,
-          "n": 144
-        },
-        "cluster_throughput_comps": {
-          "score": 1.3,
-          "n": 16
-        },
-        "edge_traffic_forecast": {
-          "score": 0.0,
-          "n": 16
-        },
-        "squad_v2_open_qa": {
-          "score": 80.0,
-          "n": 60
-        },
-        "contract_extraction": {
-          "score": 27.6,
-          "n": 96
-        },
-        "adversarial_stress": {
-          "score": 37.5,
           "n": 8
         }
       },
@@ -1597,7 +1597,7 @@
           17.5
         ],
         "calibration": 89.2,
-        "speed": 64.5,
+        "speed": 64.2,
         "cost": 85.5
       },
       "capability_score": 52.0,
@@ -1610,10 +1610,10 @@
         "null_brier": 0.11334
       },
       "latency": {
-        "mean_ms": 9.0856,
-        "p50_ms": 8.0979,
-        "p95_ms": 14.9339,
-        "p99_ms": 40.3316
+        "mean_ms": 8.6668,
+        "p50_ms": 8.6253,
+        "p95_ms": 8.9805,
+        "p99_ms": 9.3022
       },
       "by_request_type": {
         "span_open": {
@@ -1728,11 +1728,11 @@
           17.0
         ],
         "calibration": 91.5,
-        "speed": 66.0,
+        "speed": 67.7,
         "cost": 81.1
       },
       "capability_score": 52.9,
-      "composite_score": 36.8,
+      "composite_score": 36.9,
       "open_set_score": 20.2,
       "sealed_set_score": 1.8,
       "calibration_details": {
@@ -1741,10 +1741,10 @@
         "null_brier": 0.11186
       },
       "latency": {
-        "mean_ms": 8.897,
-        "p50_ms": 6.1334,
-        "p95_ms": 19.077,
-        "p99_ms": 26.1601
+        "mean_ms": 4.552,
+        "p50_ms": 4.4787,
+        "p95_ms": 5.4739,
+        "p99_ms": 5.5359
       },
       "by_request_type": {
         "span_open": {
@@ -1859,11 +1859,11 @@
           17.5
         ],
         "calibration": 73.5,
-        "speed": 60.2,
+        "speed": 64.2,
         "cost": 85.5
       },
       "capability_score": 44.0,
-      "composite_score": 35.9,
+      "composite_score": 36.3,
       "open_set_score": 17.2,
       "sealed_set_score": 8.8,
       "calibration_details": {
@@ -1872,10 +1872,10 @@
         "null_brier": 0.23193
       },
       "latency": {
-        "mean_ms": 18.2994,
-        "p50_ms": 18.3563,
-        "p95_ms": 25.4464,
-        "p99_ms": 29.4546
+        "mean_ms": 8.6507,
+        "p50_ms": 8.5815,
+        "p95_ms": 8.9115,
+        "p99_ms": 9.0401
       },
       "by_request_type": {
         "span_open": {
@@ -1990,11 +1990,11 @@
           16.7
         ],
         "calibration": 71.0,
-        "speed": 62.8,
+        "speed": 63.3,
         "cost": 77.4
       },
       "capability_score": 42.3,
-      "composite_score": 34.3,
+      "composite_score": 34.4,
       "open_set_score": 16.2,
       "sealed_set_score": 8.2,
       "calibration_details": {
@@ -2003,10 +2003,10 @@
         "null_brier": 0.26407
       },
       "latency": {
-        "mean_ms": 14.1298,
-        "p50_ms": 11.2628,
-        "p95_ms": 32.6527,
-        "p99_ms": 52.232
+        "mean_ms": 10.2958,
+        "p50_ms": 10.2572,
+        "p95_ms": 10.5562,
+        "p99_ms": 12.7047
       },
       "by_request_type": {
         "span_open": {
@@ -2121,7 +2121,7 @@
           15.2
         ],
         "calibration": 76.6,
-        "speed": 65.9,
+        "speed": 66.4,
         "cost": 91.0
       },
       "capability_score": 44.5,
@@ -2134,10 +2134,10 @@
         "null_brier": 0.21391
       },
       "latency": {
-        "mean_ms": 6.9075,
-        "p50_ms": 6.2627,
-        "p95_ms": 7.7752,
-        "p99_ms": 30.2162
+        "mean_ms": 5.7054,
+        "p50_ms": 5.7004,
+        "p95_ms": 5.8183,
+        "p99_ms": 5.8798
       },
       "by_request_type": {
         "span_open": {
@@ -2252,7 +2252,7 @@
           13.8
         ],
         "calibration": 72.3,
-        "speed": 68.9,
+        "speed": 69.6,
         "cost": 91.0
       },
       "capability_score": 41.7,
@@ -2265,10 +2265,10 @@
         "null_brier": 0.25176
       },
       "latency": {
-        "mean_ms": 5.6642,
-        "p50_ms": 3.5192,
-        "p95_ms": 15.1691,
-        "p99_ms": 19.9379
+        "mean_ms": 3.1323,
+        "p50_ms": 3.1142,
+        "p95_ms": 3.2437,
+        "p99_ms": 3.2779
       },
       "by_request_type": {
         "span_open": {
@@ -2383,11 +2383,11 @@
           12.3
         ],
         "calibration": 70.9,
-        "speed": 62.3,
+        "speed": 67.1,
         "cost": 88.8
       },
       "capability_score": 40.5,
-      "composite_score": 28.3,
+      "composite_score": 28.5,
       "open_set_score": 11.2,
       "sealed_set_score": 7.6,
       "calibration_details": {
@@ -2396,10 +2396,10 @@
         "null_brier": 0.26323
       },
       "latency": {
-        "mean_ms": 13.0226,
-        "p50_ms": 12.3218,
-        "p95_ms": 20.8164,
-        "p99_ms": 24.6272
+        "mean_ms": 5.0175,
+        "p50_ms": 4.9879,
+        "p95_ms": 5.187,
+        "p99_ms": 5.2385
       },
       "by_request_type": {
         "span_open": {
@@ -2495,12 +2495,12 @@
   "tiers": {
     "tier_1a_pytorch_fp32": {
       "id": "nullspan-fp32",
-      "name": "nullspan-344M (PyTorch FP32)",
+      "name": "nullspan-345M (PyTorch FP32)",
       "author": "gnumanth",
       "system_type": "System One Encoder (5-Head, 512-ctx)",
       "open_weights": true,
-      "params_m": 344.2,
-      "footprint_mb": 1313.1,
+      "params_m": 345.3,
+      "footprint_mb": 1317.2,
       "base_model": "ahotrod/electra_large_discriminator_squad2_512 + SchemaAdapter",
       "runtime": "PyTorch MPS/CUDA/CPU FP32",
       "input_rate_per_1m_usd": 0.012,
@@ -2515,24 +2515,24 @@
           96.8,
           99.2
         ],
-        "calibration": 98.8,
-        "speed": 57.2,
+        "calibration": 98.5,
+        "speed": 63.2,
         "cost": 76.8
       },
-      "capability_score": 98.4,
-      "composite_score": 78.7,
+      "capability_score": 98.2,
+      "composite_score": 81.3,
       "open_set_score": 100.0,
       "sealed_set_score": 93.9,
       "calibration_details": {
-        "null_auroc": 0.99829,
-        "null_ece": 0.01215,
-        "null_brier": 0.01245
+        "null_auroc": 0.99327,
+        "null_ece": 0.01419,
+        "null_brier": 0.01532
       },
       "latency": {
-        "mean_ms": 47.0471,
-        "p50_ms": 32.3672,
-        "p95_ms": 91.8385,
-        "p99_ms": 108.335
+        "mean_ms": 16.9035,
+        "p50_ms": 10.2968,
+        "p95_ms": 33.0811,
+        "p99_ms": 37.3921
       },
       "by_request_type": {
         "span_open": {
@@ -2626,12 +2626,12 @@
     },
     "tier_1b_onnx_int8": {
       "id": "nullspan-onnx-int8",
-      "name": "nullspan-344M-Int8 (ONNX WASM/CPU)",
+      "name": "nullspan-345M-Int8 (ONNX WASM/CPU)",
       "author": "gnumanth",
       "system_type": "Quantized ONNX WASM/CPU (512-ctx)",
       "open_weights": true,
-      "params_m": 344.2,
-      "footprint_mb": 330.1,
+      "params_m": 345.3,
+      "footprint_mb": 331.1,
       "base_model": "gnumanth/nullspan (Int8 Dynamic)",
       "runtime": "ONNX Runtime Int8 (Browser WASM / Edge)",
       "input_rate_per_1m_usd": 0.006,
@@ -2646,24 +2646,24 @@
           96.6,
           99.0
         ],
-        "calibration": 98.9,
-        "speed": 53.2,
+        "calibration": 98.6,
+        "speed": 52.7,
         "cost": 84.2
       },
-      "capability_score": 98.3,
-      "composite_score": 78.4,
+      "capability_score": 98.2,
+      "composite_score": 78.1,
       "open_set_score": 100.0,
       "sealed_set_score": 93.3,
       "calibration_details": {
-        "null_auroc": 0.99737,
-        "null_ece": 0.0095,
-        "null_brier": 0.01314
+        "null_auroc": 0.99511,
+        "null_ece": 0.01267,
+        "null_brier": 0.01523
       },
       "latency": {
-        "mean_ms": 107.1327,
-        "p50_ms": 68.4825,
-        "p95_ms": 262.6889,
-        "p99_ms": 311.1327
+        "mean_ms": 108.0495,
+        "p50_ms": 75.9329,
+        "p95_ms": 207.004,
+        "p99_ms": 369.9251
       },
       "by_request_type": {
         "span_open": {
@@ -2687,11 +2687,11 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 95.4,
+          "score": 96.3,
           "n": 108
         },
         "noul_sealed": {
-          "score": 86.4,
+          "score": 84.1,
           "n": 44
         }
       },
@@ -2711,11 +2711,11 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 95.6,
+          "score": 96.5,
           "n": 113
         },
         "Hard": {
-          "score": 88.0,
+          "score": 86.0,
           "n": 50
         },
         "Judge": {
@@ -2778,11 +2778,11 @@
           93.4
         ],
         "calibration": 95.0,
-        "speed": 98.7,
+        "speed": 93.5,
         "cost": 99.8
       },
       "capability_score": 92.9,
-      "composite_score": 95.9,
+      "composite_score": 94.7,
       "open_set_score": 100.0,
       "sealed_set_score": 72.0,
       "calibration_details": {
@@ -2791,10 +2791,10 @@
         "null_brier": 0.05142
       },
       "latency": {
-        "mean_ms": 0.0632,
-        "p50_ms": 0.0127,
-        "p95_ms": 0.2868,
-        "p99_ms": 0.3604
+        "mean_ms": 0.1345,
+        "p50_ms": 0.0342,
+        "p95_ms": 0.6895,
+        "p99_ms": 0.8689
       },
       "by_request_type": {
         "span_open": {

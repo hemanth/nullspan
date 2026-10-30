@@ -62,8 +62,9 @@
     const workerSrc = `
       "use strict";
       const ORT_CDN_URL = ${JSON.stringify(ORT_CDN_URL)};
-      const IDB_NAME = "nullspan-onnx-idb-v1";
+      const IDB_NAME = "nullspan-onnx-idb-v2";
       const IDB_STORE = "models";
+      try { if (typeof indexedDB !== "undefined") indexedDB.deleteDatabase("nullspan-onnx-idb-v1"); } catch (_e) {}
       let ortReady = false;
       let ortSession = null;
       let loadedMeta = null;
@@ -185,7 +186,7 @@
             }
             const t0 = performance.now();
             const reportProgress = (p) => self.postMessage({ type: "progress", progress: p });
-            reportProgress({ phase: "init", loadedMb: "0.0", totalMb: "330.1", pct: 2 });
+            reportProgress({ phase: "init", loadedMb: "0.0", totalMb: "331.1", pct: 2 });
             ensureOrtInWorker();
 
             let modelBytes = await fetchModelBytesSingleBuffer(msg.modelUrl, reportProgress);

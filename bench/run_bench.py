@@ -320,8 +320,8 @@ class DenseBiEncoderExtractor:
         self.model_id = model_id
         self.device = device
         self.is_raw_control = is_raw_control
-        self.tokenizer = AutoTokenizer.from_pretrained(model_id, local_files_only=True)
-        self.model = AutoModel.from_pretrained(model_id, local_files_only=True).to(device)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_id)
+        self.model = AutoModel.from_pretrained(model_id).to(device)
         self.model.eval()
         self.params_m = round(sum(p.numel() for p in self.model.parameters()) / 1e6, 1)
         self.footprint_mb = round(sum(p.numel() * p.element_size() for p in self.model.parameters()) / (1024 * 1024), 1)
@@ -436,8 +436,8 @@ class DebertaSquad2Baseline:
     def __init__(self, model_id: str, device: torch.device) -> None:
         self.model_id = model_id
         self.device = device
-        self.tokenizer = AutoTokenizer.from_pretrained(model_id, local_files_only=True)
-        self.model = AutoModelForQuestionAnswering.from_pretrained(model_id, local_files_only=True).to(device)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_id)
+        self.model = AutoModelForQuestionAnswering.from_pretrained(model_id).to(device)
         self.model.eval()
         self.params_m = round(sum(p.numel() for p in self.model.parameters()) / 1e6, 1)
         self.footprint_mb = round(sum(p.numel() * p.element_size() for p in self.model.parameters()) / (1024 * 1024), 1)
@@ -1021,11 +1021,13 @@ def main() -> None:
     items = load_benchmark_pool()
     print(f"Loaded {len(items)} benchmark observations (Open S=336 + Sealed P=164)", flush=True)
 
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu"))
     tokenizer = AutoTokenizer.from_pretrained(str(ARTIFACT_DIR), trust_remote_code=True)
     cfg = NullspanConfig.from_pretrained(str(ARTIFACT_DIR))
     pt_model = NullspanForExtraction.from_pretrained(str(ARTIFACT_DIR), config=cfg).to(device)
     pt_model.eval()
+    if items:
+        evaluate_nullspan_neural_tier(items[:2], tokenizer, cfg, pytorch_model=pt_model)
 
     params_m = round(sum(p.numel() for p in pt_model.parameters()) / 1e6, 1)
     size_tag = f"{int(round(params_m))}M"
@@ -1536,7 +1538,11 @@ def main() -> None:
             "python": platform.python_version(),
             "pytorch": torch.__version__,
             "onnxruntime": ort.__version__,
-            "accelerator": "NVIDIA Tesla V100-SXM2-16GB (GCP Train) + Apple Silicon MPS/CPU (Local Eval)",
+            "accelerator": (
+                f"{torch.cuda.get_device_name(0)} (GCP CUDA Eval)"
+                if torch.cuda.is_available()
+                else "NVIDIA Tesla V100-SXM2-16GB (GCP Train) + Apple Silicon MPS/CPU (Local Eval)"
+            ),
         },
         "systems": systems_results,
         "tiers": {

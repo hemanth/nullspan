@@ -4,48 +4,45 @@ library_name: transformers
 tags:
   - nullspan
   - system-one
+  - typed-decisions
+  - jevbench
   - structured-extraction
   - span-extraction
   - calibrated-estimation
-  - time-series-forecasting
   - electra
+  - deberta-v3
   - onnx
 datasets:
   - gnumanth/nullspan-dataset
+  - LocalLLaMA/typed-decisions
   - rajpurkar/squad_v2
 metrics:
   - accuracy
   - exact_match
+  - f1
   - brier_score
 pipeline_tag: question-answering
 ---
 
-# gnumanth/nullspan
+# gnumanth/nullspan (`v1.2.1`)
 
-**`nullspan` v1.2** is a `344.2M`-parameter (`330.1 MB` Int8 ONNX, `512`-token context + long-document windowing) **System One extraction, calibrated abstention, multi-numeric contract disambiguation, invariant verification, and quantile distribution model**. It processes an unstructured `state` and a map of typed `fields` (`text`, `number`, `boolean`, `enum`, `date`, `datetime`, `duration`, `list`, `estimate`, `forecast`) in a **single parallel encoder forward pass** with zero autoregressive token generation.
+**`nullspan` v1.2.1** ships two zero-output-token **System One** neural models in one open-weights MIT repository:
 
-## Architectural Design (`NullspanForExtraction` v2.0)
+1. **`NullspanForExtraction` (`345.3M` PyTorch FP32 + `331.1 MB` Int8 ONNX, `512`-token context + long-document windowing)**: Grounded `[start, end]` span extraction, calibrated `p_null` abstention (with dedicated `qa_null_head`), multi-numeric contract disambiguation (`96/96`), cross-field algebraic `constraint` verification, and `(p10, median, p90)` quantile estimation.
+2. **`NullspanSystemOneEngine` (`435M` DeBERTa-v3-Large + `r=32` LoRA + Cross-Option & Cross-Question Workflow Competition Head, `systemone/`)**: Native `/v1/systemone` calibrated decision model for `noul` (`true`/`false`), `choice` (`options`), and ordinal `score` (`min..max`) rubrics with `0` generated output tokens.
 
-Warm-started from a 24-layer `1024`-d ELECTRA-Large SQuAD 2.0 transformer (`ahotrod/electra_large_discriminator_squad2_512`) with a non-destructive 2-layer Pre-LN `SchemaAdapterBlock` and trained across `8,290` zero-leakage multi-task field instances (`SQuAD v2.0 train`, multi-section legal/commercial contracts, SRE postmortems, GPU ledgers, cluster comps, and time-series forecasts) at full `512`-token context length:
-1. **`null_head`**: Span-attended bilinear null classifier + SQuAD2 `[CLS]` margin residual with held-out temperature scaling (`AUROC: 0.99273`, `ECE: 0.01553`, `Brier: 0.02711`).
-2. **`span_head`**: Query-conditioned token start/end pointer network mapped via `offset_mapping` to exact character spans `[start, end]` with calibrated posterior `confidence` and Shannon `span_entropy_bits`.
-3. **`bio_head`**: Class-weighted token-level `B/I/O` sequence tagger extracting ordered multi-span arrays (`type: "list"`).
-4. **`op_head`**: 10-way System One computation, normalization, boolean judgment (`BOOL_JUDGE`), and zero-shot enum classification (`ENUM_CLASSIFY`) router.
-5. **`quantile_head`**: Pinball-loss calibrated distribution head (`p10`, `median`, `p90`) with monotonic sorting (`p10 <= median <= p90`) and cross-field algebraic `constraint` verification (`verified: true/false`).
+## Verified Public Benchmark Scores (Google Cloud NVIDIA L4 GPU · Zero Test Contamination)
 
-## Zero-Leakage Empirical Evaluation (`N = 500` `NullspanBench`, `19` Systems)
+| Public Benchmark | Dataset & Split | Score | Calibration & Validity | Latency / Cost (L4 GPU) |
+| :--- | :--- | :---: | :---: | :---: |
+| **[`LocalLLaMA/typed-decisions`](https://huggingface.co/datasets/LocalLLaMA/typed-decisions)** | Official `test` (`400` cases · `2,000` decisions) | **`75.40%` Accuracy** (Table 2 fitted cross-encoder; `#2` vs Hub `.eval_results` widget) | `KL 0.1515` · `Brier 0.0770` · `ECE 0.0944` | `78.0 ms/dec` (`390.0 ms/case`) · `0` output tokens |
+| **[Benchmark Heaven / `jevbench`](https://github.com/fstandhartinger/jevbench)** | Official Public Suite (`231` items via `/v1/systemone`) | **`100.0%` Easy (`48/48`)** · `62.50%` Original (`45/72`) · `37.84%` Hard (`42/111`) | **`100.0%` Strict Schema Validity** (`Easy Brier 0.0207`, `ECE 0.0605`) | **`64.8 ms` `p50`** · **`$0.00667 / 1k`** (`encoder_classifier_<=0.6B`) |
+| **[Stanford `rajpurkar/squad_v2`](https://huggingface.co/datasets/rajpurkar/squad_v2)** | Zero-overlap `validation` (`N = 500`: `250` HasAns + `250` NoAns) | **`87.00%` Exact Match** · **`89.36%` F1** | `HasAns F1 91.52%` · `NoAns EM 87.20%` | `10.30 ms` `p50` · `$0.0017 / 1k` |
+| **[`NullspanBench v3.2`](https://hemanth.github.io/nullspan/bench.html)** | `N = 500` (`336` Open + `164` Sealed: SQuAD2, `96` Contracts, `8` Adversarial) | **`98.2` Capability** · **`98.0%` Intelligence** (`95.7` Hybrid Composite) | **`98.5` Calibration** (`AUROC 0.9933`, `ECE 0.0142`; Int8 ONNX `ECE 0.0127`) | `10.30 ms` CUDA `p50` (`0.040 ms` Hybrid) · `$0.0003–$0.0017 / 1k` |
 
-- **Training time**: `1439.2s` (`NVIDIA Tesla V100-SXM2-16GB` on Google Cloud)
-- **NullspanBench Global Rank**: **#1 Capability (`98.4`)** & **#1 Intelligence (`98.0%` `[96.8, 99.2]`)** for `nullspan-344M` (`98.3` Capability / `98.9` Calibration for `330.1 MB` Int8 ONNX); **#1 Composite (`97.2`)** for `nullspan-Hybrid`
-- **Held-Out Calibration-Dev Null Accuracy**: `96.94%` (`AUROC: 0.99273`, `ECE: 0.01553`, `Brier: 0.02711`)
-- **Open Structured Pool (`S = 336`, `64` Docs)**: `100.0%` (`100.0%` Choice, `100.0%` Math/Invariants, `100.0%` Quantiles)
-- **10-Way Operation Router & Multi-Span List BIO Accuracy**: `100.0%` / `100.0%`
-- **Sealed Multi-Numeric Legal/Commercial Contracts (`n = 96`, 12 Unseen Agreements)**: `100.0%`
-- **Sealed Stanford SQuAD v2.0 Accuracy (`n = 60`, Zero-Overlap)**: `83.33%`
-- **Adversarial Decoy & Prompt-Injection Stress Accuracy (`n = 8`)**: `100.0%`
-- **Cross-Field Invariant Verification Accuracy**: `100.0%`
+> **Training Disclosure**: `NullspanSystemOneEngine` is fine-tuned on the `LocalLLaMA/typed-decisions` `train` split alongside public `BoolQ`, `ARC-Challenge`, and `SciQ` `train` splits plus programmatic synthetic System One rubrics; it is **not zero-shot** on `Typed Decisions`. All test/evaluation splits (`Typed Decisions test`, `JevBench` public & sealed suites, `SQuAD v2.0 validation`, and `NullspanBench` evaluation pools) were strictly untouched during training and post-hoc temperature calibration.
 
-## Quick Start
+## Quick Start — Grounded Extraction (`NullspanForExtraction`)
 
 ```python
 from transformers import AutoModel, AutoTokenizer
@@ -78,150 +75,36 @@ result = model.extract(
 print(result["answers"])
 ```
 
-### Output on SRE Incident Postmortem Example
+## Quick Start — `/v1/systemone` Typed Decisions (`NullspanSystemOneEngine`)
 
-```json
-{
-  "reporter": {
-    "type": "text",
-    "p_null": 0.0,
-    "span": [
-      276,
-      280
-    ],
-    "guess": "Mira",
-    "confidence": 0.999999,
-    "span_entropy_bits": 0.0,
-    "value": "Mira"
-  },
-  "incident_id": {
-    "type": "text",
-    "p_null": 0.0,
-    "span": [
-      9,
-      18
-    ],
-    "guess": "INC-40928",
-    "confidence": 0.999999,
-    "span_entropy_bits": 0.0,
-    "value": "INC-40928"
-  },
-  "opened_on": {
-    "type": "date",
-    "p_null": 0.0,
-    "span": [
-      29,
-      41
-    ],
-    "guess": "2026-04-12",
-    "confidence": 0.999999,
-    "span_entropy_bits": 0.0,
-    "value": "2026-04-12"
-  },
-  "total_credit": {
-    "type": "number",
-    "p_null": 0.0,
-    "span": [
-      109,
-      130
-    ],
-    "guess": 1550.75,
-    "confidence": 0.999999,
-    "span_entropy_bits": 0.0,
-    "value": 1550.75
-  },
-  "outage_days": {
-    "type": "duration",
-    "p_null": 0.0,
-    "unit": "days",
-    "span": [
-      29,
-      41
-    ],
-    "guess": 7,
-    "confidence": 0.999999,
-    "span_entropy_bits": 0.0,
-    "value": 7
-  },
-  "failure_modes": {
-    "type": "list",
-    "value": [
-      "502 Bad Gateway errors",
-      "TLS handshake timeouts"
-    ],
-    "spans": [
-      [
-        49,
-        71
-      ],
-      [
-        78,
-        100
-      ]
-    ],
-    "confidence": 0.999999,
-    "span_entropy_bits": 0.0
-  },
-  "severity": {
-    "type": "enum",
-    "p_null": 0.0,
-    "span": [
-      155,
-      160
-    ],
-    "options": [
-      "sev-1",
-      "sev-2",
-      "sev-3"
-    ],
-    "probs": {
-      "sev-1": 0.999999,
-      "sev-2": 1e-06,
-      "sev-3": 1e-06
+```python
+from nullspan import decide
+
+res = decide(
+    state={"customer_tier": "enterprise", "RefundCapUSD": 500, "RequestedRefundUSD": 420, "FraudFlag": False},
+    questions={
+        "eligible": {"type": "noul", "instructions": "Is RequestedRefundUSD <= RefundCapUSD with FraudFlag == False?"},
+        "route": {"type": "choice", "options": ["approve", "escalate", "deny"], "instructions": "Select refund action."},
+        "urgency": {"type": "score", "min": 1, "max": 5, "instructions": "Rate SLA urgency from 1 to 5."},
     },
-    "guess": "sev-1",
-    "confidence": 0.999999,
-    "span_entropy_bits": 0.0,
-    "value": "sev-1"
-  },
-  "data_loss": {
-    "type": "boolean",
-    "p_null": 0.0,
-    "p_true": 1e-06,
-    "span": [
-      188,
-      193
-    ],
-    "guess": false,
-    "confidence": 0.999999,
-    "span_entropy_bits": 0.0,
-    "value": false
-  },
-  "cve_id": {
-    "type": "text",
-    "p_null": 1.0,
-    "span": [
-      109,
-      117
-    ],
-    "guess": "$1240.50",
-    "confidence": 0.999999,
-    "span_entropy_bits": 2.2523,
-    "value": null,
-    "abstention_reason": "unassigned_placeholder"
-  },
-  "remediation_cost": {
-    "type": "estimate",
-    "value": 1890,
-    "median": 1870,
-    "p10": 1270,
-    "p90": 2660,
-    "p_below": 0.0,
-    "p_above": 0.0,
-    "confidence": 0.999999
-  }
-}
+    model_id="gnumanth/nullspan",
+)
+print(res["answers"])
 ```
+
+Or serve the TypeSafe-compatible `/v1/systemone` HTTP endpoint directly:
+
+```bash
+pip install "nullspan[hf]" fastapi uvicorn peft
+python serve_systemone.py --model-dir gnumanth/nullspan --port 8010
+```
+
+## Repository Contents
+
+- `model.safetensors`, `config.json`, `modeling_nullspan.py`: `NullspanForExtraction` (`345.3M` ELECTRA-Large + 2-layer Pre-LN `SchemaAdapterBlock` + `qa_null_head`).
+- `onnx/model_quantized.onnx`, `onnx/tokenizer.json`: `331.1 MB` dynamic `QUInt8` ONNX model powering offline Browser WASM (`https://hemanth.github.io/nullspan/`) and CPU inference.
+- `systemone/`, `systemone_decision.pt`, `systemone_decision.py`, `serve_systemone.py`: `NullspanSystemOneEngine` (`435M` DeBERTa-v3-Large + `r=32` LoRA + `CrossOptionDecisionHead` + Cross-Question Workflow Propagation) and `/v1/systemone` FastAPI server.
+- `.eval_results/typed-decisions.yaml`, `.eval_results/nullspan-bench.yaml`, `SCIENCE_REPORT.md`: Reproducible benchmark metadata and statistical report.
 
 ## License
 

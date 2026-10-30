@@ -4,8 +4,8 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "nullspan"
-version = "1.2.0"
-description = "Calibrated p_null abstention, grounded [start, end] span extraction, arithmetic, and distribution forecasting in a single forward pass."
+version = "1.2.1"
+description = "Calibrated p_null abstention, grounded [start, end] span extraction, System One typed decisions, arithmetic, and distribution forecasting in a single forward pass."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { file = "LICENSE" }
@@ -20,7 +20,7 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-hf = ["torch>=2.0.0", "transformers>=4.40.0", "safetensors>=0.4.0", "huggingface_hub>=0.23.0"]
+hf = ["torch>=2.0.0", "transformers>=4.40.0", "safetensors>=0.4.0", "huggingface_hub>=0.23.0", "sentencepiece>=0.1.99"]
 
 [project.urls]
 Homepage = "https://github.com/hemanth/nullspan"

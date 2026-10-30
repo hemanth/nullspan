@@ -485,6 +485,56 @@
       </div>
     </section>
 
+    <!-- 0. External Public Benchmarks Banner -->
+    <section class="section-card">
+      <div class="section-header">
+        <span>Official External Public Benchmarks · NVIDIA L4 GPU · Zero Test Contamination</span>
+        <span>Typed Decisions · JevBench · SQuAD v2.0</span>
+      </div>
+      <div class="section-body" style="padding: 14px 18px;">
+        <div class="table-wrap">
+          <table class="lb-table">
+            <thead>
+              <tr>
+                <th>External Leaderboard</th>
+                <th>Evaluated Split</th>
+                <th>Headline Score</th>
+                <th>Calibration &amp; Schema Validity</th>
+                <th>Latency &amp; Cost (L4 GPU)</th>
+                <th>Public Rank / Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="background: #FBFAF7;">
+                <td><strong><a href="https://huggingface.co/datasets/LocalLLaMA/typed-decisions" target="_blank" rel="noopener" style="color: var(--ink);">LocalLLaMA/typed-decisions</a></strong></td>
+                <td>Official <code>test</code> (400 cases · 2,000 decisions)</td>
+                <td><strong>75.40% Accuracy</strong> (noul 82.7%, choice 75.0%, score 70.3%)</td>
+                <td>KL <strong>0.1515</strong> · Brier <strong>0.0770</strong> · ECE <strong>0.0944</strong></td>
+                <td>78.0 ms/dec · 0 output tokens</td>
+                <td>Table 2 (general + <code>train</code>) · <strong>#2 vs Hub widget</strong></td>
+              </tr>
+              <tr>
+                <td><strong><a href="https://github.com/fstandhartinger/jevbench" target="_blank" rel="noopener" style="color: var(--ink);">Benchmark Heaven / fstandhartinger/jevbench</a></strong></td>
+                <td>Public Suite (231 items via <code>/v1/systemone</code>)</td>
+                <td><strong>100.0% Easy (48/48)</strong> · 62.50% Original · 37.84% Hard</td>
+                <td><strong>100.0% Strict Valid</strong> · Easy ECE <strong>0.0605</strong></td>
+                <td><strong>64.8 ms p50</strong> · <strong>$0.00667 / 1k</strong></td>
+                <td>100% adversarial, fact, ordinal &amp; tool_selection</td>
+              </tr>
+              <tr style="background: #FBFAF7;">
+                <td><strong><a href="https://huggingface.co/datasets/rajpurkar/squad_v2" target="_blank" rel="noopener" style="color: var(--ink);">Stanford rajpurkar/squad_v2</a></strong></td>
+                <td>Zero-Overlap <code>validation</code> (500 items)</td>
+                <td><strong>87.00% Exact Match · 89.36% F1</strong></td>
+                <td>HasAns F1 <strong>91.52%</strong> · NoAns EM <strong>87.20%</strong></td>
+                <td><strong>10.30 ms p50</strong> · <strong>$0.0017 / 1k</strong></td>
+                <td>NullspanForExtraction 345.3M + <code>qa_null_head</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <!-- 1. Capability Score Headline Chart -->
     <section class="section-card">
       <div class="section-header">

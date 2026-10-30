@@ -1,0 +1,27 @@
+- dataset:
+    id: gnumanth/nullspan-dataset
+    task_id: intelligence
+  value: 0.98
+  date: "2026-10-30"
+  source:
+    url: https://hemanth.github.io/nullspan/bench.html
+    name: "NullspanBench v3.2 (N=500 Zero-Leakage, NVIDIA L4 GPU)"
+  notes: "NullspanForExtraction 345.3M PyTorch FP32 CUDA (98.0% Intelligence, 98.5 Calibration, 10.30 ms p50; 331.1 MB Int8 ONNX: 97.8% Intelligence, 98.6 Calibration)."
+- dataset:
+    id: rajpurkar/squad_v2
+    task_id: exact_match
+  value: 0.87
+  date: "2026-10-30"
+  source:
+    url: https://github.com/hemanth/nullspan/blob/main/bench/eval_public_benchmarks.py
+    name: "Stanford SQuAD v2.0 Zero-Overlap Validation (N=500)"
+  notes: "Zero-overlap validation split (250 HasAns + 250 NoAns): 87.00% Exact Match, 89.36% F1 (HasAns F1 91.52%, NoAns EM 87.20%)."
+- dataset:
+    id: rajpurkar/squad_v2
+    task_id: f1
+  value: 0.8936
+  date: "2026-10-30"
+  source:
+    url: https://github.com/hemanth/nullspan/blob/main/bench/eval_public_benchmarks.py
+    name: "Stanford SQuAD v2.0 Zero-Overlap Validation (N=500)"
+  notes: "Zero-overlap validation split (250 HasAns + 250 NoAns): 87.00% Exact Match, 89.36% F1."

@@ -59,11 +59,12 @@ def main() -> None:
     model.encoder.config._attn_implementation = "eager"
     if hasattr(model.encoder, "encoder") and hasattr(model.encoder.encoder, "layer"):
         for layer in model.encoder.encoder.layer:
-            if hasattr(layer, "attention") and hasattr(layer.attention, "self"):
+            if hasattr(layer, "attention") and hasattr(layer.attention, "self") and hasattr(layer.attention.self, "config"):
                 layer.attention.self.config._attn_implementation = "eager"
     elif hasattr(model.encoder, "transformer") and hasattr(model.encoder.transformer, "layer"):
         for layer in model.encoder.transformer.layer:
-            layer.attention.config._attn_implementation = "eager"
+            if hasattr(layer.attention, "config"):
+                layer.attention.config._attn_implementation = "eager"
     model.eval()
 
     wrapper = NullspanOnnxWrapper(model)

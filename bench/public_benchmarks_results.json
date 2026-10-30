@@ -1,0 +1,107 @@
+{
+  "hardware": "NVIDIA L4",
+  "typed_decisions": {
+    "model": "gnumanth/nullspan",
+    "mode": "specialist",
+    "n_cases": 400,
+    "n_decisions": 2000,
+    "accuracy": 0.754,
+    "kl_from_gold": 0.1515,
+    "brier": 0.077,
+    "ece": 0.0944,
+    "latency_ms_per_case": 390.02,
+    "by_workflow_accuracy": {
+      "agent_trace_observability": 0.702,
+      "customer_service": 0.81,
+      "invoice_processing": 0.754,
+      "security_incidents": 0.75
+    },
+    "by_type_accuracy": {
+      "choice": 0.75,
+      "noul": 0.8267,
+      "score": 0.7025
+    }
+  },
+  "jevbench_public": {
+    "total_public_items": 231,
+    "total_correct": 135,
+    "overall_accuracy": 0.5844,
+    "macro_accuracy": 0.5494,
+    "brier_mean": 0.5098,
+    "ece": 0.1279,
+    "strict_valid_rate": 1.0,
+    "p50_ms": 64.8,
+    "p95_ms": 143.11,
+    "price_per_1000_decisions_usd": 0.00667,
+    "public_axes_v13": {
+      "intelligence": 39.63,
+      "calibration": 58.96,
+      "speed": 89.14,
+      "cost": 75.29
+    },
+    "public_jevbench_v13_geometric": 39.53,
+    "public_jevbench_v14_harmonic": 37.68,
+    "per_family_accuracy": {
+      "adequacy": 0.4167,
+      "adversarial": 1.0,
+      "ambiguous": 0.0,
+      "extraction": 0.875,
+      "fact": 1.0,
+      "intent": 0.8333,
+      "judge_hard": 0.4118,
+      "long_policy": 0.3158,
+      "multi_hop": 0.4444,
+      "ordinal": 1.0,
+      "policy": 0.5,
+      "probability": 0.7,
+      "routing": 0.4167,
+      "routing_hard": 0.4,
+      "temporal_numeric": 0.2,
+      "tool_selection": 1.0,
+      "tradeoff": 0.0,
+      "trap": 0.375
+    },
+    "tiers": {
+      "original": {
+        "n": 72,
+        "correct": 45,
+        "accuracy": 0.625,
+        "strict_valid_rate": 1.0,
+        "brier": 0.4619,
+        "ece": 0.1757,
+        "p50_ms": 63.21,
+        "p95_ms": 65.64
+      },
+      "easy": {
+        "n": 48,
+        "correct": 48,
+        "accuracy": 1.0,
+        "strict_valid_rate": 1.0,
+        "brier": 0.0207,
+        "ece": 0.0605,
+        "p50_ms": 63.24,
+        "p95_ms": 67.29
+      },
+      "hard": {
+        "n": 111,
+        "correct": 42,
+        "accuracy": 0.3784,
+        "strict_valid_rate": 1.0,
+        "brier": 0.7523,
+        "ece": 0.2052,
+        "p50_ms": 73.79,
+        "p95_ms": 173.62
+      }
+    }
+  },
+  "squad_v2": {
+    "dataset": "rajpurkar/squad_v2",
+    "n_evaluated": 500,
+    "exact": 87.0,
+    "f1": 89.36,
+    "HasAns_exact": 86.8,
+    "HasAns_f1": 91.52,
+    "NoAns_exact": 87.2,
+    "NoAns_f1": 87.2
+  }
+}

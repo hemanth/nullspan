@@ -1,5 +1,5 @@
-"""nullspan — Calibrated p_null abstention, grounded [start, end] span extraction, and distribution forecasting."""
-from .engine import DEFAULT_HF_REPO, NullspanExtractor, extract
+"""nullspan — Calibrated p_null abstention, grounded [start, end] span extraction, System One typed decisions, and distribution forecasting."""
+from .engine import DEFAULT_HF_REPO, NullspanExtractor, decide, extract
 
-__version__ = "1.2.0"
-__all__ = ["extract", "NullspanExtractor", "DEFAULT_HF_REPO"]
+__version__ = "1.2.1"
+__all__ = ["extract", "decide", "NullspanExtractor", "DEFAULT_HF_REPO"]

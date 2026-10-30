@@ -1,0 +1,24 @@
+name: NullspanBench
+description: >
+  System One structured extraction, multi-numeric commercial contract disambiguation,
+  calibrated abstention (p_null), cross-field invariant verification, and distributional
+  quantile estimation benchmark (N = 500 field-level decisions across Open Structured,
+  Sealed Multi-Numeric Contracts, Sealed Stanford SQuAD v2.0, and Adversarial Stress pools).
+
+tasks:
+  - id: capability
+    config: default
+    split: validation
+  - id: intelligence
+    config: default
+    split: validation
+  - id: calibration
+    config: default
+    split: validation
+  - id: sealed_contracts
+    config: default
+    split: validation
+  - id: ece
+    config: default
+    split: validation
+    lower_is_better: true
