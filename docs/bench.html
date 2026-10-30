@@ -458,8 +458,8 @@
   <header>
     <div class="brand">
       <a href="./index.html" class="brand-mark">nullspan</a>
-      <span class="badge" style="background: var(--accent-span);">NullspanBench v3.0 · JevBench Methodology</span>
-      <span class="badge" id="draw-badge">S+P (404 Scored Observations)</span>
+      <span class="badge" style="background: var(--accent-span);">NullspanBench v3.2 · JevBench Methodology</span>
+      <span class="badge" id="draw-badge">S+P (500 Scored Observations)</span>
     </div>
     <nav class="links">
       <a href="./index.html">← Interactive Playground</a>
@@ -475,13 +475,13 @@
       <div>
         <h1>NullspanBench — Decision &amp; Extraction Model Leaderboard</h1>
         <p>
-          Following the <strong>Benchmark Heaven (JevBench)</strong> evaluation protocol: comparing 14 systems across <strong>Intelligence (I)</strong>, <strong>Probability Calibration (C)</strong>, <strong>Speed (S)</strong>, and <strong>Cost (K)</strong> over <strong>404 scored observations (S+P)</strong> spanning Open structured extraction (<em>n=336</em>) and Sealed Stanford SQuAD v2.0 + Adversarial prompt-injection traps (<em>n=68</em>).
+          Following the <strong>Benchmark Heaven (JevBench)</strong> evaluation protocol: comparing 19 systems across <strong>Intelligence (I)</strong>, <strong>Probability Calibration (C)</strong>, <strong>Speed (S)</strong>, and <strong>Cost (K)</strong> over <strong>500 zero-leakage observations (S+P)</strong> spanning Open structured extraction (<em>n=336</em>) and Sealed Stanford SQuAD v2.0 (<em>n=60</em>), Multi-Numeric Legal/Commercial Contracts (<em>n=96</em>), and Adversarial prompt-injection traps (<em>n=8</em>).
         </p>
       </div>
       <div class="btn-group">
         <span class="btn-label">Pool Filter:</span>
-        <button class="ctrl-btn" id="btn-pool-open" type="button">Open Weights Only (12)</button>
-        <button class="ctrl-btn active" id="btn-pool-all" type="button">Show All Mixed (+ 2 API Decoders)</button>
+        <button class="ctrl-btn" id="btn-pool-open" type="button">Open Weights Only</button>
+        <button class="ctrl-btn active" id="btn-pool-all" type="button">Show All Mixed (+ API Models)</button>
       </div>
     </section>
 
@@ -522,7 +522,7 @@
     <section class="section-card">
       <div class="section-header">
         <span>3. Composite Score Leaderboard · Four Axes (0–100) Weighted Harmonic Mean</span>
-        <span id="ranked-count-label">14 Ranked Systems</span>
+        <span id="ranked-count-label">19 Ranked Systems</span>
       </div>
       <div class="section-body">
         <div class="filter-bar" style="margin-bottom: 12px;">
@@ -634,7 +634,7 @@
     <section class="section-card">
       <div class="section-header">
         <span>5. Competence Heatmap by Request Type, Difficulty Tier &amp; Subject Domain</span>
-        <span>Greener = Stronger Within Column · Exact Observation Counts (n=404)</span>
+        <span>Greener = Stronger Within Column · Exact Observation Counts (n=500)</span>
       </div>
       <div class="section-body">
         <div class="table-wrap">
@@ -656,6 +656,7 @@
                 <th>SRE Incident</th>
                 <th>Cloud Invoice</th>
                 <th>SQuAD v2.0 QA</th>
+                <th>Contracts (96)</th>
                 <th>Adversarial</th>
               </tr>
             </thead>
@@ -956,12 +957,13 @@
         ['cluster_throughput_comps', 'Cluster Comps'],
         ['edge_traffic_forecast', 'Edge Forecast'],
         ['squad_v2_open_qa', 'SQuAD v2.0'],
+        ['contract_extraction', 'Contracts'],
         ['adversarial_stress', 'Adversarial']
       ];
       const domA = domKeys.map(([k]) => sysA.by_domain[k]?.score ?? 0);
       const domB = domKeys.map(([k]) => sysB.by_domain[k]?.score ?? 0);
       document.getElementById('radar-desc-domain').textContent =
-        `SQuAD v2.0: ${domA[4]}% vs ${domB[4]}% · Adversarial Guardrails: ${domA[5]}% vs ${domB[5]}%`;
+        `SQuAD v2.0: ${domA[4]}% vs ${domB[4]}% · Contracts (n=96): ${domA[5]}% vs ${domB[5]}% · Adversarial: ${domA[6]}% vs ${domB[6]}%`;
       drawRadarSvg('radar-domain-svg', domKeys.map(x => x[1]), domA, domB);
     }
 
@@ -988,6 +990,7 @@
           ${cell(s.by_domain.incident_report)}
           ${cell(s.by_domain.compute_ledger)}
           ${cell(s.by_domain.squad_v2_open_qa)}
+          ${cell(s.by_domain.contract_extraction)}
           ${cell(s.by_domain.adversarial_stress)}
         </tr>
       `).join('');
@@ -1013,7 +1016,7 @@
       const selB = document.getElementById('select-sys-b');
       selA.innerHTML = BENCH_DATA.systems.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
       selB.innerHTML = BENCH_DATA.systems.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-      selA.value = 'nullspan-67m-onnx-int8';
+      selA.value = 'nullspan-onnx-int8';
       selB.value = 'cloudflare-clairic-clef-live';
 
       selA.addEventListener('change', renderComparisonRadars);

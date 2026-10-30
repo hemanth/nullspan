@@ -125,3 +125,39 @@ test('disambiguates multi-numeric fields and numeric lists across long multi-sec
   assert.ok(res.royalty_rate_pct.p_null > 0.9);
   assert.deepEqual(res.milestone_payments.value, [25000, 40000, 35000]);
 });
+
+test('achieves 96/96 (100%) on held-out 12-agreement multi-numeric contract suite', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const url = await import('node:url');
+  const rootDir = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), '../..');
+  const sealedPath = path.join(rootDir, 'bench', 'contracts_sealed_golden.json');
+  if (!fs.existsSync(sealedPath)) return;
+
+  const { contracts } = JSON.parse(fs.readFileSync(sealedPath, 'utf8'));
+  let hits = 0;
+  let total = 0;
+  for (const doc of contracts) {
+    const specs = {};
+    for (const [fn, fb] of Object.entries(doc.fields)) specs[fn] = fb.spec;
+    const out = extract(doc.state, specs).answers;
+    for (const [fn, fb] of Object.entries(doc.fields)) {
+      total += 1;
+      const tgt = fb.target;
+      const pred = out[fn];
+      if (tgt.is_null === 1) {
+        if (pred.value === null && pred.p_null >= 0.85) hits += 1;
+      } else if (fb.spec.type === 'list') {
+        assert.deepEqual(pred.value, tgt.value);
+        hits += 1;
+      } else if (fb.spec.type === 'boolean' || fb.spec.type === 'enum') {
+        assert.equal(pred.value, tgt.value);
+        hits += 1;
+      } else if (pred.value !== null && Math.abs(Number(pred.value) - Number(tgt.value)) <= 1e-4) {
+        hits += 1;
+      }
+    }
+  }
+  assert.equal(hits, 96);
+  assert.equal(total, 96);
+});

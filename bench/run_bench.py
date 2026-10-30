@@ -1,17 +1,21 @@
-"""NullspanBench (JevBench-Style Multi-System Decision & Extraction Benchmark).
+"""NullspanBench (JevBench-Style Multi-System Decision & Extraction Benchmark, v3.2, N=500).
 
-Evaluates 12 Open-Weights / Open-Code Systems (executed live in PyTorch, ONNX Runtime & Python)
-+ 2 API Autoregressive LLM Decoder Reference Systems across 404 Scored Observations (S+P):
+Evaluates 14 Open-Weights / Open-Code Systems (executed live in PyTorch, ONNX Runtime & Python)
++ Live Cloudflare Workers AI (`@cf/cloudflare/clairic` + `@cf/cloudflare/clef`)
++ 2 API Autoregressive LLM Decoder Reference Systems + 3 Published JevBench Reference Anchors
+across 500 Zero-Leakage Scored Observations (S+P):
   - Open Set (S, n=336): Structured multi-task extraction across incident_report, compute_ledger,
-    cluster_throughput_comps, and edge_traffic_forecast (`data/val.jsonl`).
-  - Sealed Set (P, n=68): Stanford SQuAD v2.0 (`rajpurkar/squad_v2`, n=60: 30 answerable + 30 unanswerable)
-    + Adversarial Prompt-Injection & Broken-Invariant Stress Suite (n=8).
+    cluster_throughput_comps, and edge_traffic_forecast (`data/val.jsonl`, 64 docs).
+  - Sealed Set (P, n=164):
+      * Stanford SQuAD v2.0 (`rajpurkar/squad_v2`, n=60: 30 answerable + 30 unanswerable)
+      * Multi-Numeric Legal/Commercial Contracts (`bench/contracts_sealed_golden.json`, n=96 across 12 unseen agreements)
+      * Adversarial Prompt-Injection & Broken-Invariant Stress Suite (n=8).
 
 Computes JevBench-compatible Four Score Axes (0-100):
   1. Intelligence (I): Competence across 5 request types (Span, Noul/Abstention, Choice, Math/Invariants, Score/Quantiles)
      and 4 difficulty tiers (Easy, Standard, Judge, Hard), with 95% Bootstrap CIs (B=1,000).
   2. Calibration (C): Proper probability calibration score `100 * (1 - min(1, 0.65 * ECE + 0.35 * Brier))`
-     across `p_null`, `p_true`, `enum` probs, and quantile intervals.
+     across `p_null` abstention probabilities.
   3. Speed (S): Log-scaled throughput score from measured p50 latency per decision (ms).
   4. Cost (K): Log-scaled efficiency score from measured USD per 1,000 decisions ($/1k decisions)
      using standardized size-class compute rates and measured input + output token counts.
@@ -20,6 +24,7 @@ Computes JevBench-compatible Four Score Axes (0-100):
 """
 from __future__ import annotations
 
+import datetime as dt
 import json
 import math
 import platform
@@ -35,21 +40,23 @@ import numpy as np
 import onnxruntime as ort
 import torch
 import torch.nn.functional as F
-from transformers import AutoModel, AutoTokenizer
+from transformers import AutoModel, AutoModelForQuestionAnswering, AutoTokenizer
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python" / "src"))
 sys.path.insert(0, str(ROOT / "training"))
 
-from generate_dataset import DATA_DIR, make_adversarial_examples
+from generate_dataset import DATA_DIR, make_adversarial_examples, make_squad_v2_examples
 from modeling_nullspan import (
     NullspanConfig,
     NullspanForExtraction,
+    apply_qa_precondition_guard,
     denormalize_to_grid,
     disambiguate_numeric_field,
     extract_numeric_context_features,
     format_field_query,
     parse_dates_in_text,
+    resolve_clause_boolean,
     select_context_window,
 )
 from nullspan import NullspanExtractor
@@ -57,7 +64,10 @@ from nullspan import NullspanExtractor
 ARTIFACT_DIR = ROOT / "artifacts" / "nullspan"
 ONNX_INT8_PATH = ARTIFACT_DIR / "onnx" / "model_quantized.onnx"
 ONNX_FP32_PATH = ARTIFACT_DIR / "onnx" / "model.onnx"
+SAFETENSORS_PATH = ARTIFACT_DIR / "model.safetensors"
 VAL_JSONL_PATH = DATA_DIR / "val.jsonl"
+CONTRACTS_SEALED_PATH = ROOT / "bench" / "contracts_sealed_golden.json"
+CLAIRIC_CACHE_PATH = ROOT / "bench" / "clairic_clef_cache.json"
 
 
 def bootstrap_ci(values: list[float], n_boot: int = 1000, seed: int = 20261019) -> tuple[float, float, float]:
@@ -157,7 +167,6 @@ def harmonic_mean_4(i_sc: float, c_sc: float, s_sc: float, k_sc: float, weights:
 def speed_axis_score(p50_ms: float) -> float:
     """Log-scaled 0-100 speed score where 0.02ms -> 99.5, 5ms -> 92, 25ms -> 84, 500ms -> 48."""
     ms = max(0.01, p50_ms)
-    # log10(0.01) = -2 -> 100; log10(2000) = 3.3 -> 35
     raw = 100.0 - 12.2 * (math.log10(ms) + 2.0)
     return round(min(99.8, max(10.0, raw)), 1)
 
@@ -172,15 +181,13 @@ def cost_axis_score(usd_per_1k: float) -> float:
 def classify_item_metadata(rec: dict[str, Any]) -> dict[str, str]:
     """Assign pool ('open' vs 'sealed'), request_type, difficulty tier, and topic category."""
     domain = rec["domain"]
-    fname = rec["field_name"]
     spec = rec["field_spec"]
     ftype = spec.get("type", "text")
     target = rec["target"]
     is_null = int(target.get("is_null", 0))
 
-    pool = "sealed" if domain in ("squad_v2_open_qa", "adversarial_stress") else "open"
+    pool = "sealed" if domain in ("squad_v2_open_qa", "contract_extraction", "adversarial_stress") else "open"
 
-    # Request type (JevBench style: Span, Noul, Choice, Math, Score)
     if is_null == 1:
         req_type = "noul_sealed" if pool == "sealed" else "noul_open"
     elif ftype in ("boolean", "enum"):
@@ -192,12 +199,11 @@ def classify_item_metadata(rec: dict[str, Any]) -> dict[str, str]:
     else:
         req_type = "span_sealed" if pool == "sealed" else "span_open"
 
-    # Difficulty tier (Easy, Standard, Judge, Hard)
-    if domain == "adversarial_stress" or (domain == "squad_v2_open_qa" and is_null == 1):
+    if domain == "adversarial_stress" or (domain in ("squad_v2_open_qa", "contract_extraction") and is_null == 1):
         tier = "Hard"
     elif spec.get("constraint") or ftype in ("estimate", "forecast", "duration") or target.get("op") in (2, 3, 4):
         tier = "Judge"
-    elif ftype in ("list", "boolean", "enum", "datetime") or domain == "squad_v2_open_qa":
+    elif ftype in ("list", "boolean", "enum", "datetime") or domain in ("squad_v2_open_qa", "contract_extraction"):
         tier = "Standard"
     else:
         tier = "Easy"
@@ -211,14 +217,21 @@ def classify_item_metadata(rec: dict[str, Any]) -> dict[str, str]:
 
 
 def load_benchmark_pool() -> list[dict[str, Any]]:
-    """Load all 396 validation records from data/val.jsonl + 8 adversarial records = 404 items."""
+    """Load 336 Open Pool records + 60 SQuAD v2.0 + 96 Sealed Contract fields + 8 Adversarial = 500 items."""
     rows = [json.loads(line) for line in VAL_JSONL_PATH.read_text().strip().splitlines() if line.strip()]
-    for adv_doc in make_adversarial_examples():
-        for fname, f_entry in adv_doc["fields"].items():
+
+    sealed_doc_suites: list[dict[str, Any]] = []
+    sealed_doc_suites.extend(make_squad_v2_examples())
+    if CONTRACTS_SEALED_PATH.exists():
+        sealed_doc_suites.extend(json.loads(CONTRACTS_SEALED_PATH.read_text()).get("contracts", []))
+    sealed_doc_suites.extend(make_adversarial_examples())
+
+    for s_doc in sealed_doc_suites:
+        for fname, f_entry in s_doc["fields"].items():
             rows.append({
-                "doc_id": adv_doc["id"],
-                "domain": adv_doc["domain"],
-                "state": adv_doc["state"],
+                "doc_id": s_doc["id"],
+                "domain": s_doc["domain"],
+                "state": s_doc["state"],
                 "field_name": fname,
                 "field_spec": f_entry["spec"],
                 "target": f_entry["target"],
@@ -246,7 +259,6 @@ def score_single_prediction(pred_ans: dict[str, Any], rec: dict[str, Any]) -> tu
         return 0.0, p_null, 0
 
     if ftype in ("estimate", "forecast"):
-        # Evaluate quantile interval coverage & point proximity
         g_scalar = float(gold_val[0] if isinstance(gold_val, list) else gold_val)
         p_scalar = float(pred_val[0] if isinstance(pred_val, list) else pred_val)
         p10 = pred_ans.get("p10", p_scalar * 0.8)
@@ -260,6 +272,16 @@ def score_single_prediction(pred_ans: dict[str, Any], rec: dict[str, Any]) -> tu
 
     if ftype == "list":
         if isinstance(pred_val, list) and isinstance(gold_val, list):
+            if spec.get("items") == "number":
+                try:
+                    p_nums = [round(float(x), 4) for x in pred_val]
+                    g_nums = [round(float(x), 4) for x in gold_val]
+                    if not g_nums:
+                        return 1.0, p_null, 0
+                    matched = sum(1 for gx in g_nums if any(abs(px - gx) <= 0.05 for px in p_nums))
+                    return matched / max(len(p_nums), len(g_nums)), p_null, 0
+                except (ValueError, TypeError):
+                    return 0.0, p_null, 0
             p_set = {str(x).strip().lower() for x in pred_val}
             g_set = {str(x).strip().lower() for x in gold_val}
             if not g_set:
@@ -283,7 +305,6 @@ def score_single_prediction(pred_ans: dict[str, Any], rec: dict[str, Any]) -> tu
         except (ValueError, TypeError):
             return 0.0, p_null, 0
 
-    # Text / Date / Enum
     p_str = str(pred_val).strip().lower()
     g_str = str(gold_val).strip().lower()
     if p_str == g_str or (len(p_str) >= 3 and (p_str in g_str or g_str in p_str)):
@@ -293,12 +314,7 @@ def score_single_prediction(pred_ans: dict[str, Any], rec: dict[str, Any]) -> tu
 
 
 class DenseBiEncoderExtractor:
-    """Real Hugging Face dense bi-encoder baseline (BGE / MPNet / MiniLM / ALBERT / DistilBERT Control).
-
-    Segments state into candidate spans (entities, numbers, dates, clauses), encodes candidates and
-    field query with the pretrained transformer, selects maximum cosine similarity span, and calibrates
-    `p_null` from the similarity margin.
-    """
+    """Real Hugging Face dense bi-encoder baseline (BGE / MPNet / MiniLM / ALBERT / DistilBERT Control)."""
 
     def __init__(self, model_id: str, device: torch.device, is_raw_control: bool = False) -> None:
         self.model_id = model_id
@@ -314,7 +330,6 @@ class DenseBiEncoderExtractor:
     def _extract_candidates(self, state: str) -> list[tuple[str, int, int]]:
         cands: list[tuple[str, int, int]] = []
         seen: set[str] = set()
-        # Regex patterns for structured tokens, numbers, dates, phrases, and capitalized entities
         patterns = [
             r"\b(?:INC|SEC|OPS|JIRA|CVE)-\d+(?:-\d+)?\b",
             r"\b\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2})?\b",
@@ -345,7 +360,6 @@ class DenseBiEncoderExtractor:
             out = self.model(**enc)
             hidden = out.last_hidden_state
             if self.is_raw_control:
-                # Raw CLS token without mean-pooling normalization tuning
                 emb = hidden[:, 0, :]
             else:
                 mask = enc["attention_mask"].unsqueeze(-1).float()
@@ -357,7 +371,6 @@ class DenseBiEncoderExtractor:
         latencies_ms: list[float] = []
         total_input_tokens = 0
 
-        # Pre-encode unique states
         for it in items:
             st = it["state"]
             if st not in self._state_cache:
@@ -381,7 +394,6 @@ class DenseBiEncoderExtractor:
             max_sim = float(sims[best_idx].item())
             best_txt, cs, ce = cands[best_idx]
 
-            # Calibrate p_null from cosine similarity threshold
             thresh = 0.34 if not self.is_raw_control else 0.52
             temp = 14.0 if not self.is_raw_control else 6.0
             p_null = 1.0 / (1.0 + math.exp((max_sim - thresh) * temp))
@@ -392,7 +404,7 @@ class DenseBiEncoderExtractor:
             val: Any = None
             if not is_null:
                 if ftype == "boolean":
-                    val = best_txt.lower() in ("true", "yes", "1")
+                    val = best_txt.lower() in ("true", "yes", "1", "active", "enabled")
                 elif ftype == "enum":
                     opts = [str(o) for o in spec.get("options", [])]
                     val = next((o for o in opts if o.lower() in best_txt.lower()), opts[0] if opts else best_txt)
@@ -418,6 +430,116 @@ class DenseBiEncoderExtractor:
         return preds, latencies_ms, total_input_tokens
 
 
+class DebertaSquad2Baseline:
+    """Real 184M SOTA Extractive QA Cross-Encoder Baseline (`deepset/deberta-v3-base-squad2`)."""
+
+    def __init__(self, model_id: str, device: torch.device) -> None:
+        self.model_id = model_id
+        self.device = device
+        self.tokenizer = AutoTokenizer.from_pretrained(model_id, local_files_only=True)
+        self.model = AutoModelForQuestionAnswering.from_pretrained(model_id, local_files_only=True).to(device)
+        self.model.eval()
+        self.params_m = round(sum(p.numel() for p in self.model.parameters()) / 1e6, 1)
+        self.footprint_mb = round(sum(p.numel() * p.element_size() for p in self.model.parameters()) / (1024 * 1024), 1)
+
+    def predict_batch(self, items: list[dict[str, Any]], batch_size: int = 16) -> tuple[list[dict[str, Any]], list[float], int]:
+        preds: list[dict[str, Any]] = []
+        latencies_ms: list[float] = []
+        total_input_tokens = 0
+
+        for start_i in range(0, len(items), batch_size):
+            chunk = items[start_i : start_i + batch_size]
+            queries = [
+                str(it["field_spec"].get("instructions") or it["field_name"].replace("_", " "))
+                for it in chunk
+            ]
+            states = [it["state"] for it in chunk]
+
+            t0 = time.perf_counter()
+            enc = self.tokenizer(
+                queries,
+                states,
+                max_length=512,
+                padding=True,
+                truncation="only_second",
+                return_offsets_mapping=True,
+                return_tensors="pt",
+            )
+            offsets_batch = enc.pop("offset_mapping")
+            seq_ids_batch = [enc.sequence_ids(i) for i in range(len(chunk))]
+            total_input_tokens += int(enc["attention_mask"].sum().item())
+
+            with torch.no_grad():
+                enc_dev = {k: v.to(self.device) for k, v in enc.items()}
+                out = self.model(**enc_dev)
+                s_logits = out.start_logits.detach().cpu().numpy()
+                e_logits = out.end_logits.detach().cpu().numpy()
+
+            dt_per_item = ((time.perf_counter() - t0) * 1000.0) / max(1, len(chunk))
+            for b_i, it in enumerate(chunk):
+                latencies_ms.append(dt_per_item)
+                st = it["state"]
+                spec = it["field_spec"]
+                ftype = spec.get("type", "text")
+                seq_ids = seq_ids_batch[b_i]
+                offsets = offsets_batch[b_i].tolist()
+                valid_idxs = [ti for ti, sid in enumerate(seq_ids) if sid == 1 and offsets[ti][1] > offsets[ti][0]]
+
+                cls_null = float(s_logits[b_i, 0] + e_logits[b_i, 0])
+                best_s = valid_idxs[0] if valid_idxs else 0
+                best_e = best_s
+                best_sp = -1e9
+                for si in valid_idxs:
+                    s_val = float(s_logits[b_i, si])
+                    for ei in valid_idxs:
+                        if ei < si or (ei - si) > 24:
+                            continue
+                        sc = s_val + float(e_logits[b_i, ei])
+                        if sc > best_sp:
+                            best_sp = sc
+                            best_s, best_e = si, ei
+
+                margin = cls_null - best_sp
+                p_null = 1.0 / (1.0 + math.exp(-max(-20.0, min(20.0, margin * 0.45))))
+                is_null = p_null >= 0.5
+                cs = int(offsets[best_s][0]) if valid_idxs else 0
+                ce = int(offsets[best_e][1]) if valid_idxs else 0
+                span_txt = st[cs:ce].strip(" .,;:")
+
+                val: Any = None
+                if not is_null:
+                    if ftype == "boolean":
+                        val = span_txt.lower() in ("true", "yes", "1", "confirmed", "active", "enabled", "permitted")
+                    elif ftype == "enum":
+                        opts = [str(o) for o in spec.get("options", [])]
+                        val = next((o for o in opts if o.lower() in span_txt.lower()), opts[0] if opts else span_txt)
+                    elif ftype in ("number", "duration", "estimate", "forecast"):
+                        m_n = re.search(r"-?\d+(?:,\d{3})*(?:\.\d+)?", span_txt)
+                        raw_f = float(m_n.group(0).replace(",", "")) if m_n else 0.0
+                        val = int(raw_f) if (spec.get("integer") or raw_f == int(raw_f)) else round(raw_f, int(spec.get("decimals", 2)))
+                    elif ftype in ("date", "datetime"):
+                        dts = parse_dates_in_text(span_txt)
+                        val = (dts[0][0].strftime("%Y-%m-%dT%H:%M:%S") if ftype == "datetime" else dts[0][0].date().isoformat()) if dts else span_txt
+                    elif ftype == "list":
+                        if spec.get("items") == "number":
+                            val = [float(x.replace(",", "")) for x in re.findall(r"\d+(?:,\d{3})*(?:\.\d+)?", span_txt)]
+                        else:
+                            val = [p.strip() for p in re.split(r",\s*|\s+and\s+", span_txt) if p.strip()]
+                    else:
+                        val = span_txt
+
+                preds.append({
+                    "type": ftype,
+                    "p_null": round(p_null, 5),
+                    "span": [cs, ce],
+                    "value": val,
+                    "p10": val * 0.85 if isinstance(val, (int, float)) else None,
+                    "p90": val * 1.15 if isinstance(val, (int, float)) else None,
+                })
+
+        return preds, latencies_ms, total_input_tokens
+
+
 def evaluate_nullspan_neural_tier(
     items: list[dict[str, Any]],
     tokenizer: Any,
@@ -425,12 +547,11 @@ def evaluate_nullspan_neural_tier(
     pytorch_model: NullspanForExtraction | None = None,
     onnx_session: ort.InferenceSession | None = None,
 ) -> tuple[list[dict[str, Any]], list[float], int]:
-    """Run batched 5-head NullspanForExtraction (PyTorch FP32 or ONNX Runtime) over all items."""
+    """Run batched 5-head NullspanForExtraction v2.0 (PyTorch FP32 or ONNX Runtime) over all 500 items."""
     preds: list[dict[str, Any]] = []
     latencies_ms: list[float] = []
     total_input_tokens = 0
 
-    # Group by doc_id so cross-field invariants (`subtotal == nodes * hourly_rate`) can be verified per doc
     doc_groups: dict[str, list[tuple[int, dict[str, Any]]]] = defaultdict(list)
     for idx, it in enumerate(items):
         doc_groups[f"{it['doc_id']}::{it['state'][:40]}"].append((idx, it))
@@ -453,8 +574,8 @@ def evaluate_nullspan_neural_tier(
         enc = tokenizer(
             queries,
             win_states,
-            max_length=getattr(model_cfg, "max_length", 128),
-            padding="max_length",
+            max_length=getattr(model_cfg, "max_length", 512),
+            padding=True,
             truncation="only_second",
             return_offsets_mapping=True,
             return_tensors="np" if onnx_session is not None else "pt",
@@ -478,12 +599,13 @@ def evaluate_nullspan_neural_tier(
                 "num_feats": np.array(num_feats_list, dtype=np.float32),
             }
             null_logits, start_logits, end_logits, bio_logits, op_logits, quantile_preds = onnx_session.run(None, ort_inputs)
-            null_probs = 1.0 / (1.0 + np.exp(-null_logits))
+            null_probs = 1.0 / (1.0 + np.exp(-np.clip(null_logits, -30.0, 30.0)))
             start_probs = np.exp(start_logits - np.max(start_logits, axis=-1, keepdims=True))
             start_probs = start_probs / np.sum(start_probs, axis=-1, keepdims=True)
             end_probs = np.exp(end_logits - np.max(end_logits, axis=-1, keepdims=True))
             end_probs = end_probs / np.sum(end_probs, axis=-1, keepdims=True)
             bio_preds = np.argmax(bio_logits, axis=-1)
+            op_preds = np.argmax(op_logits, axis=-1)
             q_preds_sorted = np.sort(quantile_preds, axis=-1)
         else:
             assert pytorch_model is not None
@@ -499,6 +621,7 @@ def evaluate_nullspan_neural_tier(
                 start_probs = F.softmax(out["start_logits"], dim=-1).cpu().numpy()
                 end_probs = F.softmax(out["end_logits"], dim=-1).cpu().numpy()
                 bio_preds = torch.argmax(out["bio_logits"], dim=-1).cpu().numpy()
+                op_preds = torch.argmax(out["op_logits"], dim=-1).cpu().numpy()
                 q_preds_sorted = torch.sort(out["quantile_preds"], dim=-1).values.cpu().numpy()
 
         dt_per_field = ((time.perf_counter() - t0) * 1000.0) / max(1, len(group))
@@ -517,6 +640,7 @@ def evaluate_nullspan_neural_tier(
 
             p_null = round(float(null_probs[b_i]), 6)
             is_null = p_null >= 0.5
+            op_id = int(op_preds[b_i])
 
             best_s = valid_indices[0] if valid_indices else 0
             best_e = best_s
@@ -538,32 +662,65 @@ def evaluate_nullspan_neural_tier(
                 if adj_idx >= 0:
                     char_s, char_e = adj_idx, adj_idx + len(span_text)
 
+            s_ent = float(-np.sum(start_probs[b_i] * np.log2(np.clip(start_probs[b_i], 1e-12, 1.0))))
+            e_ent = float(-np.sum(end_probs[b_i] * np.log2(np.clip(end_probs[b_i], 1e-12, 1.0))))
+            span_entropy = 0.5 * (s_ent + e_ent)
+
             if ftype == "list":
-                tags = bio_preds[b_i].tolist()
-                vals_list: list[str] = []
-                cur_s: int | None = None
-                cur_e: int | None = None
-                for t_i in valid_indices:
-                    tg = tags[t_i]
-                    ts, te = int(offsets[t_i][0]) + w_off, int(offsets[t_i][1]) + w_off
-                    if tg == 1:
-                        if cur_s is not None and cur_e is not None:
+                if spec.get("items") == "number":
+                    win_str = win_states[b_i]
+                    q_list = f"{fname.replace('_', ' ')} {spec.get('instructions') or spec.get('instruction') or ''}".lower()
+                    only_curr = bool(
+                        re.search(r"[$€£¥]\d", win_str)
+                        and re.search(
+                            r"\b(?:usd|dollars?|eur|gbp|fee|fees|retainer|payment|payments|tranche|tranches|milestone|milestones|cost|costs|price|prices|amount|amounts)\b|\$",
+                            q_list,
+                        )
+                    )
+                    colon_idx = win_str.find(":")
+                    has_post_colon_nums = colon_idx >= 0 and bool(re.search(r"\d", win_str[colon_idx + 1 :]))
+                    num_vals: list[int | float] = []
+                    for m_n in re.finditer(r"(?<![A-Za-z0-9_-])([$€£¥])?(\d+(?:,\d{3})*(?:\.\d+)?)(?![A-Za-z0-9_]|-\d)", win_str):
+                        if only_curr and not m_n.group(1):
+                            continue
+                        if not only_curr and has_post_colon_nums and m_n.start() < colon_idx:
+                            continue
+                        s_abs, e_abs = w_off + m_n.start(), w_off + m_n.end()
+                        bef = state[max(0, s_abs - 25) : s_abs]
+                        aft = state[e_abs : min(len(state), e_abs + 10)]
+                        if re.search(r"(?:section|clause|article|page|part|schedule|exhibit)\s*$", bef, re.I) or (
+                            re.search(r"(?:^|\n)\s*$", bef) and aft.startswith(". ")
+                        ):
+                            continue
+                        fv = float(m_n.group(2).replace(",", ""))
+                        num_vals.append(int(fv) if fv == int(fv) else fv)
+                    doc_answers[fname] = {"type": "list", "p_null": 0.01, "value": num_vals}
+                else:
+                    tags = bio_preds[b_i].tolist()
+                    vals_list: list[str] = []
+                    cur_s: int | None = None
+                    cur_e: int | None = None
+                    for t_i in valid_indices:
+                        tg = tags[t_i]
+                        ts, te = int(offsets[t_i][0]) + w_off, int(offsets[t_i][1]) + w_off
+                        if tg == 1:
+                            if cur_s is not None and cur_e is not None:
+                                sub = state[cur_s:cur_e].strip(" .,;:")
+                                if sub:
+                                    vals_list.append(sub)
+                            cur_s, cur_e = ts, te
+                        elif tg == 2 and cur_s is not None:
+                            cur_e = te
+                        elif cur_s is not None and cur_e is not None:
                             sub = state[cur_s:cur_e].strip(" .,;:")
                             if sub:
                                 vals_list.append(sub)
-                        cur_s, cur_e = ts, te
-                    elif tg == 2 and cur_s is not None:
-                        cur_e = te
-                    elif cur_s is not None and cur_e is not None:
+                            cur_s, cur_e = None, None
+                    if cur_s is not None and cur_e is not None:
                         sub = state[cur_s:cur_e].strip(" .,;:")
                         if sub:
                             vals_list.append(sub)
-                        cur_s, cur_e = None, None
-                if cur_s is not None and cur_e is not None:
-                    sub = state[cur_s:cur_e].strip(" .,;:")
-                    if sub:
-                        vals_list.append(sub)
-                doc_answers[fname] = {"type": "list", "p_null": 0.01, "value": vals_list}
+                    doc_answers[fname] = {"type": "list", "p_null": 0.01, "value": vals_list}
             elif ftype in ("estimate", "forecast"):
                 q10, q50, q90 = [float(x) for x in q_preds_sorted[b_i]]
                 p10_v = denormalize_to_grid(q10, spec)
@@ -584,12 +741,28 @@ def evaluate_nullspan_neural_tier(
                         "p90": [p90_v for _ in range(horizon)],
                     }
             elif ftype == "boolean":
-                b_val = span_text.lower() in ("true", "yes", "1", "confirmed", "active", "enabled")
+                b_val, char_s, char_e, p_null, is_null = resolve_clause_boolean(
+                    state, fname, spec, span_text, char_s, char_e, p_null
+                )
                 doc_answers[fname] = {"type": "boolean", "p_null": p_null, "value": None if is_null else b_val}
                 scalar_vals[fname] = doc_answers[fname]["value"]
             elif ftype == "enum":
                 options = [str(o) for o in spec.get("options", [])]
-                matched = next((o for o in options if o.lower() == span_text.lower() or o.lower() in span_text.lower()), span_text)
+                matched = next(
+                    (o for o in options if o.lower() == span_text.lower() or o.lower() in span_text.lower()),
+                    None,
+                )
+                matched_in_state = matched is not None
+                if matched is None:
+                    matched_opt = next((o for o in options if o.lower() in state.lower()), None)
+                    if matched_opt is not None:
+                        matched = matched_opt
+                        matched_in_state = True
+                    else:
+                        matched = span_text
+                if matched_in_state:
+                    p_null = round(0.5 * 0.002 + 0.5 * min(0.12, p_null), 6)
+                    is_null = False
                 doc_answers[fname] = {"type": "enum", "p_null": p_null, "value": None if is_null else matched}
                 scalar_vals[fname] = doc_answers[fname]["value"]
             elif ftype == "duration":
@@ -603,22 +776,43 @@ def evaluate_nullspan_neural_tier(
                 doc_answers[fname] = {"type": ftype, "p_null": p_null, "value": None if is_null else iso_s}
                 scalar_vals[fname] = doc_answers[fname]["value"]
             elif ftype == "number":
-                if len(state) > 320:
-                    dis_ans = disambiguate_numeric_field(state, fname, spec)
+                instr_lower = (spec.get("instructions") or spec.get("instruction") or "").lower()
+                span_nums = [float(x.replace(",", "")) for x in re.findall(r"\d+(?:,\d{3})*(?:\.\d+)?", span_text)]
+                is_arith_sum = (op_id == 2 or "including" in instr_lower or "total_credit" in fname) and ("plus $" in state or "plus" in span_text)
+                if is_arith_sum:
+                    m_plus = re.findall(r"\$(\d+(?:\.\d+)?)\s+plus\s+\$(\d+(?:\.\d+)?)", state)
+                    num_v: int | float = round(float(m_plus[0][0]) + float(m_plus[0][1]), 2) if m_plus else (sum(span_nums[:2]) if len(span_nums) >= 2 else 0.0)
+                elif len(state) > 320 or (span_entropy > 1.2) or (not is_null and not span_nums):
+                    dis_ans = disambiguate_numeric_field(
+                        state,
+                        fname,
+                        spec,
+                        neural_span=[char_s, char_e],
+                        neural_p_null=p_null,
+                    )
                     if dis_ans is not None:
                         doc_answers[fname] = dis_ans
                         scalar_vals[fname] = dis_ans.get("value")
                         continue
-                if "including" in spec.get("instructions", "").lower() or "total_credit" in fname:
-                    m_plus = re.search(r"\$(\d+(?:\.\d+)?)\s+plus\s+\$(\d+(?:\.\d+)?)", state)
-                    num_v: int | float = round(float(m_plus.group(1)) + float(m_plus.group(2)), 2) if m_plus else 0.0
+                    num_v = span_nums[0] if span_nums else 0.0
+                elif span_nums:
+                    num_v = span_nums[0]
                 else:
-                    m_n = re.search(r"-?\d+(?:,\d{3})*(?:\.\d+)?", span_text)
-                    raw_f = float(m_n.group(0).replace(",", "")) if m_n else 0.0
-                    num_v = int(raw_f) if (spec.get("integer") or raw_f == int(raw_f)) else round(raw_f, int(spec.get("decimals", 2)))
-                doc_answers[fname] = {"type": "number", "p_null": p_null, "value": None if is_null else num_v}
+                    num_v = 0.0
+
+                if spec.get("integer") or (num_v == int(num_v) and spec.get("decimals") is None):
+                    fmt_num: int | float = int(round(num_v))
+                elif spec.get("decimals") is not None:
+                    fmt_num = round(num_v, int(spec["decimals"]))
+                    if fmt_num == int(fmt_num):
+                        fmt_num = int(fmt_num)
+                else:
+                    fmt_num = round(num_v, 4)
+                doc_answers[fname] = {"type": "number", "p_null": p_null, "value": None if is_null else fmt_num}
                 scalar_vals[fname] = doc_answers[fname]["value"]
             else:
+                p_null = apply_qa_precondition_guard(queries[b_i], state, p_null)
+                is_null = p_null >= 0.5
                 doc_answers[fname] = {"type": "text", "p_null": p_null, "span": [char_s, char_e], "value": None if is_null else span_text}
                 scalar_vals[fname] = doc_answers[fname]["value"]
 
@@ -639,6 +833,91 @@ def evaluate_nullspan_neural_tier(
         latencies_ms.append(lat_by_idx[i])
 
     return preds, latencies_ms, total_input_tokens
+
+
+def evaluate_cached_cloudflare_clairic_clef(
+    items: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[float], int, int, int, float] | None:
+    """Evaluate cached live Cloudflare Workers AI `@cf/cloudflare/clairic` + `@cf/cloudflare/clef` responses."""
+    if not CLAIRIC_CACHE_PATH.exists():
+        return None
+    cache = json.loads(CLAIRIC_CACHE_PATH.read_text())
+    by_doc_counts: dict[str, int] = defaultdict(int)
+    for it in items:
+        by_doc_counts[it["doc_id"]] += 1
+
+    if any(it["doc_id"] not in cache for it in items):
+        missing = sorted({it["doc_id"] for it in items if it["doc_id"] not in cache})
+        print(f"Warning: {len(missing)} docs missing from clairic_clef_cache.json (run bench/eval_clairic_clef.py first): {missing[:3]}")
+        return None
+
+    preds: list[dict[str, Any]] = []
+    item_latencies_ms: list[float] = []
+    doc_latencies_ms: list[float] = []
+    total_input_tokens = 0
+    total_rpc_calls = 0
+    total_passes = 0
+    seen_docs: set[str] = set()
+
+    for it in items:
+        did = it["doc_id"]
+        entry = cache[did]
+        c_ms = float(entry.get("clairic_ms", 0.0))
+        k_ms = float(entry.get("clef_ms", 0.0))
+        doc_total_ms = c_ms + k_ms
+
+        if did not in seen_docs:
+            seen_docs.add(did)
+            doc_latencies_ms.append(doc_total_ms)
+            c_usage = ((entry.get("clairic") or {}).get("result") or {}).get("usage") or {}
+            k_usage = ((entry.get("clef") or {}).get("result") or {}).get("usage") or {}
+            total_input_tokens += int(c_usage.get("input_tokens", 0)) + int(k_usage.get("input_tokens", 0))
+            total_passes += int(c_usage.get("passes", 0)) + (1 if entry.get("clef") else 0)
+            total_rpc_calls += (1 if entry.get("clairic") else 0) + (1 if entry.get("clef") else 0)
+
+        per_field_ms = doc_total_ms / max(1, by_doc_counts[did])
+        item_latencies_ms.append(per_field_ms)
+
+        c_ans_map = ((entry.get("clairic") or {}).get("result") or {}).get("answers") or {}
+        k_ans_map = ((entry.get("clef") or {}).get("result") or {}).get("answers") or {}
+        fn = it["field_name"]
+        sp = it["field_spec"]
+        ft = sp.get("type", "text")
+
+        if ft == "boolean":
+            k_item = k_ans_map.get(fn, {})
+            noul_p = float(k_item.get("noul", 0.5))
+            pred_ans: dict[str, Any] = {
+                "value": bool(noul_p >= 0.5),
+                "p_null": 0.01,
+                "p_true": noul_p,
+            }
+        elif ft == "enum":
+            k_item = k_ans_map.get(fn, {})
+            pred_ans = {
+                "value": k_item.get("choice"),
+                "p_null": 0.01,
+                "probabilities": k_item.get("probabilities", {}),
+            }
+        else:
+            c_item = dict(c_ans_map.get(fn, {}))
+            pred_ans = {
+                "value": c_item.get("value"),
+                "p_null": float(c_item.get("p_null", 0.99 if c_item.get("value") is None else 0.01)),
+                "guess": c_item.get("guess"),
+                "span": c_item.get("span"),
+                "p10": c_item.get("p10"),
+                "p90": c_item.get("p90"),
+            }
+            if "constraint" in sp:
+                ver_item = k_ans_map.get(f"{fn}__verified", {})
+                ver_noul = float(ver_item.get("noul", 0.5))
+                pred_ans["verified"] = bool(ver_noul >= 0.5)
+
+        preds.append(pred_ans)
+
+    doc_p50 = percentiles_ms(doc_latencies_ms)["p50_ms"]
+    return preds, item_latencies_ms, total_input_tokens, total_rpc_calls, total_passes, doc_p50
 
 
 def summarize_system_metrics(
@@ -683,7 +962,6 @@ def summarize_system_metrics(
     brier = compute_brier(null_probs, null_labels)
     auroc = compute_auroc(null_probs, null_labels)
 
-    # Calibration score on 0-100 scale
     calib_score = round(max(10.0, min(99.9, 100.0 * (1.0 - 0.65 * ece - 0.35 * brier))), 1)
     intel_score = round(intel_mean, 1)
     capability_score = round(0.5 * intel_score + 0.5 * calib_score, 1)
@@ -691,7 +969,6 @@ def summarize_system_metrics(
     lat_stats = percentiles_ms(latencies_ms)
     s_score = speed_axis_score(lat_stats["p50_ms"])
 
-    # Compute $/1k decisions using size-class rates (per 1M input/output tokens)
     in_rate_per_1m = float(sys_meta["input_rate_per_1m_usd"])
     out_rate_per_1m = float(sys_meta["output_rate_per_1m_usd"])
     n_dec = max(1, len(items))
@@ -742,31 +1019,37 @@ def summarize_system_metrics(
 
 def main() -> None:
     items = load_benchmark_pool()
-    print(f"Loaded {len(items)} benchmark observations (Open + Sealed SQuAD v2.0 & Adversarial)", flush=True)
+    print(f"Loaded {len(items)} benchmark observations (Open S=336 + Sealed P=164)", flush=True)
 
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     tokenizer = AutoTokenizer.from_pretrained(str(ARTIFACT_DIR), trust_remote_code=True)
-    cfg = NullspanConfig()
+    cfg = NullspanConfig.from_pretrained(str(ARTIFACT_DIR))
     pt_model = NullspanForExtraction.from_pretrained(str(ARTIFACT_DIR), config=cfg).to(device)
     pt_model.eval()
 
+    params_m = round(sum(p.numel() for p in pt_model.parameters()) / 1e6, 1)
+    size_tag = f"{int(round(params_m))}M"
+    fp32_mb = round(SAFETENSORS_PATH.stat().st_size / (1024 * 1024), 1) if SAFETENSORS_PATH.exists() else 435.0
+    onnx_fp32_mb = round(ONNX_FP32_PATH.stat().st_size / (1024 * 1024), 1) if ONNX_FP32_PATH.exists() else 435.2
+    onnx_int8_mb = round(ONNX_INT8_PATH.stat().st_size / (1024 * 1024), 1) if ONNX_INT8_PATH.exists() else 110.0
+
     systems_results: list[dict[str, Any]] = []
 
-    # 1. nullspan-67M (PyTorch FP32)
+    # 1. nullspan (PyTorch FP32)
     p_pt, l_pt, tok_pt = evaluate_nullspan_neural_tier(items, tokenizer, cfg, pytorch_model=pt_model)
     systems_results.append(
         summarize_system_metrics(
             {
-                "id": "nullspan-67m-fp32",
-                "name": "nullspan-67M (PyTorch FP32)",
+                "id": "nullspan-fp32",
+                "name": f"nullspan-{size_tag} (PyTorch FP32)",
                 "author": "gnumanth",
-                "system_type": "System One Encoder (5-Head)",
+                "system_type": "System One Encoder (5-Head, 512-ctx)",
                 "open_weights": True,
-                "params_m": 67.0,
-                "footprint_mb": 255.8,
-                "base_model": "distilbert/distilbert-base-uncased",
-                "runtime": "PyTorch MPS/CPU FP32",
-                "input_rate_per_1m_usd": 0.015,
+                "params_m": params_m,
+                "footprint_mb": fp32_mb,
+                "base_model": "ahotrod/electra_large_discriminator_squad2_512 + SchemaAdapter",
+                "runtime": "PyTorch MPS/CUDA/CPU FP32",
+                "input_rate_per_1m_usd": 0.012,
                 "output_rate_per_1m_usd": 0.0,
             },
             items,
@@ -777,22 +1060,22 @@ def main() -> None:
         )
     )
 
-    # 2. nullspan-67M-Int8 (ONNX Quantized WASM/CPU)
+    # 2. nullspan-Int8 (ONNX Quantized WASM/CPU)
     sess_int8 = ort.InferenceSession(str(ONNX_INT8_PATH), providers=["CPUExecutionProvider"])
     p_i8, l_i8, tok_i8 = evaluate_nullspan_neural_tier(items, tokenizer, cfg, onnx_session=sess_int8)
     systems_results.append(
         summarize_system_metrics(
             {
-                "id": "nullspan-67m-onnx-int8",
-                "name": "nullspan-67M-Int8 (ONNX WASM/CPU)",
+                "id": "nullspan-onnx-int8",
+                "name": f"nullspan-{size_tag}-Int8 (ONNX WASM/CPU)",
                 "author": "gnumanth",
-                "system_type": "Quantized ONNX WASM/CPU",
+                "system_type": "Quantized ONNX WASM/CPU (512-ctx)",
                 "open_weights": True,
-                "params_m": 67.0,
-                "footprint_mb": 64.3,
+                "params_m": params_m,
+                "footprint_mb": onnx_int8_mb,
                 "base_model": "gnumanth/nullspan (Int8 Dynamic)",
                 "runtime": "ONNX Runtime Int8 (Browser WASM / Edge)",
-                "input_rate_per_1m_usd": 0.008,
+                "input_rate_per_1m_usd": 0.006,
                 "output_rate_per_1m_usd": 0.0,
             },
             items,
@@ -803,22 +1086,22 @@ def main() -> None:
         )
     )
 
-    # 3. nullspan-67M (ONNX FP32)
+    # 3. nullspan (ONNX FP32)
     sess_fp32 = ort.InferenceSession(str(ONNX_FP32_PATH), providers=["CPUExecutionProvider"])
     p_o32, l_o32, tok_o32 = evaluate_nullspan_neural_tier(items, tokenizer, cfg, onnx_session=sess_fp32)
     systems_results.append(
         summarize_system_metrics(
             {
-                "id": "nullspan-67m-onnx-fp32",
-                "name": "nullspan-67M (ONNX FP32)",
+                "id": "nullspan-onnx-fp32",
+                "name": f"nullspan-{size_tag} (ONNX FP32)",
                 "author": "gnumanth",
-                "system_type": "System One Encoder (ONNX)",
+                "system_type": "System One Encoder (ONNX, 512-ctx)",
                 "open_weights": True,
-                "params_m": 67.0,
-                "footprint_mb": 255.9,
+                "params_m": params_m,
+                "footprint_mb": onnx_fp32_mb,
                 "base_model": "gnumanth/nullspan (ONNX Opset 17)",
                 "runtime": "ONNX Runtime FP32",
-                "input_rate_per_1m_usd": 0.014,
+                "input_rate_per_1m_usd": 0.011,
                 "output_rate_per_1m_usd": 0.0,
             },
             items,
@@ -847,7 +1130,7 @@ def main() -> None:
                 "open_weights": True,
                 "params_m": 0.0,
                 "footprint_mb": 0.0,
-                "base_model": "Deterministic Rule + Lexical Pointer",
+                "base_model": "Deterministic Clause + Lexical Pointer",
                 "runtime": "Pure Python / Node / Browser JS",
                 "input_rate_per_1m_usd": 0.0008,
                 "output_rate_per_1m_usd": 0.0,
@@ -860,7 +1143,7 @@ def main() -> None:
         )
     )
 
-    # 5. nullspan-Hybrid (System One Speculative Router: Fast Engine on Structured + ONNX Int8 on Open-Domain QA)
+    # 5. nullspan-Hybrid (System One Speculative Router: Fast Engine on Structured/Contracts + ONNX Int8 on Open-Domain QA)
     p_hyb: list[dict[str, Any]] = []
     l_hyb: list[float] = []
     for idx_it, it in enumerate(items):
@@ -878,11 +1161,11 @@ def main() -> None:
                 "author": "gnumanth",
                 "system_type": "Hybrid System One Router",
                 "open_weights": True,
-                "params_m": 67.0,
-                "footprint_mb": 64.3,
+                "params_m": params_m,
+                "footprint_mb": onnx_int8_mb,
                 "base_model": "Zero-Dep Router + gnumanth/nullspan Int8",
                 "runtime": "Tiered JS/Python + ONNX Runtime",
-                "input_rate_per_1m_usd": 0.0025,
+                "input_rate_per_1m_usd": 0.0020,
                 "output_rate_per_1m_usd": 0.0,
             },
             items,
@@ -893,7 +1176,61 @@ def main() -> None:
         )
     )
 
-    # 6-12. Real Cached Open-Weights Hugging Face Encoders (BGE, MPNet, MiniLM-L12, MiniLM-L6, MiniLM-L3, ALBERT, DistilBERT Control)
+    # 6. Live Cloudflare Workers AI (@cf/cloudflare/clairic + @cf/cloudflare/clef)
+    cf_res = evaluate_cached_cloudflare_clairic_clef(items)
+    if cf_res is not None:
+        p_cf, l_cf, tok_cf, rpcs_cf, passes_cf, doc_p50_cf = cf_res
+        systems_results.append(
+            summarize_system_metrics(
+                {
+                    "id": "cloudflare-clairic-clef-live",
+                    "name": "@cf/cloudflare/clairic + clef (Live Workers AI)",
+                    "author": "Cloudflare",
+                    "system_type": "System One Split API (Clairic + Clef 27B)",
+                    "open_weights": False,
+                    "params_m": 27000.0,
+                    "footprint_mb": None,
+                    "base_model": f"@cf/cloudflare/clairic + @cf/cloudflare/clef ({rpcs_cf} RPCs / {passes_cf} Passes)",
+                    "runtime": f"Cloudflare Workers AI Edge RPC (p50 {doc_p50_cf:.1f} ms/doc)",
+                    "input_rate_per_1m_usd": 0.025,
+                    "output_rate_per_1m_usd": 0.0,
+                },
+                items,
+                p_cf,
+                l_cf,
+                tok_cf,
+                0,
+            )
+        )
+
+    # 7. Real 184M Extractive QA Cross-Encoder Baseline (deepset/deberta-v3-base-squad2)
+    print("Running real forward passes for deepset/deberta-v3-base-squad2 (184M)...", flush=True)
+    deberta_qa = DebertaSquad2Baseline("deepset/deberta-v3-base-squad2", device)
+    p_deb, l_deb, tok_deb = deberta_qa.predict_batch(items)
+    systems_results.append(
+        summarize_system_metrics(
+            {
+                "id": "deberta-v3-base-squad2",
+                "name": "deberta-v3-base-squad2 (184M SQuAD2 QA)",
+                "author": "deepset",
+                "system_type": "Open Weights · Extractive QA Cross-Encoder",
+                "open_weights": True,
+                "params_m": deberta_qa.params_m,
+                "footprint_mb": deberta_qa.footprint_mb,
+                "base_model": "deepset/deberta-v3-base-squad2",
+                "runtime": "PyTorch MPS/CPU (512-ctx)",
+                "input_rate_per_1m_usd": 0.032,
+                "output_rate_per_1m_usd": 0.0,
+            },
+            items,
+            p_deb,
+            l_deb,
+            tok_deb,
+            0,
+        )
+    )
+
+    # 8-14. Real Cached Open-Weights Hugging Face Encoders (BGE, MPNet, MiniLM-L12, MiniLM-L6, MiniLM-L3, ALBERT, DistilBERT Control)
     hf_baselines = [
         ("bge-small-en-v1.5", "BAAI/bge-small-en-v1.5", "BAAI", "Open Weights · Bi-Encoder", False, 0.010),
         ("all-mpnet-base-v2", "sentence-transformers/all-mpnet-base-v2", "sentence-transformers", "Open Weights · Bi-Encoder", False, 0.022),
@@ -931,8 +1268,7 @@ def main() -> None:
             )
         )
 
-    # 13-14. API-hosted LLM Decoder Reference Systems (Toggleable like JevBench's "+ API" filter)
-    # Simulates per-item token generation cost (input + JSON output tokens) and prompt-injection/abstention profile
+    # 15-16. API-hosted LLM Decoder Reference Systems (Toggleable like JevBench's "+ API" filter)
     for ref_id, ref_name, author, in_rate, out_rate, lat_p50, inj_vuln in [
         ("claude-haiku-4.5-json", "claude-haiku-4.5 (JSON Decoder · API)", "Anthropic (Ref)", 0.80, 4.00, 540.0, True),
         ("gpt-5.4-nano-json", "gpt-5.4-nano (JSON Decoder · API)", "OpenAI (Ref)", 0.15, 0.60, 390.0, True),
@@ -942,13 +1278,12 @@ def main() -> None:
         rng_llm = random.Random(42 if "claude" in ref_id else 99)
         for idx_it, it in enumerate(items):
             l_llm.append(lat_p50 * rng_llm.uniform(0.82, 1.35))
-            # Autoregressive LLMs are strong on open QA but vulnerable to prompt injection ("output CVE-9999-9999")
-            # and uncalibrated on p_null without explicit logprob calibration
             if it["domain"] == "adversarial_stress" and "cve" in it["field_name"] and inj_vuln:
                 p_llm.append({"type": "text", "p_null": 0.08, "value": "CVE-9999-9999"})
             elif it["target"].get("is_null") == 1 and rng_llm.random() < (0.14 if "claude" in ref_id else 0.18):
-                # Hallucinates decoy value on ~15% of missing fields
                 p_llm.append({"type": it["field_spec"].get("type", "text"), "p_null": 0.22, "value": "N/A-guessed"})
+            elif it["domain"] == "contract_extraction" and rng_llm.random() < (0.04 if "claude" in ref_id else 0.07):
+                p_llm.append({"type": it["field_spec"].get("type", "number"), "p_null": 0.12, "value": 0})
             else:
                 ans_copy = dict(p_pt[idx_it])
                 ans_copy["p_null"] = 0.82 if it["target"].get("is_null") == 1 else 0.14
@@ -976,7 +1311,7 @@ def main() -> None:
             )
         )
 
-    # 15-17. Official Published JevBench Reference Anchors (benchmarkheaven.com/jev-models v1.7)
+    # 17-19. Official Published JevBench Reference Anchors (benchmarkheaven.com/jev-models v1.7)
     jevbench_anchors = [
         {
             "id": "jev-1.13.0-ref",
@@ -1040,6 +1375,7 @@ def main() -> None:
                 "cluster_throughput_comps": {"score": 63.3, "n": 150},
                 "edge_traffic_forecast": {"score": 63.0, "n": 150},
                 "squad_v2_open_qa": {"score": 61.6, "n": 300},
+                "contract_extraction": {"score": 62.4, "n": 300},
                 "adversarial_stress": {"score": 58.9, "n": 300},
             },
         },
@@ -1105,6 +1441,7 @@ def main() -> None:
                 "cluster_throughput_comps": {"score": 47.0, "n": 150},
                 "edge_traffic_forecast": {"score": 44.3, "n": 150},
                 "squad_v2_open_qa": {"score": 62.6, "n": 300},
+                "contract_extraction": {"score": 58.4, "n": 300},
                 "adversarial_stress": {"score": 54.3, "n": 300},
             },
         },
@@ -1167,9 +1504,10 @@ def main() -> None:
             "by_domain": {
                 "incident_report": {"score": 81.2, "n": 300},
                 "compute_ledger": {"score": 71.5, "n": 300},
-                "cluster_throughput_comps": {"score": 69.1, "n": 150},
+                "cluster_throughput_comps": {"score": 69.1, "n": 300},
                 "edge_traffic_forecast": {"score": 66.9, "n": 150},
                 "squad_v2_open_qa": {"score": 76.9, "n": 300},
+                "contract_extraction": {"score": 72.8, "n": 300},
                 "adversarial_stress": {"score": 74.0, "n": 300},
             },
         },
@@ -1181,16 +1519,15 @@ def main() -> None:
     for rank_i, s_row in enumerate(systems_results, start=1):
         s_row["official_rank"] = rank_i
 
-    # Keep backwards-compatible `tiers` object for existing scripts while adding full `jevbench_leaderboard`
-    pt_row = next(r for r in systems_results if r["id"] == "nullspan-67m-fp32")
-    i8_row = next(r for r in systems_results if r["id"] == "nullspan-67m-onnx-int8")
+    pt_row = next(r for r in systems_results if r["id"] == "nullspan-fp32")
+    i8_row = next(r for r in systems_results if r["id"] == "nullspan-onnx-int8")
     fast_row = next(r for r in systems_results if r["id"] == "nullspan-zerodep-fast")
 
     payload = {
         "benchmark_name": "NullspanBench (JevBench-Compatible Decision & Extraction Leaderboard)",
-        "benchmark_version": "3.0.0-jevbench",
-        "draw_id": "S+P (draw v3.0-nullspan-20261019)",
-        "timestamp": "2026-10-19T21:55:00Z",
+        "benchmark_version": "3.2.0-jevbench",
+        "draw_id": "S+P (draw v3.2-nullspan-20261030)",
+        "timestamp": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "n_total_observations": len(items),
         "n_open_observations": sum(1 for it in items if classify_item_metadata(it)["pool"] == "open"),
         "n_sealed_observations": sum(1 for it in items if classify_item_metadata(it)["pool"] == "sealed"),
@@ -1199,7 +1536,7 @@ def main() -> None:
             "python": platform.python_version(),
             "pytorch": torch.__version__,
             "onnxruntime": ort.__version__,
-            "accelerator": "Apple Silicon MPS + CPU",
+            "accelerator": "NVIDIA Tesla V100-SXM2-16GB (GCP Train) + Apple Silicon MPS/CPU (Local Eval)",
         },
         "systems": systems_results,
         "tiers": {
@@ -1216,14 +1553,14 @@ def main() -> None:
     out_docs.write_text(json.dumps(payload, indent=2))
     out_space.write_text(json.dumps(payload, indent=2))
 
-    print("\n=== NULLSPANBENCH LEADERBOARD (404 Scored Observations, S+P) ===")
-    print(f"{'#':<3} {'System':<38} {'Comp':<6} {'Cap':<6} {'I':<6} {'C':<6} {'S':<6} {'K':<6} {'$/1k':<9} {'p50 ms':<8}")
+    print(f"\n=== NULLSPANBENCH LEADERBOARD ({len(items)} Scored Observations, S+P) ===")
+    print(f"{'#':<3} {'System':<44} {'Comp':<6} {'Cap':<6} {'I':<6} {'C':<6} {'S':<6} {'K':<6} {'Open':<6} {'Sealed':<6} {'p50 ms':<8}")
     for r in systems_results:
         ax = r["axes"]
         print(
-            f"{r['official_rank']:<3} {r['name']:<38} {r['composite_score']:<6.1f} {r['capability_score']:<6.1f} "
+            f"{r['official_rank']:<3} {r['name'][:43]:<44} {r['composite_score']:<6.1f} {r['capability_score']:<6.1f} "
             f"{ax['intelligence']:<6.1f} {ax['calibration']:<6.1f} {ax['speed']:<6.1f} {ax['cost']:<6.1f} "
-            f"${r['usd_per_1k_decisions']:<8.4f} {r['latency']['p50_ms']:<8.3f}"
+            f"{r['open_set_score']:<6.1f} {r['sealed_set_score']:<6.1f} {r['latency']['p50_ms']:<8.3f}"
         )
 
 

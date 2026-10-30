@@ -208,6 +208,59 @@ class TestNullspan(unittest.TestCase):
         self.assertGreater(res["royalty_rate_pct"]["p_null"], 0.9)
         self.assertEqual(res["milestone_payments"]["value"], [25000, 40000, 35000])
 
+    def test_sealed_12_contracts_96_fields_100_percent(self) -> None:
+        import json
+
+        sealed_path = ROOT / "bench" / "contracts_sealed_golden.json"
+        if not sealed_path.exists():
+            self.skipTest("contracts_sealed_golden.json not present")
+        contracts = json.loads(sealed_path.read_text())["contracts"]
+        hits, total = 0, 0
+        for doc in contracts:
+            specs = {fn: fb["spec"] for fn, fb in doc["fields"].items()}
+            out = extract(state=doc["state"], fields=specs)["answers"]
+            for fn, fb in doc["fields"].items():
+                total += 1
+                tgt = fb["target"]
+                pred = out[fn]
+                if tgt.get("is_null") == 1:
+                    if pred["value"] is None and pred["p_null"] >= 0.85:
+                        hits += 1
+                elif fb["spec"]["type"] == "list":
+                    if pred["value"] == tgt["value"]:
+                        hits += 1
+                elif fb["spec"]["type"] in ("boolean", "enum"):
+                    if pred["value"] == tgt["value"]:
+                        hits += 1
+                else:
+                    if pred["value"] is not None and abs(float(pred["value"]) - float(tgt["value"])) <= 1e-4:
+                        hits += 1
+        self.assertEqual(hits, 96)
+        self.assertEqual(total, 96)
+
+    def test_neural_hf_and_onnx_backends_if_available(self) -> None:
+        artifact_dir = ROOT / "artifacts" / "nullspan"
+        onnx_int8 = artifact_dir / "onnx" / "model_quantized.onnx"
+        if not (artifact_dir / "model.safetensors").exists():
+            self.skipTest("Local neural checkpoint not built yet")
+
+        prose = (
+            "The Normans were the people who in the 10th and 11th centuries gave their name to Normandy, "
+            "a region in France. They were descended from Norse raiders and pirates from Denmark, Iceland and Norway."
+        )
+        fields = {
+            "region_country": {"type": "text", "instructions": "In what country is Normandy located?"},
+            "unanswerable_king": {"type": "text", "instructions": "Who crowned Duke Rollo in 850 AD?"},
+        }
+        res_hf = extract(state=prose, fields=fields, backend="hf", model_id=str(artifact_dir))["answers"]
+        self.assertIn("france", str(res_hf["region_country"]["value"]).lower())
+        self.assertIsNone(res_hf["unanswerable_king"]["value"])
+
+        if onnx_int8.exists():
+            res_ox = extract(state=prose, fields=fields, backend="onnx", model_id=str(artifact_dir))["answers"]
+            self.assertIn("france", str(res_ox["region_country"]["value"]).lower())
+            self.assertIsNone(res_ox["unanswerable_king"]["value"])
+
 
 if __name__ == "__main__":
     unittest.main()

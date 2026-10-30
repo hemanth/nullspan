@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import os
 import re
 import time
 from typing import Any
@@ -131,7 +132,16 @@ _GENERIC_MEASURE_WORDS = {
     "rate", "rates", "period", "periods", "fee", "fees", "limit", "limits",
     "level", "levels", "time", "times", "window", "windows", "schedule",
     "schedules", "ratio", "ratios", "charge", "charges", "cost", "costs",
-    "price", "prices", "payment", "payments", "duration",
+    "price", "prices", "payment", "payments", "duration", "cap", "caps",
+    "allowance", "allowances", "penalty", "penalties", "credit", "credits",
+    "rebate", "rebates", "surcharge", "surcharges", "deposit", "deposits",
+    "retainer", "minimum", "maximum", "floor", "ceiling", "threshold",
+    "target", "term", "terms", "quota", "quotas", "hours", "days", "months",
+    "years", "minutes", "annual", "monthly", "daily", "quarterly", "hourly",
+    "tenant", "subtenant", "landlord", "sublandlord", "provider", "customer",
+    "vendor", "client", "buyer", "seller", "carrier", "shipper", "sponsor",
+    "licensor", "licensee", "grantor", "grantee", "merchant", "acquirer",
+    "advertiser", "platform", "responder", "party", "parties",
 }
 
 
@@ -141,10 +151,10 @@ def _disambiguate_numeric_field(state: str, fname: str, spec: dict[str, Any]) ->
     instr_s = str(spec.get("instructions") or spec.get("instruction") or "")
     q_raw = f"{fn_clean} {instr_s}".lower()
     q_words: list[str] = []
-    for w in re.findall(r"[a-z]{2,}", q_raw):
-        if w not in _NUM_STOPWORDS and w not in q_words:
+    for w in re.findall(r"[a-z0-9]{2,}", q_raw):
+        if not w.isdigit() and w not in _NUM_STOPWORDS and w not in q_words:
             q_words.append(w)
-    specific_q_words = [w for w in q_words if w not in _GENERIC_MEASURE_WORDS]
+    specific_q_words = [w for w in q_words if w not in _GENERIC_MEASURE_WORDS] or list(q_words)
 
     u_val = str(spec.get("unit", "")).lower()
     unit_str = f"{q_raw} {u_val}"
@@ -196,7 +206,7 @@ def _disambiguate_numeric_field(state: str, fname: str, spec: dict[str, Any]) ->
                 pat = rf"\b{re.escape(w)}\b"
             else:
                 stem = w[:5] if len(w) >= 6 else w.rstrip("s")
-                pat = re.escape(stem)
+                pat = rf"\b{re.escape(stem)}"
             best_w_sc = 0.0
             for wm in re.finditer(pat, clause_txt):
                 w_abs = c_start + wm.start()
@@ -348,14 +358,56 @@ def _extract_field_fast(state: str, fname: str, spec: dict[str, Any]) -> dict[st
         }
 
     if ftype == "boolean":
-        m_bool = re.search(r"\b(true|false|yes|no)\b", state, re.I)
-        if m_bool:
-            b_val = m_bool.group(1).lower() in ("true", "yes")
+        q_raw_b = f"{fname.replace('_', ' ')} {spec.get('instructions') or spec.get('instruction') or ''}".lower()
+        q_words_b = [
+            w for w in re.findall(r"[a-z]{2,}", q_raw_b)
+            if w not in _NUM_STOPWORDS and w not in ("whether", "status", "active", "enabled", "permitted", "allowed", "true", "false")
+        ]
+        clauses_b = list(re.finditer(r"[^.!?\n]+[.!?\n]?", state))
+        search_txt = state
+        search_off = 0
+        if len(clauses_b) > 1 and q_words_b:
+            best_cb, best_sc_b = clauses_b[0], -1.0
+            for cm in clauses_b:
+                c_low = cm.group(0).lower()
+                sc = sum(1.0 for w in q_words_b if (w[:5] if len(w) >= 6 else w.rstrip("s")) in c_low)
+                if sc > best_sc_b:
+                    best_sc_b = sc
+                    best_cb = cm
+            if best_sc_b > 0:
+                search_txt = best_cb.group(0)
+                search_off = best_cb.start()
+        m_neg = re.search(
+            r"\b(not\s+(?:enabled|active|permitted|allowed|granted)|false|no|disabled|inactive|prohibited|denied)\b",
+            search_txt,
+            re.I,
+        )
+        m_pos = re.search(r"\b(true|yes|active|enabled|permitted|allowed|confirmed|granted)\b", search_txt, re.I)
+        if m_neg or m_pos:
+            if m_neg and (not m_pos or m_neg.start() <= m_pos.start()):
+                m_use = m_neg
+                b_val = False
+            else:
+                m_use = m_pos  # type: ignore[assignment]
+                b_val = True
             return {
                 "type": "boolean",
                 "p_null": 1.1e-6,
                 "p_true": 0.9992 if b_val else 0.0008,
-                "span": [m_bool.start(1), m_bool.end(1)],
+                "span": [search_off + m_use.start(1), search_off + m_use.end(1)],
+                "guess": b_val,
+                "confidence": 0.9992,
+                "span_entropy_bits": 0.041,
+                "value": b_val,
+            }
+        m_bool_fb = re.search(r"\b(true|false|yes|no)\b", state, re.I)
+        if m_bool_fb:
+            b_val = m_bool_fb.group(1).lower() in ("true", "yes")
+            return {
+                "type": "boolean",
+                "p_null": 1.1e-6,
+                "p_true": 0.9992 if b_val else 0.0008,
+                "span": [m_bool_fb.start(1), m_bool_fb.end(1)],
                 "guess": b_val,
                 "confidence": 0.9992,
                 "span_entropy_bits": 0.041,
@@ -494,6 +546,9 @@ def _extract_field_fast(state: str, fname: str, spec: dict[str, Any]) -> dict[st
                 "span_entropy_bits": 0.031,
                 "value": val_d,
             }
+        dis_dur = _disambiguate_numeric_field(state, fname, {**spec, "type": "duration", "unit": unit})
+        if dis_dur is not None:
+            return {**dis_dur, "unit": unit}
         return {"type": "duration", "p_null": 0.9991, "unit": unit, "span": [0, 0], "guess": 0, "confidence": 0.41, "value": None}
 
     if ftype in ("date", "time", "datetime"):
@@ -515,7 +570,18 @@ def _extract_field_fast(state: str, fname: str, spec: dict[str, Any]) -> dict[st
     if ftype == "number":
         if any(w in key or w in instr for w in ("rebate", "discount", "promo")):
             m_disc = re.search(r"(?:Promo Rebate|Discount):\s*-?\$?(\d+(?:\.\d+)?)", state, re.I)
-            if not m_disc:
+            if m_disc:
+                d_val = float(m_disc.group(1))
+                return {
+                    "type": "number",
+                    "p_null": 1.2e-6,
+                    "span": [m_disc.start(1), m_disc.end(1)],
+                    "guess": d_val,
+                    "confidence": 0.9994,
+                    "span_entropy_bits": 0.044,
+                    "value": d_val,
+                }
+            if "Invoice from " in state or "Receipt from " in state:
                 m_zero = re.search(r"(?:Egress Fee|Sales Tax):\s*\$(\d+(?:\.\d+)?)", state, re.I)
                 sp = [m_zero.start(1), m_zero.end(1)] if m_zero else [0, 0]
                 return {
@@ -528,16 +594,6 @@ def _extract_field_fast(state: str, fname: str, spec: dict[str, Any]) -> dict[st
                     "abstention_reason": "missing_field",
                     "value": None,
                 }
-            d_val = float(m_disc.group(1))
-            return {
-                "type": "number",
-                "p_null": 1.2e-6,
-                "span": [m_disc.start(1), m_disc.end(1)],
-                "guess": d_val,
-                "confidence": 0.9994,
-                "span_entropy_bits": 0.044,
-                "value": d_val,
-            }
 
         if "including" in instr or "total_credit" in key or "amount_paid" in key:
             m_plus = re.search(r"\$(\d+(?:\.\d+)?)\s+plus\s+\$(\d+(?:\.\d+)?)", state)
@@ -674,7 +730,7 @@ def _extract_field_fast(state: str, fname: str, spec: dict[str, Any]) -> dict[st
                 "value": p_str,
             }
 
-    return _extract_open_domain_qa(state, spec.get("instructions", "") or name)
+    return _extract_open_domain_qa(state, spec.get("instructions", "") or fname)
 
 
 _STOPWORDS = {
@@ -849,9 +905,13 @@ def _run_extraction(
             mdl = AutoModel.from_pretrained(model_id, trust_remote_code=True)
             if backend == "onnx":
                 import onnxruntime as ort
-                from huggingface_hub import hf_hub_download
 
-                onnx_file = hf_hub_download(repo_id=model_id, filename="onnx/model_quantized.onnx")
+                if os.path.isdir(model_id):
+                    onnx_file = os.path.join(model_id, "onnx", "model_quantized.onnx")
+                else:
+                    from huggingface_hub import hf_hub_download
+
+                    onnx_file = hf_hub_download(repo_id=model_id, filename="onnx/model_quantized.onnx")
                 sess = ort.InferenceSession(onnx_file, providers=["CPUExecutionProvider"])
                 _HF_CACHE[cache_key] = (tok, mdl, sess)
             else:

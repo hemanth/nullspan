@@ -1,6 +1,6 @@
 {
   "name": "nullspan",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Calibrated p_null abstention, grounded [start, end] span extraction, arithmetic, and distribution forecasting in a single forward pass with zero output tokens.",
   "type": "module",
   "main": "./js/src/index.js",

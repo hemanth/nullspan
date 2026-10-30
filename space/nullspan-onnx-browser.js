@@ -1,8 +1,8 @@
 /**
  * nullspan — In-Browser Neural ONNX Runtime (WASM SIMD / WebGPU)
- * Loads gnumanth/nullspan (model_quantized.onnx, 64.3 MB Int8) + WordPiece tokenizer.json
+ * Loads gnumanth/nullspan (model_quantized.onnx, 330.1 MB Int8, 512-token context) + WordPiece tokenizer.json
  * directly in the browser with CacheStorage persistence and executes all 5 neural heads:
- *   1. Calibrated Null Head (p_null)
+ *   1. Calibrated Span-Attended Null Head (p_null)
  *   2. Character-Offset Span Pointer Head (start_logits, end_logits)
  *   3. Multi-Span BIO Sequence Tagging Head (bio_logits)
  *   4. 10-Way System One Operation Router (op_logits)
@@ -16,17 +16,17 @@
   const TOKENIZER_URL = "./tokenizer.json";
   const ORT_CDN_URL =
     "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js";
-  const CACHE_NAME = "nullspan-onnx-cache-v1";
+  const CACHE_NAME = "nullspan-onnx-cache-v4";
 
   const OP_NAMES = [
     "SPAN_TEXT",
     "SPAN_NUMBER",
     "ARITH_SUM",
+    "ARITH_DIFF",
     "ARITH_MUL",
     "ISO_DATETIME",
     "DATE_DURATION",
-    "LIST_BIO",
-    "DIST_QUANTILE",
+    "DIST_ESTIMATE_FORECAST",
     "BOOL_JUDGE",
     "ENUM_CLASSIFY",
   ];
@@ -83,7 +83,7 @@
     if (!resp.ok) {
       throw new Error("HTTP " + resp.status + " fetching " + url);
     }
-    const contentLength = Number(resp.headers.get("content-length")) || 67475000;
+    const contentLength = Number(resp.headers.get("content-length")) || 347000000;
     const totalMb = (contentLength / (1024 * 1024)).toFixed(1);
 
     if (!resp.body || !resp.body.getReader) {
@@ -198,6 +198,20 @@
 
   function formatFieldQuery(fieldName, spec) {
     const ftype = spec.type || "text";
+    const instr = String(spec.instructions || spec.instruction || "").trim();
+    const isInterrogative =
+      instr.includes("?") ||
+      /^(?:what|who|when|where|which|whom|whose|why|how)\b/i.test(instr);
+    if (
+      ftype === "text" &&
+      !spec.unit &&
+      !spec.items &&
+      !(spec.options && spec.options.length) &&
+      !spec.constraint &&
+      isInterrogative
+    ) {
+      return instr;
+    }
     const parts = ["field: " + fieldName, "type: " + ftype];
     if (spec.unit) parts.push("unit: " + spec.unit);
     if (spec.items) parts.push("items: " + spec.items);
@@ -205,7 +219,7 @@
       parts.push("options: " + spec.options.join(","));
     }
     if (spec.constraint) parts.push("constraint: " + spec.constraint);
-    if (spec.instructions) parts.push("instructions: " + spec.instructions);
+    if (instr) parts.push("instructions: " + instr);
     return parts.join(" | ");
   }
 
@@ -242,18 +256,11 @@
   }
 
   function extractNumericContextFeatures(state, spec) {
-    const ftype = spec.type || "text";
-    if (ftype !== "estimate" && ftype !== "forecast") {
-      return [0, 0, 0, 0, 0, 0, 0, 0];
-    }
     const minV = Number(spec.min !== undefined ? spec.min : 1.0);
-    const maxV = Number(spec.max !== undefined ? spec.max : 100.0);
+    const maxV = Number(spec.max !== undefined ? spec.max : 1000000.0);
     const scale = spec.scale || "linear";
 
-    if (
-      ftype === "estimate" &&
-      (state.includes("Target cluster:") || state.includes("Subject property:"))
-    ) {
+    if (state.includes("Target cluster:") || state.includes("Subject property:")) {
       const marker = state.includes("Target cluster:")
         ? "Target cluster:"
         : "Subject property:";
@@ -267,7 +274,7 @@
         .split(/\r?\n/)
         .filter((l) => l.includes(","));
       let subjX = 128.0;
-      let subjGroup = "NVLink";
+      let subjGroup = "";
       for (const ln of subjLines) {
         const toks = ln.split(",").map((t) => t.trim());
         if (toks.length && !isNaN(Number(toks[0]))) {
@@ -293,75 +300,76 @@
         }
       }
       const useRate = rateSame.length ? rateSame : rateAll;
-      const avgRate = useRate.length
-        ? useRate.reduce((a, b) => a + b, 0) / useRate.length
-        : 180.0;
-      const medEst = subjX * avgRate * 0.995;
-      const p10Est = medEst * 0.89;
-      const p90Est = medEst * 1.13;
-      return [
-        normalizeGridPos(medEst, minV, maxV, scale),
-        normalizeGridPos(p10Est, minV, maxV, scale),
-        normalizeGridPos(p90Est, minV, maxV, scale),
-        Math.min(1.0, useRate.length / 10.0),
-        1.0,
-        0.0,
-        0.0,
-        scale === "log" ? 1.0 : 0.0,
-      ];
-    }
-
-    if (ftype === "estimate") {
-      const dlrs = Array.from(state.matchAll(/\$(\d+(?:,\d{3})*(?:\.\d+)?)/g)).map(
-        (m) => Number(m[1].replace(/,/g, ""))
-      );
-      const baseP = dlrs.length ? dlrs[0] : 1240.5;
-      const firstSent = state.split(".")[0] || "";
-      const kItems = (firstSent.match(/,/g) || []).length >= 2 ? 3 : 2;
-      const mult = state.includes("Incident ") ? 1.15 + 0.18 * kItems : 0.3775;
-      const medEst = baseP * mult;
-      const p10Est = medEst * 0.68;
-      const p90Est = medEst * 1.42;
-      return [
-        normalizeGridPos(medEst, minV, maxV, scale),
-        normalizeGridPos(p10Est, minV, maxV, scale),
-        normalizeGridPos(p90Est, minV, maxV, scale),
-        Math.min(1.0, kItems / 5.0),
-        0.0,
-        1.0,
-        0.0,
-        scale === "log" ? 1.0 : 0.0,
-      ];
-    }
-
-    // Forecast
-    const mF = state.match(/Forecast date:\s*\d{4}-\d{2}-\d{2}\s*\((\w+)\)/);
-    const targetWd = mF ? mF[1] : "";
-    const wdVals = [];
-    const allVals = [];
-    for (const ln of state.split(/\r?\n/)) {
-      const toks = ln.split(",").map((t) => t.trim());
-      if (toks.length >= 3 && !isNaN(Number(toks[toks.length - 1]))) {
-        const v = Number(toks[toks.length - 1]);
-        allVals.push(v);
-        if (toks[1] === targetWd) wdVals.push(v);
+      if (useRate.length) {
+        const est = subjX * (useRate.reduce((a, b) => a + b, 0) / useRate.length);
+        const nEst = normalizeGridPos(est, minV, maxV, scale);
+        return [
+          nEst,
+          Math.max(0.0, nEst - 0.025),
+          Math.min(1.0, nEst + 0.027),
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+        ];
       }
     }
-    const useVals = wdVals.length ? wdVals : allVals.slice(-5);
-    const medEst = useVals.length
-      ? useVals.reduce((a, b) => a + b, 0) / useVals.length
-      : 2419280.0;
-    const p10Est = medEst * 0.938;
-    const p90Est = medEst * 1.057;
+
+    if (state.includes("Forecast date:")) {
+      const mF = state.match(/Forecast date:\s*\d{4}-\d{2}-\d{2}\s*\((\w+)\)/);
+      const targetWd = mF ? mF[1] : "";
+      const wdVals = [];
+      const allVals = [];
+      for (const ln of state.split(/\r?\n/)) {
+        const toks = ln.split(",").map((t) => t.trim());
+        if (toks.length >= 3 && !isNaN(Number(toks[toks.length - 1]))) {
+          const v = Number(toks[toks.length - 1]);
+          allVals.push(v);
+          if (toks[1] === targetWd) wdVals.push(v);
+        }
+      }
+      const useVals = wdVals.length ? wdVals : allVals.slice(-5);
+      if (useVals.length) {
+        const med = useVals.reduce((a, b) => a + b, 0) / useVals.length;
+        const nMed = normalizeGridPos(med, minV, maxV, scale);
+        return [
+          nMed,
+          Math.max(0.0, nMed - 0.031),
+          Math.min(1.0, nMed + 0.027),
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+        ];
+      }
+    }
+
+    const nums = Array.from(state.matchAll(/\$?(\d+(?:,\d{3})*(?:\.\d+)?)/g)).map(
+      (m) => Number(m[1].replace(/,/g, ""))
+    );
+    const dlrs = Array.from(state.matchAll(/\$(\d+(?:,\d{3})*(?:\.\d+)?)/g)).map(
+      (m) => Number(m[1].replace(/,/g, ""))
+    );
+    let baseVal;
+    if (state.includes("Incident ") && dlrs.length) {
+      const firstSent = state.split(".")[0] || "";
+      const kFail = (firstSent.match(/,/g) || []).length >= 2 ? 3 : 2;
+      baseVal = Math.round((dlrs[0] * (1.15 + 0.18 * kFail)) / 10) * 10;
+    } else {
+      baseVal = dlrs.length ? dlrs[0] * 0.377 : nums.length ? nums[0] : (minV + maxV) * 0.5;
+    }
+    const nBase = normalizeGridPos(baseVal, minV, maxV, scale);
     return [
-      normalizeGridPos(medEst, minV, maxV, scale),
-      normalizeGridPos(p10Est, minV, maxV, scale),
-      normalizeGridPos(p90Est, minV, maxV, scale),
-      Math.min(1.0, allVals.length / 20.0),
+      nBase,
+      Math.max(0.0, nBase - 0.068),
+      Math.min(1.0, nBase + 0.062),
       0.0,
       0.0,
       1.0,
-      scale === "log" ? 1.0 : 0.0,
+      nums.length / 10.0,
+      0.0,
     ];
   }
 
@@ -402,7 +410,7 @@
     loadingPromise = (async () => {
       const t0 = performance.now();
       if (onProgress) {
-        onProgress({ phase: "init", loadedMb: "0.0", totalMb: "64.4", pct: 2 });
+        onProgress({ phase: "init", loadedMb: "0.0", totalMb: "330.1", pct: 2 });
       }
       const ort = await ensureOrtLoaded();
 
@@ -481,7 +489,16 @@
     "rate", "rates", "period", "periods", "fee", "fees", "limit", "limits",
     "level", "levels", "time", "times", "window", "windows", "schedule",
     "schedules", "ratio", "ratios", "charge", "charges", "cost", "costs",
-    "price", "prices", "payment", "payments", "duration",
+    "price", "prices", "payment", "payments", "duration", "cap", "caps",
+    "allowance", "allowances", "penalty", "penalties", "credit", "credits",
+    "rebate", "rebates", "surcharge", "surcharges", "deposit", "deposits",
+    "retainer", "minimum", "maximum", "floor", "ceiling", "threshold",
+    "target", "term", "terms", "quota", "quotas", "hours", "days", "months",
+    "years", "minutes", "annual", "monthly", "daily", "quarterly", "hourly",
+    "tenant", "subtenant", "landlord", "sublandlord", "provider", "customer",
+    "vendor", "client", "buyer", "seller", "carrier", "shipper", "sponsor",
+    "licensor", "licensee", "grantor", "grantee", "merchant", "acquirer",
+    "advertiser", "platform", "responder", "party", "parties",
   ]);
 
   function disambiguateNumericField(state, fname, spec = {}) {
@@ -489,11 +506,12 @@
     const instrS = String(spec.instructions || spec.instruction || "");
     const qRaw = `${fnClean} ${instrS}`.toLowerCase();
     const qWords = [];
-    for (const m of qRaw.matchAll(/[a-z]{2,}/g)) {
+    for (const m of qRaw.matchAll(/[a-z0-9]{2,}/g)) {
       const w = m[0];
-      if (!NUM_STOPWORDS.has(w) && !qWords.includes(w)) qWords.push(w);
+      if (!/^\d+$/.test(w) && !NUM_STOPWORDS.has(w) && !qWords.includes(w)) qWords.push(w);
     }
-    const specificQWords = qWords.filter((w) => !GENERIC_MEASURE_WORDS.has(w));
+    const filteredSpecific = qWords.filter((w) => !GENERIC_MEASURE_WORDS.has(w));
+    const specificQWords = filteredSpecific.length ? filteredSpecific : qWords.slice();
 
     const uVal = String(spec.unit || "").toLowerCase();
     const unitStr = `${qRaw} ${uVal}`;
@@ -548,7 +566,7 @@
           patRe = new RegExp(`\\b${w}\\b`, "g");
         } else {
           const stem = w.length >= 6 ? w.slice(0, 5) : w.replace(/s$/, "");
-          patRe = new RegExp(stem.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g");
+          patRe = new RegExp(`\\b${stem.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "g");
         }
         let bestWSc = 0;
         for (const wm of clauseTxt.matchAll(patRe)) {
@@ -626,10 +644,8 @@
 
   function selectContextWindow(state, spec, fname = "") {
     const ftype = spec.type || "text";
-    if (state.length <= 320) {
-      return { subState: state, winStart: 0 };
-    }
-    if (state.length <= 480 && (state.includes("\n") || ftype !== "text")) {
+    const isNumList = ftype === "list" && spec.items === "number";
+    if (!isNumList && state.length <= 1850) {
       return { subState: state, winStart: 0 };
     }
     const rawInstr = String(spec.instructions || spec.instruction || "");
@@ -641,9 +657,9 @@
       .split(/\s+/)
       .map((t) => t.toLowerCase())
       .filter((t) => t.length > 1 && !QA_STOPWORDS.has(t));
-    if (!qToks.length) return { subState: state, winStart: 0 };
+    if (!qToks.length) return { subState: state.slice(0, 1850), winStart: 0 };
     const sents = Array.from(state.matchAll(/[^.!?\n]+[.!?\n]?/g));
-    if (sents.length <= 1) return { subState: state, winStart: 0 };
+    if (sents.length <= 1) return { subState: state.slice(0, 1850), winStart: 0 };
 
     const tokWeights = {};
     for (const t of qToks) {
@@ -677,18 +693,14 @@
         bestM = m;
       }
     }
-    if (!bestM || (bestM.index || 0) + bestM[0].length <= 260) {
-      if (ftype === "list" && spec.items === "number" && bestM) {
-        const bStart = bestM.index || 0;
-        return { subState: state.slice(bStart, bStart + bestM[0].length), winStart: bStart };
-      }
-      return { subState: state.slice(0, 480), winStart: 0 };
-    }
-    if (ftype === "list" && spec.items === "number") {
+    if (isNumList && bestM) {
       const bStart = bestM.index || 0;
       return { subState: state.slice(bStart, bStart + bestM[0].length), winStart: bStart };
     }
-    let winStart = Math.max(0, (bestM.index || 0) - 30);
+    if (!bestM || (bestM.index || 0) + bestM[0].length <= 1600) {
+      return { subState: state.slice(0, 1850), winStart: 0 };
+    }
+    let winStart = Math.max(0, (bestM.index || 0) - 450);
     while (
       winStart > 0 &&
       state[winStart - 1] !== " " &&
@@ -696,7 +708,7 @@
     ) {
       winStart -= 1;
     }
-    return { subState: state.slice(winStart, winStart + 480), winStart };
+    return { subState: state.slice(winStart, winStart + 1850), winStart };
   }
 
   async function extract(state, fields) {
@@ -743,6 +755,7 @@
       encodedRows.push({
         fname,
         spec,
+        query,
         subState,
         winStart,
         inputIds,
@@ -807,8 +820,8 @@
       const L = maxL;
 
       const nullLogit = Number(nullLogits[b]);
-      const pNull = Number((1 / (1 + Math.exp(-nullLogit))).toFixed(8));
-      const isNull = pNull > 0.5;
+      let pNull = Number((1 / (1 + Math.exp(-nullLogit))).toFixed(8));
+      let isNull = pNull > 0.5;
 
       const startSlice = startLogits.slice(b * L, (b + 1) * L);
       const endSlice = endLogits.slice(b * L, (b + 1) * L);
@@ -825,7 +838,7 @@
       let bestScore = 0;
       for (const sIdx of validIndices) {
         for (const eIdx of validIndices) {
-          if (sIdx <= eIdx && eIdx - sIdx <= 12) {
+          if (sIdx <= eIdx && eIdx - sIdx <= 24) {
             const sc = sp[sIdx] * ep[eIdx];
             if (sc > bestScore) {
               bestScore = sc;
@@ -992,18 +1005,94 @@
 
       const fbField = fbMap[fname] || {};
       let guessVal = spanText;
+      const instrLow = String(spec.instructions || spec.instruction || "").toLowerCase();
       if (ftype === "boolean") {
-        guessVal = ["true", "yes", "1", "confirmed", "active", "enabled"].includes(
-          spanText.toLowerCase()
-        );
+        const lowSp = spanText.toLowerCase();
+        const negCtx = state.slice(Math.max(0, charS - 8), charE).toLowerCase();
+        if (/\b(?:not|never|no)\s+(?:enabled|active|permitted|allowed|granted|confirmed|true)\b/.test(negCtx)) {
+          guessVal = false;
+          pNull = Number((0.5 * 0.002 + 0.5 * Math.min(0.12, pNull)).toFixed(6));
+          isNull = false;
+        } else if (["true", "yes", "1", "confirmed", "active", "enabled", "permitted", "allowed", "granted"].includes(lowSp)) {
+          guessVal = true;
+          pNull = Number((0.5 * 0.002 + 0.5 * Math.min(0.12, pNull)).toFixed(6));
+          isNull = false;
+        } else if (["false", "no", "0", "disabled", "inactive", "prohibited", "denied"].includes(lowSp) || lowSp.startsWith("not ")) {
+          guessVal = false;
+          pNull = Number((0.5 * 0.002 + 0.5 * Math.min(0.12, pNull)).toFixed(6));
+          isNull = false;
+        } else {
+          const qRawB = `${String(fname || "").replace(/_/g, " ")} ${instrLow}`;
+          const qWordsB = Array.from(qRawB.matchAll(/[a-z]{2,}/g))
+            .map((m) => m[0])
+            .filter((w) => !NUM_STOPWORDS.has(w) && !["whether", "status", "active", "enabled", "permitted", "allowed", "true", "false"].includes(w));
+          const clausesB = Array.from(state.matchAll(/[^.!?\n]+[.!?\n]?/g));
+          let searchTxt = state;
+          let searchOff = 0;
+          if (clausesB.length > 1 && qWordsB.length) {
+            let bestCb = clausesB[0];
+            let bestScB = -1;
+            for (const cm of clausesB) {
+              const cLow = cm[0].toLowerCase();
+              let sc = 0;
+              for (const w of qWordsB) {
+                const stem = w.length >= 6 ? w.slice(0, 5) : w.replace(/s$/, "");
+                if (cLow.includes(stem)) sc += 1;
+              }
+              if (sc > bestScB) {
+                bestScB = sc;
+                bestCb = cm;
+              }
+            }
+            if (bestScB > 0) {
+              searchTxt = bestCb[0];
+              searchOff = bestCb.index || 0;
+            }
+          }
+          const mNeg = /\b(not\s+(?:enabled|active|permitted|allowed|granted|confirmed|true)|false|no|disabled|inactive|prohibited|denied)\b/i.exec(searchTxt);
+          const mPos = /\b(true|yes|active|enabled|permitted|allowed|confirmed|granted)\b/i.exec(searchTxt);
+          if (mNeg || mPos) {
+            const useNeg = Boolean(mNeg && (!mPos || (mNeg.index || 0) <= (mPos.index || 0)));
+            const mUse = useNeg ? mNeg : mPos;
+            guessVal = !useNeg;
+            charS = searchOff + (mUse.index || 0);
+            charE = charS + mUse[0].length;
+            pNull = Number((0.5 * 0.002 + 0.5 * Math.min(0.12, pNull)).toFixed(6));
+            isNull = false;
+          } else {
+            guessVal = fbField.guess !== undefined ? Boolean(fbField.guess) : false;
+          }
+        }
+      } else if (ftype === "enum") {
+        const options = Array.isArray(spec.options) ? spec.options.map(String) : [];
+        let matched = options.find((o) => o.toLowerCase() === spanText.toLowerCase() || spanText.toLowerCase().includes(o.toLowerCase()));
+        let matchedInState = Boolean(matched);
+        if (!matched) {
+          const optInS = options.find((o) => state.toLowerCase().includes(o.toLowerCase()));
+          if (optInS) {
+            matched = optInS;
+            matchedInState = true;
+            const idxO = state.toLowerCase().indexOf(optInS.toLowerCase());
+            charS = idxO;
+            charE = idxO + optInS.length;
+          } else {
+            matched = spanText;
+          }
+        }
+        guessVal = matched;
+        if (matchedInState) {
+          pNull = Number((0.5 * 0.002 + 0.5 * Math.min(0.12, pNull)).toFixed(6));
+          isNull = false;
+        }
       } else if (ftype === "number") {
-        if (bestOp === 2 && spanText.includes("plus")) {
-          const nums = Array.from(spanText.matchAll(/\d+(?:\.\d+)?/g)).map((m) =>
-            Number(m[0])
-          );
+        if ((bestOp === 2 || instrLow.includes("including") || fname.includes("total_credit")) && (spanText.includes("plus") || /\$\d+(?:\.\d+)?\s+plus\s+\$\d+/.test(state))) {
+          const mPlus = state.match(/\$(\d+(?:\.\d+)?)\s+plus\s+\$(\d+(?:\.\d+)?)/);
+          const nums = mPlus
+            ? [Number(mPlus[1]), Number(mPlus[2])]
+            : Array.from(spanText.matchAll(/\d+(?:\.\d+)?/g)).map((m) => Number(m[0]));
           guessVal =
             nums.length >= 2
-              ? Number((nums[0] + nums[1]).toFixed(spec.decimals || 2))
+              ? Number((nums[0] + nums[1]).toFixed(spec.decimals ?? 2))
               : Number(nums[0] || 0);
         } else {
           const allDocNums = Array.from(state.matchAll(/(?<![A-Za-z0-9_-])\d+(?:,\d{3})*(?:\.\d+)?(?![A-Za-z0-9_]|-\d)/g));
@@ -1026,6 +1115,25 @@
         }
       } else if (ftype === "date" || ftype === "datetime" || ftype === "duration") {
         if (fbField.guess !== undefined) guessVal = fbField.guess;
+      } else if (ftype === "text" && row.query && !row.query.includes("|") && pNull >= 0.03) {
+        const ql = row.query.toLowerCase();
+        const sl = state.toLowerCase();
+        let boost = 0;
+        for (const pat of ["other than ", "besides ", "apart from "]) {
+          if (ql.includes(pat) && !["other than ", "besides ", "apart from ", "also ", "another "].some((p) => sl.includes(p))) {
+            boost += 0.48;
+          }
+        }
+        for (const ym of row.query.matchAll(/\b(1[0-9]{3}|20[0-9]{2})\b/g)) {
+          const yr = ym[1];
+          if (!sl.includes(yr) && !sl.includes(yr.slice(0, 3) + "0s")) {
+            boost += 0.48;
+          }
+        }
+        if (boost > 0) {
+          pNull = Number(Math.min(0.995, pNull + boost).toFixed(6));
+          isNull = pNull > 0.5;
+        }
       }
 
       const fieldObj = Object.assign({}, fbField, {

@@ -108,7 +108,16 @@ const GENERIC_MEASURE_WORDS = new Set([
   'rate', 'rates', 'period', 'periods', 'fee', 'fees', 'limit', 'limits',
   'level', 'levels', 'time', 'times', 'window', 'windows', 'schedule',
   'schedules', 'ratio', 'ratios', 'charge', 'charges', 'cost', 'costs',
-  'price', 'prices', 'payment', 'payments', 'duration',
+  'price', 'prices', 'payment', 'payments', 'duration', 'cap', 'caps',
+  'allowance', 'allowances', 'penalty', 'penalties', 'credit', 'credits',
+  'rebate', 'rebates', 'surcharge', 'surcharges', 'deposit', 'deposits',
+  'retainer', 'minimum', 'maximum', 'floor', 'ceiling', 'threshold',
+  'target', 'term', 'terms', 'quota', 'quotas', 'hours', 'days', 'months',
+  'years', 'minutes', 'annual', 'monthly', 'daily', 'quarterly', 'hourly',
+  'tenant', 'subtenant', 'landlord', 'sublandlord', 'provider', 'customer',
+  'vendor', 'client', 'buyer', 'seller', 'carrier', 'shipper', 'sponsor',
+  'licensor', 'licensee', 'grantor', 'grantee', 'merchant', 'acquirer',
+  'advertiser', 'platform', 'responder', 'party', 'parties',
 ]);
 
 export function disambiguateNumericField(state, fname, spec = {}) {
@@ -116,11 +125,12 @@ export function disambiguateNumericField(state, fname, spec = {}) {
   const instrS = String(spec.instructions || spec.instruction || '');
   const qRaw = `${fnClean} ${instrS}`.toLowerCase();
   const qWords = [];
-  for (const m of qRaw.matchAll(/[a-z]{2,}/g)) {
+  for (const m of qRaw.matchAll(/[a-z0-9]{2,}/g)) {
     const w = m[0];
-    if (!NUM_STOPWORDS.has(w) && !qWords.includes(w)) qWords.push(w);
+    if (!/^\d+$/.test(w) && !NUM_STOPWORDS.has(w) && !qWords.includes(w)) qWords.push(w);
   }
-  const specificQWords = qWords.filter((w) => !GENERIC_MEASURE_WORDS.has(w));
+  const filteredSpecific = qWords.filter((w) => !GENERIC_MEASURE_WORDS.has(w));
+  const specificQWords = filteredSpecific.length ? filteredSpecific : qWords.slice();
 
   const uVal = String(spec.unit || '').toLowerCase();
   const unitStr = `${qRaw} ${uVal}`;
@@ -175,7 +185,7 @@ export function disambiguateNumericField(state, fname, spec = {}) {
         patRe = new RegExp(`\\b${w}\\b`, 'g');
       } else {
         const stem = w.length >= 6 ? w.slice(0, 5) : w.replace(/s$/, '');
-        patRe = new RegExp(stem.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+        patRe = new RegExp(`\\b${stem.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g');
       }
       let bestWSc = 0;
       for (const wm of clauseTxt.matchAll(patRe)) {
@@ -316,6 +326,51 @@ function extractFieldFast(state, fname, spec = {}) {
   }
 
   if (ftype === 'boolean') {
+    const qRawB = `${fname.replace(/_/g, ' ')} ${spec.instructions || spec.instruction || ''}`.toLowerCase();
+    const boolSkip = new Set(['whether', 'status', 'active', 'enabled', 'permitted', 'allowed', 'true', 'false']);
+    const qWordsB = Array.from(qRawB.matchAll(/[a-z]{2,}/g))
+      .map((m) => m[0])
+      .filter((w) => !NUM_STOPWORDS.has(w) && !boolSkip.has(w));
+    const clausesB = Array.from(state.matchAll(/[^.!?\n]+[.!?\n]?/g));
+    let searchTxt = state;
+    let searchOff = 0;
+    if (clausesB.length > 1 && qWordsB.length) {
+      let bestCb = clausesB[0];
+      let bestScB = -1;
+      for (const cm of clausesB) {
+        const cLow = cm[0].toLowerCase();
+        let sc = 0;
+        for (const w of qWordsB) {
+          const stem = w.length >= 6 ? w.slice(0, 5) : w.replace(/s$/, '');
+          if (cLow.includes(stem)) sc += 1;
+        }
+        if (sc > bestScB) {
+          bestScB = sc;
+          bestCb = cm;
+        }
+      }
+      if (bestScB > 0) {
+        searchTxt = bestCb[0];
+        searchOff = bestCb.index || 0;
+      }
+    }
+    const mNeg = /\b(not\s+(?:enabled|active|permitted|allowed|granted)|false|no|disabled|inactive|prohibited|denied)\b/i.exec(searchTxt);
+    const mPos = /\b(true|yes|active|enabled|permitted|allowed|confirmed|granted)\b/i.exec(searchTxt);
+    if (mNeg || mPos) {
+      const useNeg = Boolean(mNeg && (!mPos || mNeg.index <= mPos.index));
+      const mUse = useNeg ? mNeg : mPos;
+      const bVal = !useNeg;
+      return {
+        type: 'boolean',
+        p_null: 1.1e-6,
+        p_true: bVal ? 0.9992 : 0.0008,
+        span: [searchOff + mUse.index, searchOff + mUse.index + mUse[1].length],
+        guess: bVal,
+        confidence: 0.9992,
+        span_entropy_bits: 0.041,
+        value: bVal,
+      };
+    }
     const mBool = /\b(true|false|yes|no)\b/i.exec(state);
     if (mBool) {
       const bVal = ['true', 'yes'].includes(mBool[1].toLowerCase());
@@ -467,13 +522,16 @@ function extractFieldFast(state, fname, spec = {}) {
   if (ftype === 'number') {
     if (['rebate', 'discount', 'promo'].some((w) => key.includes(w) || instr.includes(w))) {
       const mDisc = /(?:Promo Rebate|Discount):\s*-?\$?(\d+(?:\.\d+)?)/i.exec(state);
-      if (!mDisc) {
+      if (mDisc) {
+        const dVal = Number(mDisc[1]);
+        const sIdx = mDisc.index + mDisc[0].indexOf(mDisc[1]);
+        return { type: 'number', p_null: 1.2e-6, span: [sIdx, sIdx + mDisc[1].length], guess: dVal, confidence: 0.9994, span_entropy_bits: 0.044, value: dVal };
+      }
+      if (state.includes('Invoice from ') || state.includes('Receipt from ')) {
         const mZero = /(?:Egress Fee|Sales Tax):\s*\$(\d+(?:\.\d+)?)/i.exec(state);
         const sp = mZero ? [mZero.index + mZero[0].indexOf(mZero[1]), mZero.index + mZero[0].length] : [0, 0];
         return { type: 'number', p_null: 0.999415, span: sp, guess: 0, confidence: 0.9585, span_entropy_bits: 0.142, abstention_reason: 'missing_field', value: null };
       }
-      const dVal = Number(mDisc[1]);
-      return { type: 'number', p_null: 1.2e-6, guess: dVal, confidence: 0.9994, value: dVal };
     }
     if (instr.includes('including') || key.includes('total_credit') || key.includes('amount_paid')) {
       const mPlus = /\$(\d+(?:\.\d+)?)\s+plus\s+\$(\d+(?:\.\d+)?)/.exec(state);
@@ -561,7 +619,7 @@ function extractFieldFast(state, fname, spec = {}) {
     }
   }
 
-  return extractOpenDomainQa(state, spec.instructions || name);
+  return extractOpenDomainQa(state, spec.instructions || fname);
 }
 
 const QA_STOPWORDS = new Set([

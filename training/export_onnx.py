@@ -1,4 +1,4 @@
-"""Export NullspanForExtraction to ONNX (FP32 + Dynamic Int8 Quantized) for Browser WASM/WebGPU & Edge Runtime."""
+"""Export NullspanForExtraction v2.0 to ONNX (FP32 + Dynamic Int8 Quantized) for Browser WASM/WebGPU & Edge Runtime."""
 from __future__ import annotations
 
 import json
@@ -21,7 +21,7 @@ ONNX_DIR = ARTIFACT_DIR / "onnx"
 
 
 class NullspanOnnxWrapper(nn.Module):
-    """Clean tensor-in, tensor-tuple-out wrapper for ONNX export (WASM/WebGPU compatible ops)."""
+    """Clean tensor-in, tensor-tuple-out wrapper sharing exact NullspanForExtraction.forward() math & temperature scaling."""
 
     def __init__(self, model: NullspanForExtraction) -> None:
         super().__init__()
@@ -34,24 +34,22 @@ class NullspanOnnxWrapper(nn.Module):
         state_mask: torch.Tensor,
         num_feats: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        enc_out = self.model.encoder(input_ids=input_ids, attention_mask=attention_mask)
-        seq_out = enc_out.last_hidden_state  # [B, L, H]
-        cls_out = seq_out[:, 0, :]  # [B, H]
-
-        null_logits = self.model.null_head(cls_out).squeeze(-1)  # [B]
-        span_logits = self.model.span_head(seq_out)  # [B, L, 2]
-        start_logits = span_logits[:, :, 0] + (1.0 - state_mask.float()) * (-1e4)
-        end_logits = span_logits[:, :, 1] + (1.0 - state_mask.float()) * (-1e4)
-
-        bio_logits = self.model.bio_head(seq_out)  # [B, L, 3]
-        op_logits = self.model.op_head(cls_out)  # [B, 10]
-
-        q_in = torch.cat([cls_out, num_feats], dim=-1)
-        q_delta = torch.tanh(self.model.quantile_head(q_in)) * 0.15
-        anchors = torch.stack([num_feats[:, 1], num_feats[:, 0], num_feats[:, 2]], dim=-1)
-        quantile_preds = torch.clamp(anchors + q_delta, 0.0, 1.0)
-
-        return null_logits, start_logits, end_logits, bio_logits, op_logits, quantile_preds
+        # In eval() mode, self.model.forward() computes token_type_ids internally, runs span-attended null_head,
+        # and applies null_temperature & span_temperature scaling!
+        out = self.model(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            state_mask=state_mask,
+            num_feats=num_feats,
+        )
+        return (
+            out["null_logits"],
+            out["start_logits"],
+            out["end_logits"],
+            out["bio_logits"],
+            out["op_logits"],
+            out["quantile_preds"],
+        )
 
 
 def main() -> None:
@@ -59,8 +57,13 @@ def main() -> None:
     cfg = NullspanConfig.from_pretrained(str(ARTIFACT_DIR))
     model = NullspanForExtraction.from_pretrained(str(ARTIFACT_DIR), config=cfg)
     model.encoder.config._attn_implementation = "eager"
-    for layer in model.encoder.transformer.layer:
-        layer.attention.config._attn_implementation = "eager"
+    if hasattr(model.encoder, "encoder") and hasattr(model.encoder.encoder, "layer"):
+        for layer in model.encoder.encoder.layer:
+            if hasattr(layer, "attention") and hasattr(layer.attention, "self"):
+                layer.attention.self.config._attn_implementation = "eager"
+    elif hasattr(model.encoder, "transformer") and hasattr(model.encoder.transformer, "layer"):
+        for layer in model.encoder.transformer.layer:
+            layer.attention.config._attn_implementation = "eager"
     model.eval()
 
     wrapper = NullspanOnnxWrapper(model)
@@ -68,8 +71,12 @@ def main() -> None:
 
     B, L = 2, 64
     dummy_ids = torch.ones((B, L), dtype=torch.long)
+    dummy_ids[:, 0] = 101
+    dummy_ids[:, 12] = 102
+    dummy_ids[:, -1] = 102
     dummy_attn = torch.ones((B, L), dtype=torch.long)
-    dummy_state = torch.ones((B, L), dtype=torch.long)
+    dummy_state = torch.zeros((B, L), dtype=torch.long)
+    dummy_state[:, 13:-1] = 1
     dummy_feats = torch.zeros((B, 8), dtype=torch.float32)
 
     fp32_path = ONNX_DIR / "model.onnx"
@@ -110,10 +117,12 @@ def main() -> None:
         weight_type=QuantType.QUInt8,
     )
 
-    # Copy tokenizer.json into ONNX_DIR and docs/ for browser tokenizer
+    # Copy tokenizer.json into ONNX_DIR, docs/, and space/ for browser tokenizer
     if (ARTIFACT_DIR / "tokenizer.json").exists():
         shutil.copyfile(ARTIFACT_DIR / "tokenizer.json", ONNX_DIR / "tokenizer.json")
         shutil.copyfile(ARTIFACT_DIR / "tokenizer.json", ROOT / "docs" / "tokenizer.json")
+        if (ROOT / "space").exists():
+            shutil.copyfile(ARTIFACT_DIR / "tokenizer.json", ROOT / "space" / "tokenizer.json")
 
     fp32_mb = round(fp32_path.stat().st_size / (1024 * 1024), 2)
     int8_mb = round(int8_path.stat().st_size / (1024 * 1024), 2)

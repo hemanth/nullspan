@@ -160,6 +160,25 @@ PRESETS: dict[str, dict[str, Any]] = {
             "unanswerable_trap": {"type": "text", "instructions": "What other countries besides France did the Normans give their name to?"},
         },
     },
+    "7. Enterprise MSA Contract (Multi-Numeric Disambiguation + >512-Token Windowing)": {
+        "state": (
+            "MASTER SUBSCRIPTION AGREEMENT #MSA-2026-8841\n"
+            "Effective Date: March 1, 2026 | Initial Term: 36 months | Auto-Renewal Notice Window: 60 days prior to expiration.\n"
+            "Section 4.1 Fees & Payment: Customer commits to 250 Enterprise Seats at $140.00 per seat/month, plus Platform Base Fee of $4,500.00/month. "
+            "Annual Contract Value (ACV): $474,000.00. Invoices are payable Net 45 days; late balances accrue interest at 1.5% per month.\n"
+            "Section 7.2 Limitation of Liability: General Liability Cap shall not exceed $948,000.00 (2x ACV); Super-Cap for Data Breach & IP Indemnity is $2,500,000.00. "
+            "Early Termination Fee: not applicable (waived under Addendum B)."
+        ),
+        "schema": {
+            "initial_term_months": {"type": "number", "integer": True, "instructions": "Initial contract term length in months"},
+            "seat_unit_price": {"type": "number", "decimals": 2, "unit": "USD", "instructions": "Monthly price per Enterprise Seat"},
+            "annual_contract_value": {"type": "number", "decimals": 2, "unit": "USD", "instructions": "Annual Contract Value (ACV)"},
+            "payment_net_days": {"type": "number", "integer": True, "instructions": "Net payment terms in days"},
+            "general_liability_cap": {"type": "number", "decimals": 2, "unit": "USD", "instructions": "General limitation of liability cap"},
+            "super_cap_indemnity": {"type": "number", "decimals": 2, "unit": "USD", "instructions": "Super-cap for data breach and IP indemnity"},
+            "early_termination_fee": {"type": "number", "decimals": 2, "unit": "USD", "instructions": "Early termination fee amount if applicable"},
+        },
+    },
 }
 
 
@@ -236,7 +255,7 @@ def run_nullspan(engine_mode: str, state: str, schema_json: str) -> tuple[str, l
     else:
         ext = NullspanExtractor(fields_spec)
         raw_out = ext.run(state)
-        fields_out = raw_out.get("fields", {})
+        fields_out = raw_out.get("answers", raw_out.get("fields", {}))
         payload = {
             "engine": "Zero-Dep Algorithmic Fast Engine (nullspan)",
             "latency_ms": round((time.perf_counter() - t0) * 1000.0, 3),
@@ -285,7 +304,7 @@ with gr.Blocks(title="nullspan — System One Structured Extraction & Quantiles"
     gr.Markdown(
         """
         # `nullspan` — System One Structured Extraction, Calibrated `p_null` & Quantile Distributions
-        Single-pass encoder extraction (`gnumanth/nullspan`, 67M params) with character-offset `[start, end]` grounding, calibrated null abstention (`p_null`), 10-way System One operation routing (`BOOL_JUDGE`, `ENUM_CLASSIFY`, `ARITH_SUM`, `ARITH_MUL`), cross-field algebraic invariant verification, and Pinball-loss quantile distributions (`p10`, `median`, `p90`).
+        Single-pass encoder extraction (`gnumanth/nullspan`, 344.2M params, 512-token context + long-doc windowing) with character-offset `[start, end]` grounding, calibrated null abstention (`p_null`), 10-way System One operation routing (`BOOL_JUDGE`, `ENUM_CLASSIFY`, `ARITH_SUM`, `ARITH_MUL`), cross-field algebraic invariant verification, and Pinball-loss quantile distributions (`p10`, `median`, `p90`).
         - **Model Hub**: [`gnumanth/nullspan`](https://huggingface.co/gnumanth/nullspan) · **Dataset**: [`gnumanth/nullspan-dataset`](https://huggingface.co/datasets/gnumanth/nullspan-dataset) · **GitHub & Browser WebGPU/WASM Playground**: [`hemanth/nullspan`](https://hemanth.github.io/nullspan/)
         """
     )

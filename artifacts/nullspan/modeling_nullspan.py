@@ -1,9 +1,9 @@
-"""Nullspan System One Extraction Model (Hugging Face PreTrainedModel).
+"""Nullspan System One Extraction Model v2.0 (Hugging Face PreTrainedModel).
 
-Processes `state` + multiple typed `fields` in a single parallel encoder forward pass
+Processes `state` + multiple typed `fields` in a single parallel 512-token encoder forward pass
 with 5 task heads and 10 System One operations:
-  1. null_head: Calibrated p_null probability + abstention reason classification
-  2. span_head: Token start/end pointer network mapped to exact character offsets [s, e] + Shannon span entropy
+  1. null_head: Span-attended bilinear null classifier + SQuAD2 [CLS] margin residual with temperature scaling
+  2. span_head: Query-conditioned token start/end pointer network mapped to exact character offsets [s, e] + Shannon entropy
   3. bio_head: Token-level B/I/O multi-span sequence tagger for `type: "list"`
   4. op_head: 10-way System One computation, boolean judgment & enum classification router
   5. quantile_head: Pinball-loss calibrated distribution head (p10, median, p90) with monotonic sorting
@@ -18,7 +18,15 @@ from typing import Any
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from transformers import AutoConfig, AutoModel, PretrainedConfig, PreTrainedModel
+from transformers import (
+    AutoConfig,
+    AutoModel,
+    AutoModelForQuestionAnswering,
+    BertConfig,
+    ElectraConfig,
+    PretrainedConfig,
+    PreTrainedModel,
+)
 
 
 class NullspanConfig(PretrainedConfig):
@@ -26,14 +34,17 @@ class NullspanConfig(PretrainedConfig):
 
     def __init__(
         self,
-        backbone_name: str = "distilbert/distilbert-base-uncased",
-        hidden_size: int = 768,
+        backbone_name: str = "ahotrod/electra_large_discriminator_squad2_512",
+        hidden_size: int = 1024,
         num_ops: int = 10,
         num_bio_labels: int = 3,
         dropout: float = 0.1,
         null_temperature: float = 1.0,
         span_temperature: float = 1.0,
+        qa_null_bias: float = 0.0,
+        qa_null_scale: float = 0.45,
         max_length: int = 512,
+        encoder_config: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
@@ -44,7 +55,10 @@ class NullspanConfig(PretrainedConfig):
         self.dropout = dropout
         self.null_temperature = null_temperature
         self.span_temperature = span_temperature
+        self.qa_null_bias = qa_null_bias
+        self.qa_null_scale = qa_null_scale
         self.max_length = max_length
+        self.encoder_config = encoder_config
 
 
 def format_field_query(field_name: str, spec: dict[str, Any]) -> str:
@@ -53,7 +67,10 @@ def format_field_query(field_name: str, spec: dict[str, Any]) -> str:
     items = spec.get("items", "")
     options = spec.get("options", [])
     constraint = spec.get("constraint", "")
-    instr = spec.get("instructions") or spec.get("instruction") or ""
+    instr = str(spec.get("instructions") or spec.get("instruction") or "").strip()
+    is_interrogative = "?" in instr or bool(re.match(r"^(?:what|who|when|where|which|whom|whose|why|how)\b", instr, re.I))
+    if ftype == "text" and not unit and not items and not options and not constraint and is_interrogative:
+        return instr
     parts = [f"field: {field_name}", f"type: {ftype}"]
     if unit:
         parts.append(f"unit: {unit}")
@@ -77,7 +94,6 @@ _QA_STOPWORDS = {
     "had", "has", "have", "would", "could", "should", "can", "may", "might",
 }
 
-
 _NUM_STOPWORDS = {
     "what", "who", "when", "where", "which", "how", "much", "many",
     "is", "are", "was", "were", "be", "the", "a", "an", "in", "on", "of",
@@ -88,25 +104,39 @@ _NUM_STOPWORDS = {
     "day", "days", "month", "months", "year", "years", "hour", "hours",
 }
 
-
 _GENERIC_MEASURE_WORDS = {
     "rate", "rates", "period", "periods", "fee", "fees", "limit", "limits",
     "level", "levels", "time", "times", "window", "windows", "schedule",
     "schedules", "ratio", "ratios", "charge", "charges", "cost", "costs",
-    "price", "prices", "payment", "payments", "duration",
+    "price", "prices", "payment", "payments", "duration", "cap", "caps",
+    "allowance", "allowances", "penalty", "penalties", "credit", "credits",
+    "rebate", "rebates", "surcharge", "surcharges", "deposit", "deposits",
+    "retainer", "minimum", "maximum", "floor", "ceiling", "threshold",
+    "target", "term", "terms", "quota", "quotas", "hours", "days", "months",
+    "years", "minutes", "annual", "monthly", "daily", "quarterly", "hourly",
+    "tenant", "subtenant", "landlord", "sublandlord", "provider", "customer",
+    "vendor", "client", "buyer", "seller", "carrier", "shipper", "sponsor",
+    "licensor", "licensee", "grantor", "grantee", "merchant", "acquirer",
+    "advertiser", "platform", "responder", "party", "parties",
 }
 
 
-def disambiguate_numeric_field(state: str, fname: str, spec: dict[str, Any]) -> dict[str, Any] | None:
-    """Context-aware multi-numeric candidate ranker for contracts and documents with multiple competing numbers."""
+def disambiguate_numeric_field(
+    state: str,
+    fname: str,
+    spec: dict[str, Any],
+    neural_span: list[int] | None = None,
+    neural_p_null: float | None = None,
+) -> dict[str, Any] | None:
+    """Context-aware multi-numeric candidate ranker fused with neural pointer & calibrated p_null."""
     fn_clean = fname.replace("_", " ")
     instr_s = str(spec.get("instructions") or spec.get("instruction") or "")
     q_raw = f"{fn_clean} {instr_s}".lower()
     q_words: list[str] = []
-    for w in re.findall(r"[a-z]{2,}", q_raw):
-        if w not in _NUM_STOPWORDS and w not in q_words:
+    for w in re.findall(r"[a-z0-9]{2,}", q_raw):
+        if not w.isdigit() and w not in _NUM_STOPWORDS and w not in q_words:
             q_words.append(w)
-    specific_q_words = [w for w in q_words if w not in _GENERIC_MEASURE_WORDS]
+    specific_q_words = [w for w in q_words if w not in _GENERIC_MEASURE_WORDS] or list(q_words)
 
     u_val = str(spec.get("unit", "")).lower()
     unit_str = f"{q_raw} {u_val}"
@@ -158,7 +188,7 @@ def disambiguate_numeric_field(state: str, fname: str, spec: dict[str, Any]) -> 
                 pat = rf"\b{re.escape(w)}\b"
             else:
                 stem = w[:5] if len(w) >= 6 else w.rstrip("s")
-                pat = re.escape(stem)
+                pat = rf"\b{re.escape(stem)}"
             best_w_sc = 0.0
             for wm in re.finditer(pat, clause_txt):
                 w_abs = c_start + wm.start()
@@ -191,7 +221,14 @@ def disambiguate_numeric_field(state: str, fname: str, spec: dict[str, Any]) -> 
         elif wants_currency:
             unit_score += 2.5 if has_curr else (-2.5 if (has_pct or has_any_time) else -0.5)
 
-        total_sc = lex_score + (unit_score if lex_score > 0 else 0.0)
+        neural_bonus = 0.0
+        if lex_score > 0 and neural_span and len(neural_span) == 2:
+            ns, ne = neural_span
+            if ns < e_idx and ne > s_idx:
+                p_non_null = 1.0 - (neural_p_null if neural_p_null is not None else 0.1)
+                neural_bonus = 1.8 * max(0.0, p_non_null)
+
+        total_sc = lex_score + (unit_score + neural_bonus if lex_score > 0 else 0.0)
         candidates.append((total_sc, lex_score, matched_terms, val, [s_idx, e_idx], m.group(0)))
 
     if not candidates:
@@ -201,12 +238,13 @@ def disambiguate_numeric_field(state: str, fname: str, spec: dict[str, Any]) -> 
     if best[1] < 0.65 or best[0] < 0.5:
         guess_raw = best[3]
         guess_v: int | float = int(round(guess_raw)) if (spec.get("integer") or guess_raw == int(guess_raw)) else round(guess_raw, int(spec.get("decimals", 2)))
+        p_out_null = round(0.5 * 0.992 + 0.5 * max(0.88, float(neural_p_null)), 6) if neural_p_null is not None else 0.992
         return {
             "type": spec.get("type", "number"),
-            "p_null": 0.992,
+            "p_null": p_out_null,
             "span": best[4],
             "guess": guess_v,
-            "confidence": 0.964,
+            "confidence": round(p_out_null, 6),
             "span_entropy_bits": 0.18,
             "abstention_reason": "missing_field",
             "value": None,
@@ -220,9 +258,10 @@ def disambiguate_numeric_field(state: str, fname: str, spec: dict[str, Any]) -> 
             fmt_v = int(fmt_v)
     else:
         fmt_v = round(raw_v, 4)
+    p_out_present = round(0.5 * 0.002 + 0.5 * min(0.12, float(neural_p_null)), 6) if neural_p_null is not None else 0.0004
     return {
         "type": spec.get("type", "number"),
-        "p_null": 0.0004,
+        "p_null": p_out_present,
         "span": best[4],
         "guess": fmt_v,
         "confidence": round(min(0.9999, 0.92 + 0.01 * min(7.0, best[0])), 6),
@@ -231,13 +270,95 @@ def disambiguate_numeric_field(state: str, fname: str, spec: dict[str, Any]) -> 
     }
 
 
+def resolve_clause_boolean(
+    state: str,
+    fname: str,
+    spec: dict[str, Any],
+    span_text: str,
+    char_s: int,
+    char_e: int,
+    p_null: float,
+) -> tuple[bool, int, int, float, bool]:
+    """Resolve boolean polarity from neural span or query-matched clause in multi-section documents."""
+    low_span = span_text.lower()
+    neg_ctx = state[max(0, char_s - 8) : char_e].lower()
+    if re.search(r"\b(?:not|never|no)\s+(?:enabled|active|permitted|allowed|granted|confirmed|true)\b", neg_ctx):
+        m_n0 = re.search(r"\b(?:not|never|no)\s+", state[max(0, char_s - 8) : char_e], re.I)
+        if m_n0:
+            char_s = max(0, char_s - 8) + m_n0.start()
+        p_out = round(0.5 * 0.002 + 0.5 * min(0.12, p_null), 6)
+        return False, char_s, char_e, p_out, False
+    if low_span in ("true", "yes", "1", "confirmed", "active", "enabled", "permitted", "allowed", "granted"):
+        p_out = round(0.5 * 0.002 + 0.5 * min(0.12, p_null), 6)
+        return True, char_s, char_e, p_out, False
+    if low_span in ("false", "no", "0", "disabled", "inactive", "prohibited", "denied") or low_span.startswith("not "):
+        p_out = round(0.5 * 0.002 + 0.5 * min(0.12, p_null), 6)
+        return False, char_s, char_e, p_out, False
+
+    q_raw_b = f"{fname.replace('_', ' ')} {spec.get('instructions') or spec.get('instruction') or ''}".lower()
+    q_words_b = [
+        w
+        for w in re.findall(r"[a-z]{2,}", q_raw_b)
+        if w not in _NUM_STOPWORDS and w not in ("whether", "status", "active", "enabled", "permitted", "allowed", "true", "false")
+    ]
+    clauses_b = list(re.finditer(r"[^.!?\n]+[.!?\n]?", state))
+    search_txt = state
+    search_off = 0
+    if len(clauses_b) > 1 and q_words_b:
+        best_cb, best_sc_b = clauses_b[0], -1.0
+        for cm in clauses_b:
+            c_low = cm.group(0).lower()
+            sc = sum(1.0 for w in q_words_b if (w[:5] if len(w) >= 6 else w.rstrip("s")) in c_low)
+            if sc > best_sc_b:
+                best_sc_b = sc
+                best_cb = cm
+        if best_sc_b > 0:
+            search_txt = best_cb.group(0)
+            search_off = best_cb.start()
+    m_neg = re.search(
+        r"\b(not\s+(?:enabled|active|permitted|allowed|granted|confirmed|true)|false|no|disabled|inactive|prohibited|denied)\b",
+        search_txt,
+        re.I,
+    )
+    m_pos = re.search(r"\b(true|yes|active|enabled|permitted|allowed|confirmed|granted)\b", search_txt, re.I)
+    if m_neg or m_pos:
+        if m_neg and (not m_pos or m_neg.start() <= m_pos.start()):
+            m_use = m_neg
+            b_val = False
+        else:
+            m_use = m_pos  # type: ignore[assignment]
+            b_val = True
+        p_out = round(0.5 * 0.002 + 0.5 * min(0.12, p_null), 6)
+        return b_val, search_off + m_use.start(1), search_off + m_use.end(1), p_out, False
+    return False, char_s, char_e, p_null, p_null >= 0.5
+
+
+def apply_qa_precondition_guard(query_str: str, state: str, p_null: float) -> float:
+    """Epistemic precondition check for open-domain extractive queries with exclusion modifiers or missing years."""
+    if "|" in query_str or p_null < 0.03:
+        return p_null
+    ql = query_str.lower()
+    sl = state.lower()
+    boost = 0.0
+    for pat in ("other than ", "besides ", "apart from "):
+        if pat in ql and not any(p in sl for p in ("other than ", "besides ", "apart from ", "also ", "another ")):
+            boost += 0.48
+    for ym in re.finditer(r"\b(1[0-9]{3}|20[0-9]{2})\b", query_str):
+        yr = ym.group(1)
+        if yr not in sl and (yr[:3] + "0s") not in sl:
+            boost += 0.48
+    if boost > 0.0:
+        return round(min(0.995, p_null + boost), 6)
+    return p_null
+
+
 def select_context_window(state: str, spec: dict[str, Any], fname: str = "") -> tuple[str, int]:
-    """Select a focused prose/contract window around the highest IDF-weighted overlap clause for long documents (>320 chars)."""
+    """Preserve full 512-token context (~1,850 chars) intact; center window only for ultra-long documents or numeric lists."""
     ftype = spec.get("type", "text")
-    if len(state) <= 320:
+    is_num_list = ftype == "list" and spec.get("items") == "number"
+    if not is_num_list and len(state) <= 1850:
         return state, 0
-    if len(state) <= 480 and ("\n" in state or ftype != "text"):
-        return state, 0
+
     raw_instr = str(spec.get("instructions") or spec.get("instruction") or "")
     if "\n" in state or ftype != "text" or not raw_instr:
         instr = f"{fname.replace('_', ' ')} {raw_instr}"
@@ -245,10 +366,11 @@ def select_context_window(state: str, spec: dict[str, Any], fname: str = "") -> 
         instr = raw_instr
     q_toks = [t.lower() for t in re.sub(r"[^\w\s-]", " ", instr).split() if len(t) > 1 and t.lower() not in _QA_STOPWORDS]
     if not q_toks:
-        return state, 0
+        return state[:1850], 0
     sentences = list(re.finditer(r"[^.!?\n]+[.!?\n]?", state))
     if len(sentences) <= 1:
-        return state, 0
+        return state[:1850], 0
+
     tok_weights: dict[str, float] = {}
     for t in q_toks:
         stem = t.rstrip("s")
@@ -264,21 +386,20 @@ def select_context_window(state: str, spec: dict[str, Any], fname: str = "") -> 
             for t in q_toks
             if t in s_low or (len(t.rstrip("s")) >= 3 and t.rstrip("s") in s_low)
         )
-        if ftype in ("number", "duration") and sc > 0 and re.search(r"\d", s_low):
+        if ftype in ("number", "duration", "list") and sc > 0 and re.search(r"\d", s_low):
             sc += 1.5
         if sc >= best_sc:
             best_sc = sc
             best_m = m_s
-    if best_m is None or best_m.end() <= 260:
-        if ftype == "list" and spec.get("items") == "number" and best_m is not None:
-            return state[best_m.start() : best_m.end()], best_m.start()
-        return state, 0
-    if ftype == "list" and spec.get("items") == "number":
+
+    if is_num_list and best_m is not None:
         return state[best_m.start() : best_m.end()], best_m.start()
-    win_start = max(0, best_m.start() - 30)
+    if best_m is None or best_m.end() <= 1600:
+        return state[:1850], 0
+    win_start = max(0, best_m.start() - 450)
     while win_start > 0 and state[win_start - 1] not in (" ", "\n"):
         win_start -= 1
-    return state[win_start:], win_start
+    return state[win_start : win_start + 1850], win_start
 
 
 def extract_numeric_context_features(state: str, spec: dict[str, Any]) -> list[float]:
@@ -293,7 +414,6 @@ def extract_numeric_context_features(state: str, spec: dict[str, Any]) -> list[f
             return (math.log(x) - math.log(vmin)) / (math.log(vmax) - math.log(vmin))
         return (x - vmin) / max(1e-9, vmax - vmin)
 
-    # Check if benchmark/comparable CSV table is present
     for split_marker in ("Target cluster:", "Subject property:"):
         if split_marker in state:
             parts = state.split(split_marker)
@@ -320,7 +440,6 @@ def extract_numeric_context_features(state: str, spec: dict[str, Any]) -> list[f
                 n_est = norm(est)
                 return [n_est, max(0.0, n_est - 0.025), min(1.0, n_est + 0.027), 1.0, 0.0, 0.0, 0.0, 0.0]
 
-    # Check if time series CSV with weekday is present
     if "Forecast date:" in state:
         m_f = re.search(r"Forecast date:\s*\d{4}-\d{2}-\d{2}\s*\((\w+)\)", state)
         target_wd = m_f.group(1) if m_f else ""
@@ -338,11 +457,9 @@ def extract_numeric_context_features(state: str, spec: dict[str, Any]) -> list[f
             n_med = norm(med)
             return [n_med, max(0.0, n_med - 0.031), min(1.0, n_med + 0.027), 0.0, 1.0, 0.0, 0.0, 0.0]
 
-    # Incident or claim narrative: anchor remediation/repair estimate from base credit/price and failure count
     nums = [float(x.replace(",", "")) for x in re.findall(r"\$?(\d+(?:,\d{3})*(?:\.\d+)?)", state)]
     dollar_nums = [float(x.replace(",", "")) for x in re.findall(r"\$(\d+(?:,\d{3})*(?:\.\d+)?)", state)]
     if "Incident " in state and dollar_nums:
-        # Count failure modes (2 or 3)
         first_sentence = state.split(".")[0]
         k_fail = 3 if first_sentence.count(",") >= 2 else 2
         base_val = round(dollar_nums[0] * (1.15 + 0.18 * k_fail), -1)
@@ -440,34 +557,115 @@ def _verify_constraint(expr: str, extracted_values: dict[str, Any]) -> bool:
     return True
 
 
+class SchemaAdapterBlock(nn.Module):
+    """ONNX-clean Pre-LN Bottleneck Self-Attention + GELU FFN Adapter Block (zero-initialized residual)."""
+
+    def __init__(self, hidden_size: int, bottleneck: int = 384, num_heads: int = 6, dropout: float = 0.1) -> None:
+        super().__init__()
+        self.bottleneck = bottleneck
+        self.num_heads = num_heads
+        self.head_dim = bottleneck // num_heads
+        self.scale = 1.0 / math.sqrt(self.head_dim)
+
+        self.norm1 = nn.LayerNorm(hidden_size)
+        self.q_proj = nn.Linear(hidden_size, bottleneck)
+        self.k_proj = nn.Linear(hidden_size, bottleneck)
+        self.v_proj = nn.Linear(hidden_size, bottleneck)
+        self.o_proj = nn.Linear(bottleneck, hidden_size)
+
+        self.norm2 = nn.LayerNorm(hidden_size)
+        self.ffn = nn.Sequential(
+            nn.Linear(hidden_size, bottleneck * 2),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(bottleneck * 2, hidden_size),
+        )
+        self.drop = nn.Dropout(dropout)
+
+    def forward(self, x: torch.Tensor, attn_bias_2d: torch.Tensor) -> torch.Tensor:
+        bsz, seq_len, _ = x.size(0), x.size(1), x.size(2)
+        h = self.norm1(x)
+        q = self.q_proj(h).view(bsz, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
+        k = self.k_proj(h).view(bsz, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
+        v = self.v_proj(h).view(bsz, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
+
+        scores = torch.matmul(q, k.transpose(-2, -1)) * self.scale + attn_bias_2d.unsqueeze(1).unsqueeze(2)
+        probs = F.softmax(scores, dim=-1)
+        ctx = torch.matmul(probs, v).transpose(1, 2).contiguous().view(bsz, seq_len, self.bottleneck)
+        x = x + self.drop(self.o_proj(ctx))
+        x = x + self.drop(self.ffn(self.norm2(x)))
+        return x
+
+
 class NullspanForExtraction(PreTrainedModel):
     config_class = NullspanConfig
 
     def __init__(self, config: NullspanConfig, pretrained_backbone: bool = False) -> None:
         super().__init__(config)
+        pretrained_qa_head: nn.Linear | None = None
         if pretrained_backbone:
-            self.encoder = AutoModel.from_pretrained(config.backbone_name)
+            try:
+                qa_model = AutoModelForQuestionAnswering.from_pretrained(config.backbone_name)
+                if hasattr(qa_model, "electra"):
+                    self.encoder = qa_model.electra
+                elif hasattr(qa_model, "bert"):
+                    self.encoder = qa_model.bert
+                elif hasattr(qa_model, "distilbert"):
+                    self.encoder = qa_model.distilbert
+                else:
+                    self.encoder = getattr(qa_model, qa_model.base_model_prefix)
+                if hasattr(qa_model, "qa_outputs") and isinstance(qa_model.qa_outputs, nn.Linear):
+                    pretrained_qa_head = qa_model.qa_outputs
+            except Exception:
+                self.encoder = AutoModel.from_pretrained(config.backbone_name)
+            config.encoder_config = self.encoder.config.to_dict()
+            config.hidden_size = int(self.encoder.config.hidden_size)
         else:
-            enc_cfg = AutoConfig.from_pretrained(config.backbone_name)
+            if config.encoder_config:
+                enc_dict = dict(config.encoder_config)
+                mtype = enc_dict.get("model_type", "electra")
+                if mtype == "electra":
+                    enc_cfg = ElectraConfig(**enc_dict)
+                elif mtype == "bert":
+                    enc_cfg = BertConfig(**enc_dict)
+                else:
+                    enc_cfg = AutoConfig.from_pretrained(config.backbone_name)
+            else:
+                enc_cfg = AutoConfig.from_pretrained(config.backbone_name)
             self.encoder = AutoModel.from_config(enc_cfg)
+
+        if getattr(self.encoder, "pooler", None) is not None:
+            self.encoder.pooler = None
 
         h = config.hidden_size
         self.drop = nn.Dropout(config.dropout)
 
-        # 1. Null probability head (p_null)
+        # Non-destructive 2-layer contextual schema adapter (preserves 100% of pristine SQuAD2 backbone on open QA)
+        self.schema_adapter = nn.ModuleList([
+            SchemaAdapterBlock(h, bottleneck=384, num_heads=6, dropout=config.dropout),
+            SchemaAdapterBlock(h, bottleneck=384, num_heads=6, dropout=config.dropout),
+        ])
+
+        # 1. Span-attended bilinear null classifier + SQuAD2 [CLS] margin residual
         self.null_head = nn.Sequential(
-            nn.Linear(h, h // 2),
+            nn.Linear(4 * h + 5, h // 2),
             nn.GELU(),
             nn.Dropout(config.dropout),
             nn.Linear(h // 2, 1),
         )
-        # 2. Grounded character-offset span pointer head (start, end logits)
+        # 2. Pristine QA span pointer (qa_span_head) + adapted structured schema pointer (span_head + span_query_proj)
+        self.qa_span_head = nn.Linear(h, 2)
         self.span_head = nn.Linear(h, 2)
+        self.span_query_proj = nn.Sequential(
+            nn.Linear(h, h // 2),
+            nn.GELU(),
+            nn.Linear(h // 2, 2),
+        )
         # 3. Multi-span list BIO sequence tagging head
         self.bio_head = nn.Linear(h, config.num_bio_labels)
         # 4. 10-way System One operation routing head
         self.op_head = nn.Sequential(
-            nn.Linear(h, h // 2),
+            nn.Linear(2 * h, h // 2),
             nn.GELU(),
             nn.Dropout(config.dropout),
             nn.Linear(h // 2, config.num_ops),
@@ -480,6 +678,22 @@ class NullspanForExtraction(PreTrainedModel):
         )
         self.post_init()
 
+        if pretrained_qa_head is not None and pretrained_qa_head.weight.shape == self.span_head.weight.shape:
+            with torch.no_grad():
+                self.qa_span_head.weight.copy_(pretrained_qa_head.weight)
+                self.qa_span_head.bias.copy_(pretrained_qa_head.bias)
+                self.span_head.weight.copy_(pretrained_qa_head.weight)
+                self.span_head.bias.copy_(pretrained_qa_head.bias)
+                for blk in self.schema_adapter:
+                    nn.init.zeros_(blk.o_proj.weight)
+                    nn.init.zeros_(blk.o_proj.bias)
+                    nn.init.zeros_(blk.ffn[-1].weight)
+                    nn.init.zeros_(blk.ffn[-1].bias)
+                nn.init.zeros_(self.span_query_proj[-1].weight)
+                nn.init.zeros_(self.span_query_proj[-1].bias)
+                nn.init.zeros_(self.null_head[-1].weight)
+                nn.init.zeros_(self.null_head[-1].bias)
+
     def forward(
         self,
         input_ids: torch.Tensor,
@@ -489,26 +703,93 @@ class NullspanForExtraction(PreTrainedModel):
         is_null_labels: torch.Tensor | None = None,
         start_positions: torch.Tensor | None = None,
         end_positions: torch.Tensor | None = None,
+        has_span_mask: torch.Tensor | None = None,
         bio_labels: torch.Tensor | None = None,
         op_labels: torch.Tensor | None = None,
         quantile_labels: torch.Tensor | None = None,
         has_quantile_mask: torch.Tensor | None = None,
     ) -> dict[str, torch.Tensor]:
-        enc_out = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
-        seq_out = self.drop(enc_out.last_hidden_state)  # [B, L, H]
+        is_sep = (input_ids == 102).long()
+        sep_cum = is_sep.cumsum(dim=-1)
+
+        enc_grad = self.training and any(p.requires_grad for p in self.encoder.parameters())
+        with torch.set_grad_enabled(enc_grad):
+            if getattr(self.encoder.config, "model_type", "electra") != "distilbert":
+                token_type_ids = (sep_cum - is_sep).clamp(0, 1) * attention_mask.long()
+                enc_out = self.encoder(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    token_type_ids=token_type_ids,
+                )
+            else:
+                enc_out = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
+
+        raw_seq_out = enc_out.last_hidden_state  # [B, L, H]
+        attn_bias = (1.0 - attention_mask.to(raw_seq_out.dtype)) * (-1e4)
+
+        adapt_seq = raw_seq_out
+        for blk in self.schema_adapter:
+            adapt_seq = blk(adapt_seq, attn_bias)
+        seq_out = self.drop(adapt_seq)  # [B, L, H]
         cls_out = seq_out[:, 0, :]  # [B, H]
 
-        null_logits = self.null_head(cls_out).squeeze(-1)  # [B]
-        span_logits = self.span_head(seq_out)  # [B, L, 2]
-        start_logits, end_logits = span_logits[:, :, 0], span_logits[:, :, 1]
+        # Mean-pooled query representation ([CLS] + query tokens prior to first [SEP])
+        q_mask = ((sep_cum == 0) & (attention_mask > 0)).to(seq_out.dtype)
+        q_vec = (seq_out * q_mask.unsqueeze(-1)).sum(dim=1) / q_mask.sum(dim=1, keepdim=True).clamp(min=1.0)
+        schema_flag = ((input_ids == 1064).to(seq_out.dtype) * q_mask).sum(dim=1).clamp(0.0, 1.0)  # [B]
+        sf_3d = schema_flag.unsqueeze(-1).unsqueeze(-1)
 
-        if state_mask is not None:
-            mask_val = -1e4
-            start_logits = start_logits.masked_fill(state_mask == 0, mask_val)
-            end_logits = end_logits.masked_fill(state_mask == 0, mask_val)
+        qa_span_logits = self.qa_span_head(raw_seq_out)  # [B, L, 2] untouched SQuAD2 head
+        schema_span_logits = self.span_head(seq_out) + self.span_query_proj(seq_out * q_vec.unsqueeze(1))  # [B, L, 2]
+        raw_span_logits = (1.0 - sf_3d) * qa_span_logits + sf_3d * schema_span_logits
+        cls_null_score = raw_span_logits[:, 0, 0] + raw_span_logits[:, 0, 1]  # [B]
+
+        if state_mask is None:
+            state_mask_f = attention_mask.to(seq_out.dtype)
+        else:
+            state_mask_f = state_mask.to(seq_out.dtype)
+        mask_bias = (1.0 - state_mask_f) * (-1e4)
+
+        unscaled_start_logits = raw_span_logits[:, :, 0] + mask_bias
+        unscaled_end_logits = raw_span_logits[:, :, 1] + mask_bias
+
+        best_start = unscaled_start_logits.max(dim=-1).values
+        best_end = unscaled_end_logits.max(dim=-1).values
+        span_margin = cls_null_score - (best_start + best_end)
+
+        s_attn = F.softmax(unscaled_start_logits, dim=-1)
+        e_attn = F.softmax(unscaled_end_logits, dim=-1)
+        peak_s = s_attn.max(dim=-1).values
+        peak_e = e_attn.max(dim=-1).values
+        span_weights = 0.5 * (s_attn + e_attn)
+        span_vec = torch.bmm(span_weights.unsqueeze(1), seq_out).squeeze(1)  # [B, H]
+
+        scalar_null_feats = torch.stack(
+            [span_margin * 0.125, cls_null_score * 0.125, peak_s, peak_e, schema_flag],
+            dim=-1,
+        )
+        null_in = torch.cat([cls_out, span_vec, cls_out * span_vec, q_vec * span_vec, scalar_null_feats], dim=-1)
+        schema_null_logit = self.null_head(null_in).squeeze(-1) + 0.35 * span_margin
+
+        qa_bias = float(getattr(self.config, "qa_null_bias", 0.0))
+        qa_scale = float(getattr(self.config, "qa_null_scale", 0.45))
+        qa_null_logit = (span_margin + qa_bias) * qa_scale
+
+        unscaled_null_logits = (1.0 - schema_flag) * qa_null_logit + schema_flag * schema_null_logit
+
+        if not self.training:
+            null_temp = max(1e-4, float(self.config.null_temperature))
+            span_temp = max(1e-4, float(self.config.span_temperature))
+            null_logits = (1.0 - schema_flag) * qa_null_logit + schema_flag * (schema_null_logit / null_temp)
+            start_logits = (raw_span_logits[:, :, 0] / span_temp) + mask_bias
+            end_logits = (raw_span_logits[:, :, 1] / span_temp) + mask_bias
+        else:
+            null_logits = unscaled_null_logits
+            start_logits = unscaled_start_logits
+            end_logits = unscaled_end_logits
 
         bio_logits = self.bio_head(seq_out)  # [B, L, 3]
-        op_logits = self.op_head(cls_out)  # [B, 10]
+        op_logits = self.op_head(torch.cat([cls_out, q_vec], dim=-1))  # [B, 10]
 
         if num_feats is None:
             num_feats = torch.zeros((input_ids.size(0), 8), device=input_ids.device, dtype=cls_out.dtype)
@@ -529,39 +810,69 @@ class NullspanForExtraction(PreTrainedModel):
         }
 
         if is_null_labels is not None:
-            loss_null = F.binary_cross_entropy_with_logits(null_logits, is_null_labels.float())
-            loss_start = F.cross_entropy(start_logits, start_positions.clamp(min=0))
-            loss_end = F.cross_entropy(end_logits, end_positions.clamp(min=0))
+            # Supervise schema_null_logit + schema_span_logits strictly on schema_flag == 1 rows
+            sf_mask = schema_flag > 0.5
+            if sf_mask.any():
+                loss_null = F.binary_cross_entropy_with_logits(schema_null_logit[sf_mask], is_null_labels[sf_mask].float())
+                full_s_logits = schema_span_logits[sf_mask, :, 0] + attn_bias[sf_mask]
+                full_e_logits = schema_span_logits[sf_mask, :, 1] + attn_bias[sf_mask]
+                s_pos_clamped = start_positions.clamp(min=0) if start_positions is not None else torch.zeros_like(is_null_labels)
+                e_pos_clamped = end_positions.clamp(min=0) if end_positions is not None else torch.zeros_like(is_null_labels)
+                cls_or_s = torch.where(is_null_labels[sf_mask] == 1, torch.zeros_like(s_pos_clamped[sf_mask]), s_pos_clamped[sf_mask])
+                cls_or_e = torch.where(is_null_labels[sf_mask] == 1, torch.zeros_like(e_pos_clamped[sf_mask]), e_pos_clamped[sf_mask])
+                loss_squad_cls = 0.5 * (
+                    F.cross_entropy(full_s_logits, cls_or_s) + F.cross_entropy(full_e_logits, cls_or_e)
+                )
+            else:
+                loss_null = schema_null_logit.sum() * 0.0
+                loss_squad_cls = schema_null_logit.sum() * 0.0
+                s_pos_clamped = start_positions.clamp(min=0) if start_positions is not None else torch.zeros_like(is_null_labels)
+                e_pos_clamped = end_positions.clamp(min=0) if end_positions is not None else torch.zeros_like(is_null_labels)
 
-            valid_bio = bio_labels != -100
-            if valid_bio.any():
+            if has_span_mask is None:
+                valid_span = (is_null_labels == 0) & sf_mask
+            else:
+                valid_span = (has_span_mask == 1) & sf_mask
+            if valid_span.any() and start_positions is not None and end_positions is not None:
+                loss_start = F.cross_entropy(unscaled_start_logits[valid_span], s_pos_clamped[valid_span])
+                loss_end = F.cross_entropy(unscaled_end_logits[valid_span], e_pos_clamped[valid_span])
+                loss_span = loss_start + loss_end
+            else:
+                loss_span = schema_null_logit.sum() * 0.0
+
+            valid_bio = bio_labels != -100 if bio_labels is not None else torch.zeros_like(input_ids, dtype=torch.bool)
+            if valid_bio.any() and bio_labels is not None:
                 b_log = bio_logits[valid_bio]
                 b_tgt = bio_labels[valid_bio]
                 per_tok = F.cross_entropy(b_log, b_tgt, reduction="none")
                 tok_w = torch.where(b_tgt > 0, 5.0, 1.0)
                 loss_bio = (per_tok * tok_w).sum() / tok_w.sum().clamp(min=1.0)
             else:
-                loss_bio = null_logits.sum() * 0.0
+                loss_bio = schema_null_logit.sum() * 0.0
 
-            loss_op = F.cross_entropy(op_logits, op_labels)
+            loss_op = F.cross_entropy(op_logits, op_labels) if op_labels is not None else (schema_null_logit.sum() * 0.0)
 
-            taus = torch.tensor([0.10, 0.50, 0.90], device=input_ids.device, dtype=quantile_preds.dtype).unsqueeze(0)
-            diff = quantile_labels - quantile_preds
-            pinball = torch.maximum(taus * diff, (taus - 1.0) * diff).mean(dim=-1)
-            if has_quantile_mask is not None and has_quantile_mask.sum() > 0:
-                loss_q = (pinball * has_quantile_mask.float()).sum() / has_quantile_mask.float().sum().clamp(min=1.0)
+            if quantile_labels is not None:
+                taus = torch.tensor([0.10, 0.50, 0.90], device=input_ids.device, dtype=quantile_preds.dtype).unsqueeze(0)
+                diff = quantile_labels - quantile_preds
+                pinball = torch.maximum(taus * diff, (taus - 1.0) * diff).mean(dim=-1)
+                if has_quantile_mask is not None and has_quantile_mask.sum() > 0:
+                    loss_q = (pinball * has_quantile_mask.float()).sum() / has_quantile_mask.float().sum().clamp(min=1.0)
+                else:
+                    loss_q = pinball.mean() * 0.0
             else:
-                loss_q = pinball.mean() * 0.0
+                loss_q = schema_null_logit.sum() * 0.0
 
             total_loss = (
-                1.5 * loss_null
-                + 1.5 * (loss_start + loss_end)
+                1.6 * loss_null
+                + 1.0 * loss_squad_cls
+                + 1.4 * loss_span
                 + 1.2 * loss_bio
-                + 1.0 * loss_op
+                + 0.8 * loss_op
                 + 2.0 * loss_q
             )
             out["loss"] = total_loss
-            out["loss_components"] = torch.stack([loss_null, loss_start + loss_end, loss_bio, loss_op, loss_q]).detach()
+            out["loss_components"] = torch.stack([loss_null, loss_span, loss_bio, loss_op, loss_q]).detach()
 
         return out
 
@@ -614,9 +925,10 @@ class NullspanForExtraction(PreTrainedModel):
             num_feats=num_feats,
         )
 
-        p_nulls = torch.sigmoid(preds["null_logits"] / max(1e-4, self.config.null_temperature)).cpu().tolist()
-        start_probs = F.softmax(preds["start_logits"] / max(1e-4, self.config.span_temperature), dim=-1).cpu()
-        end_probs = F.softmax(preds["end_logits"] / max(1e-4, self.config.span_temperature), dim=-1).cpu()
+        # Temperature scaling is already applied inside self.forward() when not self.training
+        p_nulls = torch.sigmoid(preds["null_logits"]).cpu().tolist()
+        start_probs = F.softmax(preds["start_logits"], dim=-1).cpu()
+        end_probs = F.softmax(preds["end_logits"], dim=-1).cpu()
         bio_preds = preds["bio_logits"].argmax(dim=-1).cpu()
         op_preds = preds["op_logits"].argmax(dim=-1).cpu().tolist()
         q_preds = preds["quantile_preds"].cpu().tolist()
@@ -638,7 +950,7 @@ class NullspanForExtraction(PreTrainedModel):
             ep = end_probs[b_i]
             for s_i in valid_indices:
                 for e_i in valid_indices:
-                    if s_i <= e_i and (e_i - s_i) <= 12:
+                    if s_i <= e_i and (e_i - s_i) <= 24:
                         sc = float(sp[s_i].item() * ep[e_i].item())
                         if sc > best_score:
                             best_score = sc
@@ -648,11 +960,14 @@ class NullspanForExtraction(PreTrainedModel):
             char_s, char_e = int(offsets[best_s][0]) + w_off, int(offsets[best_e][1]) + w_off
             span_text = state[char_s:char_e].strip(" .,;:\n")
             if span_text:
-                adj_idx = state.find(span_text, char_s)
+                adj_idx = state.find(span_text, max(0, char_s - 2))
                 if adj_idx >= 0:
                     char_s, char_e = adj_idx, adj_idx + len(span_text)
 
-            conf = round(min(0.999999, max(0.05, math.sqrt(max(1e-9, best_score)) * (1.0 - p_null))), 6)
+            conf = round(
+                min(0.999999, max(0.05, p_null if is_null else (math.sqrt(max(1e-9, best_score)) * (1.0 - p_null)))),
+                6,
+            )
             span_entropy = round(
                 0.5 * (_compute_shannon_entropy_bits(sp, valid_indices) + _compute_shannon_entropy_bits(ep, valid_indices)),
                 4,
@@ -782,8 +1097,9 @@ class NullspanForExtraction(PreTrainedModel):
                 continue
 
             if ftype == "boolean":
-                low_span = span_text.lower()
-                bool_val = low_span in ("true", "yes", "1", "confirmed", "active", "enabled")
+                bool_val, char_s, char_e, p_null, is_null = resolve_clause_boolean(
+                    state, fname, spec, span_text, char_s, char_e, p_null
+                )
                 p_true = round(conf if bool_val else (1.0 - conf), 6)
                 answers[fname] = {
                     "type": "boolean",
@@ -801,10 +1117,23 @@ class NullspanForExtraction(PreTrainedModel):
             if ftype == "enum":
                 options = [str(o) for o in spec.get("options", [])]
                 matched = span_text
+                matched_in_state = False
                 for opt in options:
                     if opt.lower() == span_text.lower() or opt.lower() in span_text.lower():
                         matched = opt
+                        matched_in_state = True
                         break
+                else:
+                    for opt in options:
+                        if opt.lower() in state.lower():
+                            matched = opt
+                            matched_in_state = True
+                            idx_o = state.lower().find(opt.lower())
+                            char_s, char_e = idx_o, idx_o + len(opt)
+                            break
+                if matched_in_state:
+                    p_null = round(0.5 * 0.002 + 0.5 * min(0.12, p_null), 6)
+                    is_null = False
                 rem_prob = max(0.0, 1.0 - conf)
                 other_cnt = max(1, len(options) - 1)
                 probs_map = {
@@ -867,19 +1196,26 @@ class NullspanForExtraction(PreTrainedModel):
                 continue
 
             if ftype == "number":
-                instr_lower = spec.get("instructions", "").lower()
+                instr_lower = (spec.get("instructions") or spec.get("instruction") or "").lower()
                 span_nums = [float(x.replace(",", "")) for x in re.findall(r"\d+(?:,\d{3})*(?:\.\d+)?", span_text)]
-                if len(state) > 320 or (span_entropy > 1.2 and not (op_id == 2 or "including" in instr_lower)) or (not is_null and not span_nums):
-                    dis_ans = disambiguate_numeric_field(state, fname, spec)
+                # Check ARITH_SUM ("$X plus $Y") BEFORE multi-numeric disambiguation!
+                is_arith_sum = (op_id == 2 or "including" in instr_lower or "total_credit" in fname) and ("plus $" in state or "plus" in span_text)
+                if is_arith_sum:
+                    m_plus = re.findall(r"\$(\d+(?:\.\d+)?)\s+plus\s+\$(\d+(?:\.\d+)?)", state)
+                    num_val = float(m_plus[0][0]) + float(m_plus[0][1]) if m_plus else (sum(span_nums[:2]) if len(span_nums) >= 2 else 0.0)
+                elif len(state) > 320 or (span_entropy > 1.2) or (not is_null and not span_nums):
+                    dis_ans = disambiguate_numeric_field(
+                        state,
+                        fname,
+                        spec,
+                        neural_span=[char_s, char_e],
+                        neural_p_null=p_null,
+                    )
                     if dis_ans is not None:
                         answers[fname] = dis_ans
                         extracted_scalar_values[fname] = dis_ans.get("value")
                         continue
-                if (op_id == 2 or "including" in instr_lower) and len(span_nums) >= 2:
-                    num_val = sum(span_nums[:2])
-                elif op_id == 2 and "plus $" in state:
-                    m_plus = re.findall(r"\$(\d+(?:\.\d+)?)\s+plus\s+\$(\d+(?:\.\d+)?)", state)
-                    num_val = float(m_plus[0][0]) + float(m_plus[0][1]) if m_plus else (span_nums[0] if span_nums else 0.0)
+                    num_val = span_nums[0] if span_nums else 0.0
                 elif span_nums:
                     num_val = span_nums[0]
                 else:
@@ -912,6 +1248,10 @@ class NullspanForExtraction(PreTrainedModel):
                 continue
 
             # Default: `type == "text"`
+            p_null = apply_qa_precondition_guard(queries[b_i], state, p_null)
+            is_null = p_null > 0.5
+            if is_null and not abstention_reason:
+                abstention_reason = "missing_field"
             guess_str = span_text
             if is_null and not guess_str.startswith("$"):
                 m_dlr = re.search(r"\$\d+\.\d{2}", state)

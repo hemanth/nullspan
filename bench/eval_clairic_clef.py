@@ -1,9 +1,9 @@
 """Live Empirical Evaluation of Cloudflare Workers AI `@cf/cloudflare/clairic` + `@cf/cloudflare/clef`
-on the exact same N=404 NullspanBench items (126 unique documents: 336 Open Structured + 60 Stanford SQuAD v2.0 + 8 Adversarial).
+on the exact same N=500 NullspanBench items (138 unique documents: 336 Open Structured + 60 Stanford SQuAD v2.0 + 96 Sealed Multi-Numeric Contracts + 8 Adversarial).
 
 Caches raw Cloudflare Workers AI responses to `bench/clairic_clef_cache.json` for reproducibility
-and computes identical JevBench/NullspanBench metrics (Intelligence, SQuAD v2.0, Structured/Math,
-Calibration ECE/Brier/AUROC, Latency p50/p95, and Token/Pass usage).
+and computes identical JevBench/NullspanBench metrics (Intelligence, SQuAD v2.0, Multi-Numeric Contracts,
+Structured/Math, Calibration ECE/Brier/AUROC, Latency p50/p95, and Token/Pass usage).
 """
 from __future__ import annotations
 
@@ -179,9 +179,10 @@ def main() -> None:
                     print(f"  Fetched {done}/{len(missing_docs)} docs...")
                     CACHE_PATH.write_text(json.dumps(cache, indent=2))
 
-    # Now evaluate all 404 items from the live responses
+    # Now evaluate all 500 items from the live responses
     scores_all: list[float] = []
     scores_squad: list[float] = []
+    scores_contracts: list[float] = []
     scores_struct: list[float] = []
     scores_adv: list[float] = []
     scores_by_type: dict[str, list[float]] = {}
@@ -258,6 +259,8 @@ def main() -> None:
                 scores_squad.append(sc)
                 squad_p_null_preds.append(p_null_val)
                 squad_p_null_golds.append(gold_null)
+            elif r["domain"] == "contract_extraction":
+                scores_contracts.append(sc)
             elif r["domain"] == "adversarial_stress":
                 scores_adv.append(sc)
                 scores_struct.append(sc)
@@ -266,6 +269,7 @@ def main() -> None:
 
     overall_mean, overall_lo, overall_hi = bootstrap_ci(scores_all)
     squad_mean, squad_lo, squad_hi = bootstrap_ci(scores_squad)
+    contracts_mean, contracts_lo, contracts_hi = bootstrap_ci(scores_contracts)
     struct_mean, struct_lo, struct_hi = bootstrap_ci(scores_struct)
     adv_mean, _, _ = bootstrap_ci(scores_adv)
 
@@ -290,6 +294,8 @@ def main() -> None:
         "squad_v2_acc_pct": round(squad_mean * 100, 1),
         "squad_v2_ci95_pct": [round(squad_lo * 100, 1), round(squad_hi * 100, 1)],
         "squad_v2_auroc": round(auroc_squad, 3),
+        "contracts_sealed_acc_pct": round(contracts_mean * 100, 1),
+        "contracts_sealed_ci95_pct": [round(contracts_lo * 100, 1), round(contracts_hi * 100, 1)],
         "structured_math_acc_pct": round(struct_mean * 100, 1),
         "structured_math_ci95_pct": [round(struct_lo * 100, 1), round(struct_hi * 100, 1)],
         "adversarial_acc_pct": round(adv_mean * 100, 1),

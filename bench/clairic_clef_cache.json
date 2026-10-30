@@ -7473,5 +7473,1123 @@
       "messages": []
     },
     "clef_ms": 301.0
+  },
+  "sealed_contract_biotech_clinical_cro": {
+    "clairic": {
+      "result": {
+        "model": "clairic",
+        "answers": {
+          "patient_target": {
+            "type": "number",
+            "p_null": 1.0936128091998398e-06,
+            "guess": 360,
+            "confidence": 0.9999393250359218,
+            "value": 360
+          },
+          "startup_retainer": {
+            "type": "number",
+            "p_null": 2.2598440409637988e-05,
+            "guess": 85000,
+            "confidence": 0.999940040489696,
+            "value": 85000
+          },
+          "per_patient_fee": {
+            "type": "number",
+            "p_null": 0.0002341775834793225,
+            "guess": 4200,
+            "confidence": 0.9994318072550308,
+            "value": 4200
+          },
+          "sae_reporting_hours": {
+            "type": "number",
+            "p_null": 5.8081634051632136e-05,
+            "guess": 24,
+            "confidence": 0.9937835406269208,
+            "value": 24
+          },
+          "amendment_notice_days": {
+            "type": "number",
+            "p_null": 1.2595481280186505e-07,
+            "guess": 30,
+            "confidence": 0.9999976158185078,
+            "value": 30
+          },
+          "liability_cap": {
+            "type": "number",
+            "p_null": 4.361652827356011e-06,
+            "guess": 950000,
+            "confidence": 0.9999850990365199,
+            "value": 950000
+          },
+          "biomarker_milestones": {
+            "type": "list",
+            "value": [
+              50000,
+              75000,
+              65000
+            ],
+            "confidences": [
+              0.9993264056983048,
+              0.9987599102950613,
+              0.9996760686933346
+            ],
+            "confidence": 0.9956328941698148
+          },
+          "patent_royalty_pct": {
+            "type": "number",
+            "p_null": 0.9999958276748657,
+            "span": [
+              452,
+              457
+            ],
+            "source": "input",
+            "guess": 4200,
+            "confidence": 0.5167190635432632,
+            "value": null
+          }
+        },
+        "truncated": false,
+        "usage": {
+          "state_tokens": 287,
+          "image_tokens": 0,
+          "schema_tokens": 549,
+          "input_tokens": 836,
+          "output_tokens": 0,
+          "passes": 1
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clairic_ms": 363.02,
+    "clef": null,
+    "clef_ms": 0.0
+  },
+  "sealed_contract_gpu_colocation_lease": {
+    "clairic": {
+      "result": {
+        "model": "clairic",
+        "answers": {
+          "lease_term_months": {
+            "type": "number",
+            "p_null": 0.0028235202189534903,
+            "guess": 60,
+            "confidence": 0.7258556897807634,
+            "value": 60
+          },
+          "monthly_colocation_rent": {
+            "type": "number",
+            "p_null": 6.0360540373949334e-05,
+            "guess": 215000,
+            "confidence": 0.9999582780445223,
+            "value": 215000
+          },
+          "security_deposit": {
+            "type": "number",
+            "p_null": 2.7835108085128013e-06,
+            "guess": 430000,
+            "confidence": 0.9999921322393701,
+            "value": 430000
+          },
+          "pue_ceiling": {
+            "type": "number",
+            "p_null": 1.5185302117970423e-06,
+            "guess": 1.22,
+            "confidence": 0.9997954682312008,
+            "value": 1.22
+          },
+          "early_exit_fee": {
+            "type": "number",
+            "p_null": 8.459177479380742e-06,
+            "guess": 645000,
+            "confidence": 0.9999884367977139,
+            "value": 645000
+          },
+          "termination_notice_days": {
+            "type": "number",
+            "p_null": 4.6633482497782097e-07,
+            "guess": 120,
+            "confidence": 0.9999425434171652,
+            "value": 120
+          },
+          "buildout_milestones": {
+            "type": "list",
+            "value": [
+              60000,
+              95000,
+              45000
+            ],
+            "confidences": [
+              0.9996420058841139,
+              0.9996098152240753,
+              0.9999523181393616
+            ],
+            "confidence": 0.9980770181831381
+          },
+          "carbon_offset_surcharge": {
+            "type": "number",
+            "p_null": 0.9999994039535522,
+            "guess": 0,
+            "confidence": 0.5196510144077988,
+            "value": null
+          }
+        },
+        "truncated": false,
+        "usage": {
+          "state_tokens": 306,
+          "image_tokens": 0,
+          "schema_tokens": 541,
+          "input_tokens": 847,
+          "output_tokens": 0,
+          "passes": 1
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clairic_ms": 381.25,
+    "clef": null,
+    "clef_ms": 0.0
+  },
+  "sealed_contract_saas_enterprise_msa": {
+    "clairic": {
+      "result": {
+        "model": "clairic",
+        "answers": {
+          "initial_term_months": {
+            "type": "number",
+            "p_null": 2.2748068658984266e-05,
+            "guess": 36,
+            "confidence": 0.33734891345230317,
+            "value": 36
+          },
+          "annual_platform_fee": {
+            "type": "number",
+            "p_null": 1.1488065865705721e-05,
+            "guess": 185000,
+            "confidence": 0.999986171854501,
+            "value": 185000
+          },
+          "uptime_sla_pct": {
+            "type": "number",
+            "p_null": 3.928648766304832e-07,
+            "guess": 99.98,
+            "confidence": 0.9999719864713686,
+            "value": 99.98
+          },
+          "disaster_recovery_rto_hours": {
+            "type": "number",
+            "p_null": 5.728865204446265e-08,
+            "guess": 4,
+            "confidence": 0.9999948740241463,
+            "value": 4
+          },
+          "late_interest_pct": {
+            "type": "number",
+            "p_null": 6.45628897473216e-05,
+            "guess": 1.25,
+            "confidence": 0.9995529905568654,
+            "value": 1.25
+          },
+          "cure_period_days": {
+            "type": "number",
+            "p_null": 3.4078759370004263e-08,
+            "guess": 14,
+            "confidence": 0.9999947548160221,
+            "value": 14
+          },
+          "liability_cap": {
+            "type": "number",
+            "p_null": 7.275589723576559e-06,
+            "guess": 550000,
+            "confidence": 0.9999463578842385,
+            "value": 550000
+          },
+          "royalty_rate_pct": {
+            "type": "number",
+            "p_null": 0.9999990463256836,
+            "span": [
+              1025,
+              1029
+            ],
+            "source": "input",
+            "guess": 1.25,
+            "confidence": 0.7423002563789289,
+            "value": null
+          }
+        },
+        "truncated": false,
+        "usage": {
+          "state_tokens": 336,
+          "image_tokens": 0,
+          "schema_tokens": 414,
+          "input_tokens": 750,
+          "output_tokens": 0,
+          "passes": 1
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clairic_ms": 406.32,
+    "clef": null,
+    "clef_ms": 0.0
+  },
+  "sealed_contract_renewable_ppa": {
+    "clairic": {
+      "result": {
+        "model": "clairic",
+        "answers": {
+          "ppa_term_years": {
+            "type": "number",
+            "p_null": 6.983628964007949e-07,
+            "guess": 15,
+            "confidence": 0.9999741320267518,
+            "value": 15
+          },
+          "strike_price": {
+            "type": "number",
+            "p_null": 3.917312369594583e-06,
+            "guess": 38.5,
+            "confidence": 0.9999914169831141,
+            "value": 38.5
+          },
+          "degradation_cap_pct": {
+            "type": "number",
+            "p_null": 3.5600794490164844e-07,
+            "guess": 0.5,
+            "confidence": 0.9999401598026262,
+            "value": 0.5
+          },
+          "availability_guarantee_pct": {
+            "type": "number",
+            "p_null": 1.7660014464127016e-06,
+            "guess": 98.5,
+            "confidence": 0.9999793771329196,
+            "value": 98.5
+          },
+          "curtailment_credit": {
+            "type": "number",
+            "p_null": 2.1385164927778533e-06,
+            "guess": 29,
+            "confidence": 0.9999076187119238,
+            "value": 29
+          },
+          "cure_period_days": {
+            "type": "number",
+            "p_null": 7.086030429093171e-09,
+            "guess": 20,
+            "confidence": 1,
+            "value": 20
+          },
+          "interconnection_tranches": {
+            "type": "list",
+            "value": [
+              120000,
+              180000,
+              200000
+            ],
+            "confidences": [
+              0.999150159486482,
+              0.9999552978688846,
+              0.9999947548087107
+            ],
+            "confidence": 0.9987655788304975
+          },
+          "tax_credit_rebate": {
+            "type": "number",
+            "p_null": 0.9999998807907104,
+            "span": [
+              416,
+              420
+            ],
+            "source": "input",
+            "guess": 0.5,
+            "confidence": 0.6177748634346045,
+            "value": null
+          }
+        },
+        "truncated": false,
+        "usage": {
+          "state_tokens": 263,
+          "image_tokens": 0,
+          "schema_tokens": 561,
+          "input_tokens": 824,
+          "output_tokens": 0,
+          "passes": 1
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clairic_ms": 244.82,
+    "clef": null,
+    "clef_ms": 0.0
+  },
+  "sealed_contract_supply_chain_3pl": {
+    "clairic": {
+      "result": {
+        "model": "clairic",
+        "answers": {
+          "contract_duration_months": {
+            "type": "number",
+            "p_null": 1.7445849152863957e-05,
+            "span": [
+              309,
+              311
+            ],
+            "source": "input",
+            "guess": 48,
+            "confidence": 0.6579070308319501,
+            "value": 48
+          },
+          "warehouse_retainer": {
+            "type": "number",
+            "p_null": 3.018010283994954e-05,
+            "guess": 32000,
+            "confidence": 0.9999926090668294,
+            "value": 32000
+          },
+          "shrinkage_allowance_pct": {
+            "type": "number",
+            "p_null": 3.8631364418506564e-07,
+            "guess": 0.35,
+            "confidence": 0.9999440932118628,
+            "value": 0.35
+          },
+          "detention_grace_hours": {
+            "type": "number",
+            "p_null": 1.265587368237675e-08,
+            "guess": 3,
+            "confidence": 0.9999990463272184,
+            "value": 3
+          },
+          "cargo_liability_cap": {
+            "type": "number",
+            "p_null": 1.237893116012856e-06,
+            "guess": 400000,
+            "confidence": 0.9999974966103835,
+            "value": 400000
+          },
+          "net_payment_days": {
+            "type": "number",
+            "p_null": 8.755325325182639e-06,
+            "guess": 15,
+            "confidence": 0.999986887092546,
+            "value": 15
+          },
+          "fuel_surcharge_cap_pct": {
+            "type": "number",
+            "p_null": 1,
+            "span": [
+              537,
+              541
+            ],
+            "source": "input",
+            "guess": 0.35,
+            "confidence": 0.8541465955859877,
+            "value": null
+          }
+        },
+        "truncated": false,
+        "usage": {
+          "state_tokens": 246,
+          "image_tokens": 0,
+          "schema_tokens": 384,
+          "input_tokens": 630,
+          "output_tokens": 0,
+          "passes": 1
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clairic_ms": 407.78,
+    "clef": {
+      "result": {
+        "model": "clef",
+        "answers": {
+          "cold_chain_telemetry": {
+            "type": "noul",
+            "noul": 0.9914
+          }
+        },
+        "usage": {
+          "input_tokens": 395,
+          "output_tokens": 0
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clef_ms": 386.64
+  },
+  "sealed_contract_ai_foundation_license": {
+    "clairic": {
+      "result": {
+        "model": "clairic",
+        "answers": {
+          "annual_committed_spend": {
+            "type": "number",
+            "p_null": 4.0311686461791396e-05,
+            "guess": 320000,
+            "confidence": 0.9999954700614708,
+            "value": 320000
+          },
+          "overage_discount_pct": {
+            "type": "number",
+            "p_null": 4.2490486862334365e-07,
+            "guess": 22.5,
+            "confidence": 0.9999980926539607,
+            "value": 22.5
+          },
+          "checkpoint_retention_days": {
+            "type": "number",
+            "p_null": 6.224539106369775e-07,
+            "guess": 30,
+            "confidence": 0.9999864102716449,
+            "value": 30
+          },
+          "termination_notice_days": {
+            "type": "number",
+            "p_null": 1.392483852669102e-07,
+            "guess": 45,
+            "confidence": 0.9999967813568702,
+            "value": 45
+          },
+          "ip_indemnity_cap": {
+            "type": "number",
+            "p_null": 4.978501237928867e-06,
+            "guess": 1500000,
+            "confidence": 0.9999983310718861,
+            "value": 1500000
+          },
+          "requests_per_minute": {
+            "type": "number",
+            "p_null": 9.204577509080991e-06,
+            "guess": 18000,
+            "confidence": 0.9999676949518028,
+            "value": 18000
+          },
+          "revenue_share_pct": {
+            "type": "number",
+            "p_null": 0.9999990463256836,
+            "span": [
+              476,
+              480
+            ],
+            "source": "input",
+            "guess": 22.5,
+            "confidence": 0.5766433599178313,
+            "value": null
+          }
+        },
+        "truncated": false,
+        "usage": {
+          "state_tokens": 212,
+          "image_tokens": 0,
+          "schema_tokens": 383,
+          "input_tokens": 595,
+          "output_tokens": 0,
+          "passes": 1
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clairic_ms": 255.43,
+    "clef": {
+      "result": {
+        "model": "clef",
+        "answers": {
+          "deployment_mode": {
+            "type": "choice",
+            "choice": "vpc-dedicated",
+            "probabilities": {
+              "multi-tenant": 0.0066,
+              "vpc-dedicated": 0.9846,
+              "air-gapped": 0.0088
+            },
+            "confidence": 0.9544
+          }
+        },
+        "usage": {
+          "input_tokens": 368,
+          "output_tokens": 0
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clef_ms": 251.38
+  },
+  "sealed_contract_hipaa_baa_dpa": {
+    "clairic": {
+      "result": {
+        "model": "clairic",
+        "answers": {
+          "breach_notification_hours": {
+            "type": "number",
+            "p_null": 7.3473102020216174e-06,
+            "guess": 24,
+            "confidence": 0.999207081253754,
+            "value": 24
+          },
+          "audit_retention_days": {
+            "type": "number",
+            "p_null": 4.713721466487186e-07,
+            "guess": 2190,
+            "confidence": 0.9999909401624688,
+            "value": 2190
+          },
+          "key_rotation_days": {
+            "type": "number",
+            "p_null": 4.525384156295331e-08,
+            "guess": 90,
+            "confidence": 0.9999964237306926,
+            "value": 90
+          },
+          "subprocessor_notice_days": {
+            "type": "number",
+            "p_null": 3.111025037583204e-08,
+            "guess": 45,
+            "confidence": 0.9999972581926642,
+            "value": 45
+          },
+          "indemnity_cap": {
+            "type": "number",
+            "p_null": 7.20729076419957e-06,
+            "guess": 1200000,
+            "confidence": 0.9999936819341001,
+            "value": 1200000
+          },
+          "credit_monitoring_sublimit": {
+            "type": "number",
+            "p_null": 3.233291135984473e-05,
+            "guess": 350000,
+            "confidence": 0.9999929666821713,
+            "value": 350000
+          },
+          "liquidated_damages": {
+            "type": "number",
+            "p_null": 0.9999996423721313,
+            "guess": 100,
+            "confidence": 0.060370345407695696,
+            "value": null
+          }
+        },
+        "truncated": false,
+        "usage": {
+          "state_tokens": 297,
+          "image_tokens": 0,
+          "schema_tokens": 408,
+          "input_tokens": 705,
+          "output_tokens": 0,
+          "passes": 1
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clairic_ms": 338.58,
+    "clef": {
+      "result": {
+        "model": "clef",
+        "answers": {
+          "hipaa_compliant": {
+            "type": "noul",
+            "noul": 0.9923
+          }
+        },
+        "usage": {
+          "input_tokens": 446,
+          "output_tokens": 0
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clef_ms": 539.03
+  },
+  "sealed_contract_fintech_payment_clearing": {
+    "clairic": {
+      "result": {
+        "model": "clairic",
+        "answers": {
+          "settlement_days": {
+            "type": "number",
+            "p_null": 1.3344118769964552e-06,
+            "guess": 2,
+            "confidence": 0.9999051177615604,
+            "value": 2
+          },
+          "rolling_reserve_pct": {
+            "type": "number",
+            "p_null": 1.3410699466476217e-05,
+            "guess": 8.5,
+            "confidence": 0.9999363451194817,
+            "value": 8.5
+          },
+          "reserve_hold_days": {
+            "type": "number",
+            "p_null": 1.582888131679283e-08,
+            "guess": 120,
+            "confidence": 0.9999974966096445,
+            "value": 120
+          },
+          "chargeback_threshold_pct": {
+            "type": "number",
+            "p_null": 1.060145905285026e-06,
+            "guess": 0.85,
+            "confidence": 0.9994639221972602,
+            "value": 0.85
+          },
+          "dispute_fee": {
+            "type": "number",
+            "p_null": 7.575021072625532e-07,
+            "guess": 22.5,
+            "confidence": 0.9999994039538151,
+            "value": 22.5
+          },
+          "monthly_minimum_fee": {
+            "type": "number",
+            "p_null": 1.3019539437664207e-05,
+            "guess": 3500,
+            "confidence": 0.9999438544166037,
+            "value": 3500
+          },
+          "exclusivity_buyout": {
+            "type": "number",
+            "p_null": 0.9999996423721313,
+            "guess": 300,
+            "confidence": 0.1219527277331152,
+            "value": null
+          }
+        },
+        "truncated": false,
+        "usage": {
+          "state_tokens": 197,
+          "image_tokens": 0,
+          "schema_tokens": 385,
+          "input_tokens": 582,
+          "output_tokens": 0,
+          "passes": 1
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clairic_ms": 300.44,
+    "clef": {
+      "result": {
+        "model": "clef",
+        "answers": {
+          "pricing_tier": {
+            "type": "choice",
+            "choice": "enterprise-plus",
+            "probabilities": {
+              "starter": 0.0024,
+              "growth": 0.0026,
+              "enterprise-plus": 0.995
+            },
+            "confidence": 0.9851
+          }
+        },
+        "usage": {
+          "input_tokens": 340,
+          "output_tokens": 0
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clef_ms": 678.36
+  },
+  "sealed_contract_cyber_ir_retainer": {
+    "clairic": {
+      "result": {
+        "model": "clairic",
+        "answers": {
+          "prepaid_hours": {
+            "type": "number",
+            "p_null": 2.7282956338581243e-08,
+            "guess": 160,
+            "confidence": 0.9999960661067604,
+            "value": 160
+          },
+          "hourly_rate": {
+            "type": "number",
+            "p_null": 1.8795233700075187e-05,
+            "guess": 325,
+            "confidence": 0.9999806884087227,
+            "value": 325
+          },
+          "annual_retainer": {
+            "type": "number",
+            "p_null": 1.584548044775147e-05,
+            "guess": 52000,
+            "confidence": 0.9999922514314575,
+            "value": 52000
+          },
+          "rollover_pct": {
+            "type": "number",
+            "p_null": 8.209111911128275e-06,
+            "guess": 25,
+            "confidence": 0.9998030998801132,
+            "value": 25
+          },
+          "response_sla_minutes": {
+            "type": "number",
+            "p_null": 1.088416823336047e-08,
+            "guess": 30,
+            "confidence": 0.9999991655355203,
+            "value": 30
+          },
+          "liability_cap": {
+            "type": "number",
+            "p_null": 1.7670746501607937e-06,
+            "guess": 500000,
+            "confidence": 0.9999940395626224,
+            "value": 500000
+          },
+          "ransom_negotiation_fee": {
+            "type": "number",
+            "p_null": 0.9999994039535522,
+            "guess": 0,
+            "confidence": 0.5310193579021926,
+            "value": null
+          }
+        },
+        "truncated": false,
+        "usage": {
+          "state_tokens": 207,
+          "image_tokens": 0,
+          "schema_tokens": 378,
+          "input_tokens": 585,
+          "output_tokens": 0,
+          "passes": 1
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clairic_ms": 239.88,
+    "clef": {
+      "result": {
+        "model": "clef",
+        "answers": {
+          "annual_retainer__verified": {
+            "type": "noul",
+            "noul": 0.9619
+          },
+          "weekend_coverage": {
+            "type": "noul",
+            "noul": 0.9868
+          }
+        },
+        "usage": {
+          "input_tokens": 449,
+          "output_tokens": 0
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clef_ms": 433.25
+  },
+  "sealed_contract_commercial_sublease": {
+    "clairic": {
+      "result": {
+        "model": "clairic",
+        "answers": {
+          "sublease_term_months": {
+            "type": "number",
+            "p_null": 4.933275340590626e-05,
+            "guess": 52,
+            "confidence": 0.32982068369746853,
+            "value": 52
+          },
+          "base_monthly_rent": {
+            "type": "number",
+            "p_null": 3.5546792787499726e-05,
+            "guess": 68500,
+            "confidence": 0.9999917746024065,
+            "value": 68500
+          },
+          "rent_escalation_pct": {
+            "type": "number",
+            "p_null": 1.2053410500811879e-05,
+            "guess": 3.25,
+            "confidence": 0.9999923706474758,
+            "value": 3.25
+          },
+          "security_deposit": {
+            "type": "number",
+            "p_null": 1.744776113810076e-06,
+            "guess": 137000,
+            "confidence": 0.9999884368012737,
+            "value": 137000
+          },
+          "holdover_multiplier_pct": {
+            "type": "number",
+            "p_null": 0.0002419747761450708,
+            "guess": 50,
+            "confidence": 0.5322456953224374,
+            "value": 50
+          },
+          "abatement_months": {
+            "type": "number",
+            "p_null": 3.9334673296309575e-09,
+            "guess": 2,
+            "confidence": 0.9999994039538151,
+            "value": 2
+          },
+          "tenant_improvement_allowance": {
+            "type": "number",
+            "p_null": 0.9999998807907104,
+            "guess": 0,
+            "confidence": 0.4702617528210115,
+            "value": null
+          }
+        },
+        "truncated": false,
+        "usage": {
+          "state_tokens": 238,
+          "image_tokens": 0,
+          "schema_tokens": 368,
+          "input_tokens": 606,
+          "output_tokens": 0,
+          "passes": 1
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clairic_ms": 260.87,
+    "clef": {
+      "result": {
+        "model": "clef",
+        "answers": {
+          "further_subletting_allowed": {
+            "type": "noul",
+            "noul": 0.006
+          }
+        },
+        "usage": {
+          "input_tokens": 389,
+          "output_tokens": 0
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clef_ms": 301.96
+  },
+  "sealed_contract_telecom_dark_fiber": {
+    "clairic": {
+      "result": {
+        "model": "clairic",
+        "answers": {
+          "iru_term_years": {
+            "type": "number",
+            "p_null": 1.0959632163576316e-05,
+            "guess": 20,
+            "confidence": 0.9990359185157106,
+            "value": 20
+          },
+          "upfront_iru_fee": {
+            "type": "number",
+            "p_null": 7.366218142124126e-06,
+            "guess": 480000,
+            "confidence": 0.9999921322403151,
+            "value": 480000
+          },
+          "annual_om_fee": {
+            "type": "number",
+            "p_null": 6.692482565995306e-05,
+            "guess": 19500,
+            "confidence": 0.9998692379485301,
+            "value": 19500
+          },
+          "mttr_hours": {
+            "type": "number",
+            "p_null": 3.4539972659786145e-08,
+            "guess": 4,
+            "confidence": 0.9999961853143304,
+            "value": 4
+          },
+          "splice_loss_db": {
+            "type": "number",
+            "p_null": 2.783221759727894e-07,
+            "guess": 0.25,
+            "confidence": 0.9999818804553768,
+            "value": 0.25
+          },
+          "chronic_outage_credit_pct": {
+            "type": "number",
+            "p_null": 3.9005361031740904e-05,
+            "guess": 15,
+            "confidence": 0.9799033178204488,
+            "value": 15
+          },
+          "pole_attachment_fee": {
+            "type": "number",
+            "p_null": 0.9999995231628418,
+            "span": [
+              577,
+              581
+            ],
+            "source": "input",
+            "guess": 0.25,
+            "confidence": 0.5409006440929574,
+            "value": null
+          }
+        },
+        "truncated": false,
+        "usage": {
+          "state_tokens": 232,
+          "image_tokens": 0,
+          "schema_tokens": 387,
+          "input_tokens": 619,
+          "output_tokens": 0,
+          "passes": 1
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clairic_ms": 208.54,
+    "clef": {
+      "result": {
+        "model": "clef",
+        "answers": {
+          "fiber_route": {
+            "type": "choice",
+            "choice": "ring-east-diverse",
+            "probabilities": {
+              "ring-west-primary": 0.0117,
+              "ring-east-diverse": 0.9843,
+              "trans-hudson-direct": 0.004
+            },
+            "confidence": 0.9536
+          }
+        },
+        "usage": {
+          "input_tokens": 390,
+          "output_tokens": 0
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clef_ms": 336.09
+  },
+  "sealed_contract_adtech_dsp_io": {
+    "clairic": {
+      "result": {
+        "model": "clairic",
+        "answers": {
+          "campaign_flight_days": {
+            "type": "number",
+            "p_null": 8.489838165814945e-08,
+            "guess": 75,
+            "confidence": 0.9999983310719145,
+            "value": 75
+          },
+          "total_media_budget": {
+            "type": "number",
+            "p_null": 3.585077820389415e-06,
+            "guess": 275000,
+            "confidence": 0.9999142952264226,
+            "value": 275000
+          },
+          "payment_net_days": {
+            "type": "number",
+            "p_null": 6.172796673808989e-08,
+            "guess": 45,
+            "confidence": 0.9999979734459572,
+            "value": 45
+          },
+          "dsp_tech_fee_pct": {
+            "type": "number",
+            "p_null": 7.107471901690587e-06,
+            "guess": 11.5,
+            "confidence": 0.9999138162985379,
+            "value": 11.5
+          },
+          "viewability_floor_pct": {
+            "type": "number",
+            "p_null": 1.4342509530251846e-05,
+            "guess": 78,
+            "confidence": 0.9964681888166911,
+            "value": 78
+          },
+          "ivt_threshold_pct": {
+            "type": "number",
+            "p_null": 2.205009150202386e-05,
+            "guess": 1.5,
+            "confidence": 0.9995915863393725,
+            "value": 1.5
+          },
+          "cancellation_penalty": {
+            "type": "number",
+            "p_null": 0.9999977350234985,
+            "guess": 100,
+            "confidence": 0.1114932227013439,
+            "value": null
+          }
+        },
+        "truncated": false,
+        "usage": {
+          "state_tokens": 217,
+          "image_tokens": 0,
+          "schema_tokens": 387,
+          "input_tokens": 604,
+          "output_tokens": 0,
+          "passes": 1
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clairic_ms": 335.87,
+    "clef": {
+      "result": {
+        "model": "clef",
+        "answers": {
+          "brand_safety_enabled": {
+            "type": "noul",
+            "noul": 0.9922
+          }
+        },
+        "usage": {
+          "input_tokens": 367,
+          "output_tokens": 0
+        }
+      },
+      "success": true,
+      "errors": [],
+      "messages": []
+    },
+    "clef_ms": 574.54
   }
 }

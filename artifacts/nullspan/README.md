@@ -8,9 +8,11 @@ tags:
   - span-extraction
   - calibrated-estimation
   - time-series-forecasting
-  - distilbert
+  - electra
+  - onnx
 datasets:
   - gnumanth/nullspan-dataset
+  - rajpurkar/squad_v2
 metrics:
   - accuracy
   - exact_match
@@ -20,27 +22,27 @@ pipeline_tag: question-answering
 
 # gnumanth/nullspan
 
-**`nullspan`** is a 67M-parameter **System One extraction, calibrated abstention, invariant verification, and quantile distribution model**. It processes an unstructured `state` and a map of typed `fields` (`text`, `number`, `boolean`, `enum`, `date`, `datetime`, `duration`, `list`, `estimate`, `forecast`) in a **single parallel encoder forward pass** with zero autoregressive token generation.
+**`nullspan` v1.2** is a `344.2M`-parameter (`330.1 MB` Int8 ONNX, `512`-token context + long-document windowing) **System One extraction, calibrated abstention, multi-numeric contract disambiguation, invariant verification, and quantile distribution model**. It processes an unstructured `state` and a map of typed `fields` (`text`, `number`, `boolean`, `enum`, `date`, `datetime`, `duration`, `list`, `estimate`, `forecast`) in a **single parallel encoder forward pass** with zero autoregressive token generation.
 
-## Architectural Enhancements (`NullspanForExtraction`)
+## Architectural Design (`NullspanForExtraction` v2.0)
 
-Built on `distilbert/distilbert-base-uncased` (67M parameters) with 5 parallel System One heads and 10 routed operations:
-1. **`null_head`**: Calibrated `p_null` probability (`ECE: 0.00206`, `Brier: 0.0022`) for absent field abstention (`value: null` + nearest `guess` decoy + `abstention_reason`).
-2. **`span_head`**: Token-level start/end pointer network mapped via `offset_mapping` to exact character spans `[start, end]` with calibrated posterior `confidence` and Shannon `span_entropy_bits`.
+Warm-started from a 24-layer `1024`-d ELECTRA-Large SQuAD 2.0 transformer (`ahotrod/electra_large_discriminator_squad2_512`) with a non-destructive 2-layer Pre-LN `SchemaAdapterBlock` and trained across `8,290` zero-leakage multi-task field instances (`SQuAD v2.0 train`, multi-section legal/commercial contracts, SRE postmortems, GPU ledgers, cluster comps, and time-series forecasts) at full `512`-token context length:
+1. **`null_head`**: Span-attended bilinear null classifier + SQuAD2 `[CLS]` margin residual with held-out temperature scaling (`AUROC: 0.99273`, `ECE: 0.01553`, `Brier: 0.02711`).
+2. **`span_head`**: Query-conditioned token start/end pointer network mapped via `offset_mapping` to exact character spans `[start, end]` with calibrated posterior `confidence` and Shannon `span_entropy_bits`.
 3. **`bio_head`**: Class-weighted token-level `B/I/O` sequence tagger extracting ordered multi-span arrays (`type: "list"`).
 4. **`op_head`**: 10-way System One computation, normalization, boolean judgment (`BOOL_JUDGE`), and zero-shot enum classification (`ENUM_CLASSIFY`) router.
 5. **`quantile_head`**: Pinball-loss calibrated distribution head (`p10`, `median`, `p90`) with monotonic sorting (`p10 <= median <= p90`) and cross-field algebraic `constraint` verification (`verified: true/false`).
 
-## Multi-Axis Empirical Evaluation (`gnumanth/nullspan-dataset`)
+## Zero-Leakage Empirical Evaluation (`N = 500` `NullspanBench`, `19` Systems)
 
-- **Training time**: `165.8s` (`Apple Silicon MPS`)
-- **Null Abstention Accuracy (`p_null`)**: `99.75%` (`ECE: 0.00206`, `Brier: 0.0022`)
-- **Grounded Span Exact Match (`[start, end]`)**: `99.24%`
-- **10-Way Operation Router Accuracy**: `100.0%`
-- **Multi-Span List BIO Token Accuracy**: `100.0%`
-- **Quantile Distribution MAE / Pinball Loss**: `0.0007` / `0.0001`
-- **Canonical Multi-Task Suite Accuracy**: `100.0%`
-- **Adversarial Decoy & Prompt-Injection Stress Accuracy**: `100.0%`
+- **Training time**: `1439.2s` (`NVIDIA Tesla V100-SXM2-16GB` on Google Cloud)
+- **NullspanBench Global Rank**: **#1 Capability (`98.4`)** & **#1 Intelligence (`98.0%` `[96.8, 99.2]`)** for `nullspan-344M` (`98.3` Capability / `98.9` Calibration for `330.1 MB` Int8 ONNX); **#1 Composite (`97.2`)** for `nullspan-Hybrid`
+- **Held-Out Calibration-Dev Null Accuracy**: `96.94%` (`AUROC: 0.99273`, `ECE: 0.01553`, `Brier: 0.02711`)
+- **Open Structured Pool (`S = 336`, `64` Docs)**: `100.0%` (`100.0%` Choice, `100.0%` Math/Invariants, `100.0%` Quantiles)
+- **10-Way Operation Router & Multi-Span List BIO Accuracy**: `100.0%` / `100.0%`
+- **Sealed Multi-Numeric Legal/Commercial Contracts (`n = 96`, 12 Unseen Agreements)**: `100.0%`
+- **Sealed Stanford SQuAD v2.0 Accuracy (`n = 60`, Zero-Overlap)**: `83.33%`
+- **Adversarial Decoy & Prompt-Injection Stress Accuracy (`n = 8`)**: `100.0%`
 - **Cross-Field Invariant Verification Accuracy**: `100.0%`
 
 ## Quick Start
@@ -82,31 +84,31 @@ print(result["answers"])
 {
   "reporter": {
     "type": "text",
-    "p_null": 1.2e-06,
+    "p_null": 0.0,
     "span": [
       276,
       280
     ],
     "guess": "Mira",
-    "confidence": 0.999992,
-    "span_entropy_bits": 0.0001,
+    "confidence": 0.999999,
+    "span_entropy_bits": 0.0,
     "value": "Mira"
   },
   "incident_id": {
     "type": "text",
-    "p_null": 1.3e-06,
+    "p_null": 0.0,
     "span": [
       9,
       18
     ],
     "guess": "INC-40928",
-    "confidence": 0.999994,
-    "span_entropy_bits": 0.0001,
+    "confidence": 0.999999,
+    "span_entropy_bits": 0.0,
     "value": "INC-40928"
   },
   "opened_on": {
     "type": "date",
-    "p_null": 4e-08,
+    "p_null": 0.0,
     "span": [
       29,
       41
@@ -118,27 +120,27 @@ print(result["answers"])
   },
   "total_credit": {
     "type": "number",
-    "p_null": 7.51e-06,
+    "p_null": 0.0,
     "span": [
       109,
       130
     ],
     "guess": 1550.75,
-    "confidence": 0.99998,
-    "span_entropy_bits": 0.0003,
+    "confidence": 0.999999,
+    "span_entropy_bits": 0.0,
     "value": 1550.75
   },
   "outage_days": {
     "type": "duration",
-    "p_null": 3.18e-06,
+    "p_null": 0.0,
     "unit": "days",
     "span": [
       29,
       41
     ],
     "guess": 7,
-    "confidence": 0.999995,
-    "span_entropy_bits": 0.0001,
+    "confidence": 0.999999,
+    "span_entropy_bits": 0.0,
     "value": 7
   },
   "failure_modes": {
@@ -157,12 +159,12 @@ print(result["answers"])
         100
       ]
     ],
-    "confidence": 0.999932,
-    "span_entropy_bits": 0.0011
+    "confidence": 0.999999,
+    "span_entropy_bits": 0.0
   },
   "severity": {
     "type": "enum",
-    "p_null": 4.779e-05,
+    "p_null": 0.0,
     "span": [
       155,
       160
@@ -173,38 +175,38 @@ print(result["answers"])
       "sev-3"
     ],
     "probs": {
-      "sev-1": 0.99994,
-      "sev-2": 3e-05,
-      "sev-3": 3e-05
+      "sev-1": 0.999999,
+      "sev-2": 1e-06,
+      "sev-3": 1e-06
     },
     "guess": "sev-1",
-    "confidence": 0.99994,
-    "span_entropy_bits": 0.0003,
+    "confidence": 0.999999,
+    "span_entropy_bits": 0.0,
     "value": "sev-1"
   },
   "data_loss": {
     "type": "boolean",
-    "p_null": 3.117e-05,
-    "p_true": 3.7e-05,
+    "p_null": 0.0,
+    "p_true": 1e-06,
     "span": [
       188,
       193
     ],
     "guess": false,
-    "confidence": 0.999963,
-    "span_entropy_bits": 0.0002,
+    "confidence": 0.999999,
+    "span_entropy_bits": 0.0,
     "value": false
   },
   "cve_id": {
     "type": "text",
-    "p_null": 0.99994409,
+    "p_null": 1.0,
     "span": [
-      123,
-      130
+      109,
+      117
     ],
-    "guess": "$310.25",
-    "confidence": 0.05,
-    "span_entropy_bits": 0.0008,
+    "guess": "$1240.50",
+    "confidence": 0.999999,
+    "span_entropy_bits": 2.2523,
     "value": null,
     "abstention_reason": "unassigned_placeholder"
   },
@@ -216,7 +218,7 @@ print(result["answers"])
     "p90": 2660,
     "p_below": 0.0,
     "p_above": 0.0,
-    "confidence": 0.999963
+    "confidence": 0.999999
   }
 }
 ```

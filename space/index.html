@@ -48,8 +48,9 @@
 
     .brand {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 12px;
+      gap: 8px 12px;
     }
 
     .brand-mark {
@@ -201,6 +202,7 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      min-width: 0;
     }
 
     .panel-header {
@@ -212,6 +214,8 @@
       letter-spacing: 0.08em;
       padding: 9px 14px;
       display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
       justify-content: space-between;
       align-items: center;
       text-transform: uppercase;
@@ -378,6 +382,14 @@
       border: 1.5px solid var(--border);
       border-radius: 6px;
       padding: 20px;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     .arch-card h2 {
@@ -493,6 +505,98 @@
       padding: 1px 5px;
       border-radius: 3px;
     }
+
+    @media (max-width: 768px) {
+      header {
+        position: static;
+        padding: 12px 14px;
+        gap: 10px;
+      }
+      .brand .badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+      }
+      .links {
+        width: 100%;
+        gap: 6px;
+        font-size: 0.72rem;
+      }
+      .links a {
+        padding: 5px 8px;
+      }
+      main {
+        padding: 18px 12px 48px;
+      }
+      .hero {
+        gap: 14px;
+        margin-bottom: 18px;
+        padding-bottom: 16px;
+      }
+      .hero h1 {
+        font-size: 1.4rem;
+        line-height: 1.2;
+      }
+      .hero p {
+        font-size: 0.9rem;
+      }
+      .install-box {
+        width: 100%;
+        text-align: center;
+        font-size: 0.76rem;
+        padding: 9px 12px;
+        overflow-x: auto;
+      }
+      .plain-english-card {
+        padding: 14px;
+      }
+      .plain-grid {
+        grid-template-columns: 1fr;
+      }
+      .preset-bar {
+        padding: 10px 12px;
+        gap: 10px;
+      }
+      .preset-buttons {
+        width: 100%;
+        gap: 6px;
+      }
+      button.preset-btn {
+        font-size: 0.72rem;
+        padding: 6px 9px;
+        text-align: left;
+      }
+      .metrics-strip {
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 8px 12px;
+        font-size: 0.74rem;
+      }
+      button.run-btn {
+        width: 100%;
+        padding: 9px 12px;
+        text-align: center;
+      }
+      .panel-body {
+        padding: 12px;
+      }
+      .field-card-top {
+        flex-wrap: wrap;
+      }
+      .arch-card {
+        padding: 14px 12px;
+      }
+      .arch-card h2 {
+        font-size: 0.88rem;
+        line-height: 1.35;
+      }
+      table.bench-table {
+        font-size: 0.74rem;
+      }
+      table.bench-table th, table.bench-table td {
+        padding: 7px 9px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -504,9 +608,9 @@
       <span class="badge">100% Span, Invariant &amp; Abstention EM</span>
     </div>
     <nav class="links">
-      <a href="./bench.html" style="background: var(--accent-span); color: var(--ink); font-weight: 800;">NullspanBench (14 Systems)</a>
+      <a href="./bench.html" style="background: var(--accent-span); color: var(--ink); font-weight: 800;">NullspanBench (19 Systems)</a>
       <a href="https://huggingface.co/spaces/gnumanth/nullspan" target="_blank" rel="noopener">HF Space</a>
-      <a href="https://huggingface.co/gnumanth/nullspan" target="_blank" rel="noopener">HF Model (67M + ONNX)</a>
+      <a href="https://huggingface.co/gnumanth/nullspan" target="_blank" rel="noopener">HF Model (344M + ONNX)</a>
       <a href="https://huggingface.co/datasets/gnumanth/nullspan-dataset" target="_blank" rel="noopener">HF Dataset</a>
       <a href="https://github.com/hemanth/nullspan" target="_blank" rel="noopener">GitHub</a>
     </nav>
@@ -553,7 +657,7 @@
         <span><code>p_null</code> Chance the field is missing (≥ 50% → returns <code>null</code>)</span>
         <span><code>verified=true</code> Cross-field math formula passed</span>
         <span><code>H=0.00b</code> Uncertainty in bits (closer to <code>0b</code> = more certain)</span>
-        <span><code>Tier 2 vs Tier 1</code> Run instantly in pure JS (Tier 2) or download the real 67M neural network into your browser (Tier 1 ONNX)</span>
+        <span><code>Tier 2 vs Tier 1</code> Run instantly in pure JS (Tier 2) or stream the 344M Int8 ONNX neural network into your browser (Tier 1 · 330.1 MB)</span>
       </div>
     </section>
 
@@ -561,7 +665,7 @@
       <div class="preset-buttons">
         <span style="font-family: var(--mono); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 4px;">Browser Runtime Tier:</span>
         <button class="preset-btn active" id="engine-btn-fast" type="button">⚡ Tier 2: Zero-Dep Fast Engine (Sub-ms)</button>
-        <button class="preset-btn" id="engine-btn-onnx" type="button">🧠 Tier 1: In-Browser Neural ONNX (WASM SIMD · 64.3 MB Int8)</button>
+        <button class="preset-btn" id="engine-btn-onnx" type="button">🧠 Tier 1: In-Browser Neural ONNX (WASM SIMD · 330.1 MB Int8)</button>
       </div>
       <div class="metrics-strip">
         <span id="engine-status-pill" style="font-weight: 700;">Active: Zero-Dep Fast Engine (0 B weights)</span>
@@ -576,6 +680,7 @@
         <button class="preset-btn" data-preset="edge">4. Edge Gateway (Horizon Forecast)</button>
         <button class="preset-btn" data-preset="adversarial">5. Adversarial Prompt-Injection &amp; Decoy Stress</button>
         <button class="preset-btn" data-preset="squad_v2">6. SQuAD v2.0 Open-Domain QA + Unanswerable</button>
+        <button class="preset-btn" data-preset="contract">7. Multi-Numeric Commercial Contract (512+ Window)</button>
       </div>
       <div class="metrics-strip">
         <span id="metric-fields">Fields: 10</span>
@@ -635,6 +740,7 @@
     <div class="arch-section">
       <div class="arch-card">
         <h2>Sample Dataset Explorer · gnumanth/nullspan-dataset (Click Any Row to Load &amp; Execute)</h2>
+        <div class="table-wrap">
         <table class="bench-table" id="sample-explorer-table">
           <thead>
             <tr>
@@ -695,24 +801,33 @@
               <td>Open-domain extractive span + adversarial unanswerable abstention (<code>p_null</code>)</td>
               <td><button class="preset-btn" data-preset="squad_v2">Load ↵</button></td>
             </tr>
+            <tr data-sample="contract" style="cursor:pointer">
+              <td><code>msa_enterprise_multi_numeric</code></td>
+              <td><code>contract_extraction</code></td>
+              <td>MASTER SUBSCRIPTION AGREEMENT §1–§6: $285,000 fee, $14,500 onboarding, 18.5% overage, 3 tranches...</td>
+              <td>Multi-numeric clause disambiguation + <code>list[number]</code> tranches + absent field <code>p_null</code></td>
+              <td><button class="preset-btn" data-preset="contract">Load ↵</button></td>
+            </tr>
           </tbody>
         </table>
+        </div>
       </div>
 
       <div class="arch-card">
-        <h2>Architecture Blueprint · NullspanForExtraction (67M DistilBERT · 5 Heads · 10 System One Ops)</h2>
+        <h2>Architecture Blueprint · NullspanForExtraction v2.0 (344M ELECTRA-Large + Adapter · 5 Heads · 10 Ops)</h2>
         <img src="./flow-diagram.svg" alt="nullspan System One Single-Pass Extraction Architecture" />
       </div>
 
       <div class="arch-card">
         <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px;">
-          <h2 style="margin: 0;">NullspanBench vs JevBench Leaderboard (4-Axis Harmonic Mean · N=404 Scored Decisions · B=1,000 Bootstrap CIs)</h2>
-          <a href="./bench.html" style="font-family: var(--mono); font-size: 0.78rem; font-weight: 800; padding: 5px 12px; border: 1.5px solid var(--border); border-radius: 4px; background: var(--accent-span); color: var(--ink); text-decoration: none;">Open Interactive 17-System JevBench Explorer →</a>
+          <h2 style="margin: 0;">NullspanBench vs JevBench Leaderboard (4-Axis Harmonic Mean · N=500 Zero-Leakage Decisions · B=1,000 Bootstrap CIs)</h2>
+          <a href="./bench.html" style="font-family: var(--mono); font-size: 0.78rem; font-weight: 800; padding: 5px 12px; border: 1.5px solid var(--border); border-radius: 4px; background: var(--accent-span); color: var(--ink); text-decoration: none;">Open Interactive 19-System JevBench Explorer →</a>
         </div>
         <p style="margin: 0 0 12px 0; font-size: 0.85rem; color: var(--ink-muted);">
-          <strong>How nullspan compares to TypeSafe Jev &amp; JevBench Leaders:</strong> Evaluated using the official <a href="https://benchmarkheaven.com/jev-models" target="_blank" rel="noopener" style="color: var(--ink);">JevBench 4-axis methodology</a> (<strong>Intelligence <code>I</code></strong>, <strong>Calibration <code>C</code></strong>, <strong>Speed <code>S</code></strong>, <strong>Cost <code>K</code></strong>), <strong>nullspan-67M (PyTorch FP32 / 64.3 MB Int8 ONNX)</strong> achieves <strong>99.2 / 98.7 Capability</strong> (<code>98.8% / 98.0%</code> Intelligence, <code>99.7 / 99.3</code> Calibration) and <strong>83.3 / 83.0 Composite</strong> at <strong>$0.0008–$0.0015 / 1k decisions</strong> (<code>5.6–12.3 ms p50</code>)—compared to <strong>Jev 1.13.0 (TypeSafe AI Hosted API)</strong> at <strong>77.1 Capability / 71.5 Composite</strong> (<code>$0.0323/1k</code>, <code>239.1 ms p50</code>), <strong>H2O-Lightning-4B v1.1</strong> at <strong>75.0 Capability / 72.5 Composite</strong> (<code>$0.0211/1k</code>, <code>29.3 ms p50</code> on RTX 5090), and <strong>basal-omni-1.0-ultra (31B)</strong> at <strong>82.5 Capability / 71.8 Composite</strong> (<code>$0.0447/1k</code>, <code>102.0 ms p50</code>).
+          <strong>How nullspan compares to Cloudflare Clairic + Clef, TypeSafe Jev &amp; JevBench Leaders:</strong> Evaluated using the official <a href="https://benchmarkheaven.com/jev-models" target="_blank" rel="noopener" style="color: var(--ink);">JevBench 4-axis methodology</a> (<strong>Intelligence <code>I</code></strong>, <strong>Calibration <code>C</code></strong>, <strong>Speed <code>S</code></strong>, <strong>Cost <code>K</code></strong>) across <strong>500 zero-leakage observations</strong> (<code>336</code> Open structured + <code>164</code> Sealed: <code>60</code> SQuAD v2.0, <code>96</code> Multi-Numeric Contracts, <code>8</code> Adversarial), <strong>nullspan-344M (PyTorch FP32 / 330.1 MB Int8 ONNX)</strong> achieves <strong>98.4 / 98.3 Capability</strong> (<code>98.0% / 97.8%</code> Intelligence, <code>98.8 / 98.9</code> Calibration, <code>100.0%</code> on Multi-Numeric Contracts) and <strong>78.7 / 78.4 Composite</strong> at <strong>$0.0008–$0.0017 / 1k decisions</strong>—surpassing live <strong>@cf/cloudflare/clairic + clef</strong> (<code>93.2 Capability / 72.1 Composite</code>, <code>91.6% Intelligence</code>, <code>$0.0041/1k</code>, <code>91.3 ms p50</code>), <strong>H2O-Lightning-4B v1.1</strong> (<code>75.0 Capability / 72.5 Composite</code>), <strong>basal-omni-1.0-ultra (31B)</strong> (<code>82.5 Capability / 71.8 Composite</code>), and <strong>Jev 1.13.0</strong> (<code>77.1 Capability / 71.5 Composite</code>).
         </p>
-        <table class="bench-table" style="margin-bottom: 18px;">
+        <div class="table-wrap" style="margin-bottom: 18px;">
+        <table class="bench-table">
           <thead>
             <tr>
               <th>System</th>
@@ -728,56 +843,56 @@
           <tbody>
             <tr>
               <td><strong>1. nullspan-Hybrid (Fast + ONNX Int8)</strong></td>
-              <td><strong>97.7</strong></td>
-              <td><strong>98.7</strong></td>
-              <td><strong>98.0% [96.5, 99.3]</strong></td>
-              <td><strong>99.3 (ECE 0.0081)</strong></td>
-              <td><strong>99.8 · 0.005 ms</strong></td>
+              <td><strong>97.2</strong></td>
+              <td><strong>98.3</strong></td>
+              <td><strong>97.8% [96.6, 99.0]</strong></td>
+              <td><strong>98.8 (ECE 0.0110)</strong></td>
+              <td><strong>98.6 · 0.013 ms</strong></td>
               <td><strong>93.8 · $0.0003</strong></td>
-              <td><strong>100.0% / 88.2%</strong></td>
+              <td><strong>100.0% / 93.3% (Contracts 100%)</strong></td>
             </tr>
             <tr>
               <td><strong>2. nullspan-ZeroDep (Fast Engine · 0 MB)</strong></td>
-              <td><strong>95.3</strong></td>
-              <td><strong>91.2</strong></td>
-              <td>88.6% [85.6, 91.6]</td>
-              <td>93.8 (ECE 0.0680)</td>
-              <td><strong>99.8 · 0.005 ms</strong></td>
+              <td><strong>95.9</strong></td>
+              <td><strong>92.9</strong></td>
+              <td>90.8% [88.2, 93.4]</td>
+              <td>95.0 (ECE 0.0487)</td>
+              <td><strong>98.7 · 0.013 ms</strong></td>
               <td><strong>99.8 · $0.0001</strong></td>
-              <td><strong>100.0% / 32.4%</strong></td>
+              <td><strong>100.0% / 72.0% (Contracts 100%)</strong></td>
             </tr>
             <tr>
-              <td><strong>3. nullspan-67M (PyTorch FP32 · 255.8 MB)</strong></td>
-              <td><strong>83.3</strong></td>
-              <td><strong>99.2</strong></td>
-              <td><strong>98.8% [97.5, 99.8]</strong></td>
-              <td><strong>99.7 (ECE 0.0040)</strong></td>
-              <td>66.5 · 5.575 ms</td>
-              <td>78.0 · $0.0015</td>
-              <td><strong>99.7% / 94.1%</strong></td>
+              <td><strong>3. nullspan-344M (PyTorch FP32 · 1,313 MB)</strong></td>
+              <td><strong>78.7</strong></td>
+              <td><strong>98.4</strong></td>
+              <td><strong>98.0% [96.8, 99.2]</strong></td>
+              <td><strong>98.8 (ECE 0.0121)</strong></td>
+              <td>57.2 · 32.367 ms</td>
+              <td>76.8 · $0.0017</td>
+              <td><strong>100.0% / 93.9% (Contracts 100%)</strong></td>
             </tr>
             <tr>
-              <td><strong>4. nullspan-67M-Int8 (ONNX Browser/CPU · 64.3 MB)</strong></td>
-              <td><strong>83.0</strong></td>
-              <td><strong>98.7</strong></td>
-              <td><strong>98.0% [96.5, 99.3]</strong></td>
-              <td><strong>99.3 (ECE 0.0081)</strong></td>
-              <td>62.3 · 12.268 ms</td>
+              <td><strong>4. nullspan-344M-Int8 (ONNX Browser/CPU · 330.1 MB)</strong></td>
+              <td><strong>78.4</strong></td>
+              <td><strong>98.3</strong></td>
+              <td><strong>97.8% [96.6, 99.0]</strong></td>
+              <td><strong>98.9 (ECE 0.0095)</strong></td>
+              <td>53.2 · 68.483 ms</td>
               <td>84.2 · $0.0008</td>
-              <td><strong>100.0% / 88.2%</strong></td>
+              <td><strong>100.0% / 93.3% (Contracts 100%)</strong></td>
             </tr>
             <tr>
-              <td><strong>5. @cf/cloudflare/clairic + clef (Live Workers AI · 160 RPCs)</strong></td>
-              <td>71.5</td>
-              <td>91.9</td>
-              <td>90.1% [87.5, 92.7]</td>
-              <td>93.8 (ECE 0.0645)</td>
-              <td>51.5 · 95.0 ms (308.6 ms/doc)</td>
-              <td>67.7 · $0.0043</td>
-              <td>89.7% / 91.9% (SQuAD 92.5%)</td>
+              <td><strong>5. nullspan-344M (ONNX FP32 · 1,314 MB)</strong></td>
+              <td><strong>75.5</strong></td>
+              <td><strong>98.4</strong></td>
+              <td><strong>98.0% [96.8, 99.2]</strong></td>
+              <td><strong>98.8 (ECE 0.0121)</strong></td>
+              <td>50.5 · 113.137 ms</td>
+              <td>78.0 · $0.0015</td>
+              <td><strong>100.0% / 93.9% (Contracts 100%)</strong></td>
             </tr>
             <tr>
-              <td><strong>H2O-Lightning-4B v1.1 (JevBench #1 Composite · 4B GPU)</strong></td>
+              <td><strong>6. H2O-Lightning-4B v1.1 (JevBench #1 Composite · 4B GPU)</strong></td>
               <td>72.5</td>
               <td>75.0</td>
               <td>60.0% [57.8, 62.3]</td>
@@ -787,7 +902,17 @@
               <td>64.1% / 59.0%</td>
             </tr>
             <tr>
-              <td><strong>basal-omni-1.0-ultra (JevBench #1 Capability · 31B GPU)</strong></td>
+              <td><strong>7. @cf/cloudflare/clairic + clef (Live Workers AI · 180 RPCs)</strong></td>
+              <td>72.1</td>
+              <td>93.2</td>
+              <td>91.6% [89.2, 93.9]</td>
+              <td>94.9 (ECE 0.0524)</td>
+              <td>51.7 · 91.3 ms (315.3 ms/doc)</td>
+              <td>68.2 · $0.0041</td>
+              <td>89.7% / 95.4% (Contracts 97.9%)</td>
+            </tr>
+            <tr>
+              <td><strong>8. basal-omni-1.0-ultra (JevBench #1 Capability · 31B GPU)</strong></td>
               <td>71.8</td>
               <td>82.5</td>
               <td>74.1% [71.8, 76.3]</td>
@@ -797,7 +922,7 @@
               <td>76.7% / 73.1%</td>
             </tr>
             <tr>
-              <td><strong>Jev 1.13.0 (TypeSafe AI · Official JevBench Ref API)</strong></td>
+              <td><strong>9. Jev 1.13.0 (TypeSafe AI · Official JevBench Ref API)</strong></td>
               <td>71.5</td>
               <td>77.1</td>
               <td>63.6% [61.2, 66.0]</td>
@@ -807,64 +932,66 @@
               <td>68.9% / 61.6%</td>
             </tr>
             <tr>
-              <td><strong>gpt-5.4-nano / claude-haiku-4.5 (JSON Decoder APIs)</strong></td>
-              <td>60.3 / 49.7</td>
-              <td>91.5 / 92.3</td>
-              <td>95.3% / 96.3%</td>
-              <td>87.7 / 88.3</td>
-              <td>43.6 / 41.8 (416–588 ms)</td>
-              <td>46.5 / 28.7 ($0.038–$0.233)</td>
-              <td>98.8% / 77.9%</td>
+              <td><strong>10–12. gpt-5.4-nano / claude-haiku-4.5 (JSON Decoder APIs)</strong></td>
+              <td>59.8 / 48.8</td>
+              <td>92.1 / 92.1</td>
+              <td>95.2% / 95.4%</td>
+              <td>89.0 / 88.7</td>
+              <td>43.6 / 41.8 (418–586 ms)</td>
+              <td>45.1 / 27.5 ($0.044–$0.264)</td>
+              <td>99.7% / 86.0–87.2%</td>
             </tr>
             <tr>
-              <td><strong>Un-Finetuned Bi-Encoders (BGE-small, MPNet, MiniLM-L6/L12)</strong></td>
-              <td>28.5 – 42.0</td>
-              <td>41.2 – 53.3</td>
-              <td>9.9% – 17.5%</td>
-              <td>72.2 – 89.1</td>
-              <td>62.8 – 70.6 (2.6–11.1 ms)</td>
-              <td>80.2 – 93.8 ($0.0003–$0.0012)</td>
-              <td>16.4% – 22.9% / 7.4%</td>
+              <td><strong>13–19. Un-Finetuned Bi-Encoders (BGE-small, MPNet, MiniLM)</strong></td>
+              <td>28.3 – 37.6</td>
+              <td>40.5 – 52.9</td>
+              <td>10.0% – 14.7%</td>
+              <td>70.9 – 91.5</td>
+              <td>60.2 – 68.9 (3.5–18.4 ms)</td>
+              <td>77.4 – 91.0 ($0.0004–$0.0016)</td>
+              <td>11.2% – 20.3% / 1.8% – 8.8%</td>
             </tr>
           </tbody>
         </table>
-        <h2 style="margin-top: 14px;">Multi-Tier Scientific Evaluation Matrix (95% Bootstrap CIs, B=1,000 · Validation · Golden · Adversarial · SQuAD v2.0)</h2>
+        </div>
+        <h2 style="margin-top: 14px;">Multi-Tier Scientific Evaluation Matrix (95% Bootstrap CIs, B=1,000 · Open · Contracts · Adversarial · SQuAD v2.0)</h2>
         <p style="margin: 0 0 12px 0; font-size: 0.85rem; color: var(--ink-muted);">
-          <strong>Plain-English Takeaway:</strong> For structured telemetry, invoices, estimates, and prompt-injection stress tests, all three tiers achieve <strong>100.0% accuracy</strong>—meaning you can use the <strong>0 MB Zero-Dep Fast Engine</strong> at <code>0.023 ms/field</code>. When extracting answers from open-domain prose or tricky unanswerable questions (<strong>Stanford SQuAD v2.0</strong>), the <strong>67M Neural Model (PyTorch FP32 / 64.3 MB Int8 ONNX)</strong> jumps accuracy to <strong>91.7% (100% unanswerable abstention, AUROC 0.999)</strong>.
+          <strong>Plain-English Takeaway:</strong> Across Open structured telemetry (<code>N=336</code>), unseen Multi-Numeric Commercial Contracts (<code>N=96</code> across 12 agreements), and adversarial prompt-injection stress tests (<code>N=8</code>), all three tiers achieve <strong>100.0% accuracy</strong>—meaning you can run the <strong>0 MB Zero-Dep Fast Engine</strong> at <code>0.013 ms/field</code>. For open-domain reading comprehension and unanswerable prose traps (<strong>Stanford SQuAD v2.0</strong>), the GCP V100-trained <strong>344M Neural Model (PyTorch FP32 / 330.1 MB Int8 ONNX)</strong> lifts accuracy to <strong>83.3% / 81.7% (AUROC 0.998)</strong>.
         </p>
+        <div class="table-wrap">
         <table class="bench-table">
           <thead>
             <tr>
               <th>Evaluation Axis / Metric</th>
-              <th>Tier 1A: PyTorch FP32 (67M Neural)</th>
-              <th>Tier 1B: ONNX Int8 Quantized (64.3 MB Browser/Edge)</th>
+              <th>Tier 1A: PyTorch FP32 (344M Neural)</th>
+              <th>Tier 1B: ONNX Int8 Quantized (330.1 MB Browser/Edge)</th>
               <th>Tier 2: Zero-Dep Fast Engine (Sub-ms)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>1. Structured Multi-Task Accuracy (N=42 fields, 95% CI)</td>
+              <td>1. Open Structured Multi-Task Pool (N=336 fields, 95% CI)</td>
               <td><strong>100.0% [100.0, 100.0]</strong></td>
               <td><strong>100.0% [100.0, 100.0]</strong></td>
               <td><strong>100.0% [100.0, 100.0]</strong></td>
             </tr>
             <tr>
-              <td>2. Grounded Span Exact Match &amp; Invariant Verification</td>
-              <td><strong>100.0% / 100.0% (IoU 1.00)</strong></td>
-              <td><strong>100.0% / 100.0% (IoU 1.00)</strong></td>
-              <td><strong>100.0% / 100.0% (IoU 1.00)</strong></td>
+              <td>2. Sealed Multi-Numeric Legal/Commercial Contracts (N=96 · 12 Docs)</td>
+              <td><strong>100.0% [100.0, 100.0] (96/96)</strong></td>
+              <td><strong>100.0% [100.0, 100.0] (96/96)</strong></td>
+              <td><strong>100.0% [100.0, 100.0] (96/96)</strong></td>
             </tr>
             <tr>
-              <td>3. Structured Null Calibration (AUROC / ECE / Brier)</td>
-              <td><strong>1.0000 / 0.00002 / 0.0000</strong></td>
-              <td><strong>1.0000 / 0.00001 / 0.0000</strong></td>
-              <td><strong>1.0000 / 0.00005 / 0.0000</strong></td>
+              <td>3. Overall Null Calibration (AUROC / ECE · N=500)</td>
+              <td><strong>0.9983 / 0.01215</strong></td>
+              <td><strong>0.9974 / 0.00950</strong></td>
+              <td><strong>0.9824 / 0.04866</strong></td>
             </tr>
             <tr>
-              <td>4. Quantile Monotonicity &amp; Winkler Score (α=0.20)</td>
-              <td><strong>100.0% (Winkler 0.3723)</strong></td>
-              <td><strong>100.0% (Winkler 0.3726)</strong></td>
-              <td><strong>100.0% (Winkler 0.3671)</strong></td>
+              <td>4. Choice (Bool/Enum · N=41) &amp; Math/Invariants (N=51)</td>
+              <td><strong>100.0% / 100.0%</strong></td>
+              <td><strong>100.0% / 100.0%</strong></td>
+              <td><strong>100.0% / 100.0%</strong></td>
             </tr>
             <tr>
               <td>5. Adversarial Prompt-Injection &amp; Decoy Stress (N=8)</td>
@@ -873,19 +1000,20 @@
               <td><strong>100.0% (0.0% FPHR)</strong></td>
             </tr>
             <tr>
-              <td>6. Stanford SQuAD v2.0 Open-Domain QA + Unanswerable (N=60)</td>
-              <td><strong>91.67% [83.3, 98.3] · AUROC 0.999</strong></td>
-              <td><strong>90.00% [81.7, 96.7] · AUROC 0.996</strong></td>
-              <td><strong>23.33% [13.3, 35.0] (Lexical Baseline)</strong></td>
+              <td>6. Stanford SQuAD v2.0 Open-Domain QA + Unanswerable (N=60 · Zero-Overlap)</td>
+              <td><strong>83.33% · AUROC 0.998</strong></td>
+              <td><strong>81.67% · AUROC 0.997</strong></td>
+              <td><strong>23.33% (Lexical Baseline)</strong></td>
             </tr>
             <tr>
               <td>Model Footprint &amp; Latency (p50 / p95 per field · 0 Output Tokens)</td>
-              <td><strong>255.8 MB · 12.3 / 13.8 ms</strong></td>
-              <td><strong>64.3 MB (3.98x) · 25.3 / 27.3 ms</strong></td>
-              <td><strong>0 MB · 0.023 / 0.081 ms</strong></td>
+              <td><strong>1,313.1 MB · 32.4 / 91.8 ms</strong></td>
+              <td><strong>330.1 MB (3.98x) · 68.5 / 262.7 ms</strong></td>
+              <td><strong>0 MB · 0.013 / 0.287 ms</strong></td>
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   </main>
@@ -966,6 +1094,19 @@
           norse_leader: { type: "text", instructions: "Who was the Norse leader?" },
           norse_origins: { type: "text", instructions: "From which countries did the Norse originate?" },
           unanswerable_trap: { type: "text", instructions: "What other countries besides France did the Normans give their name to?" }
+        }
+      },
+      contract: {
+        state: "MASTER SUBSCRIPTION AGREEMENT\nSection 1. Fees & Billing: Customer shall pay an Annual Platform Subscription Fee of $285,000 USD, plus a one-time Implementation & Onboarding Fee of $14,500 USD upon execution.\nSection 2. Usage & Overage: Committed capacity includes 500 enterprise seats; excess usage is billed at an Overage Surcharge Rate of 18.5% above standard unit pricing.\nSection 3. Term & Renewal: Initial Term is 36 months with a Renewal Notice Window of 60 days prior to expiration; Late Payment Interest accrues at 1.5% per month.\nSection 4. Milestone Payment Tranches: Deployment milestones pay out in three scheduled tranches: $95,000, $95,000, and $95,000.\nSection 5. Liability & Governance: General Liability Cap shall not exceed $570,000 USD. Assignment without written consent is prohibited. Governing Law Tier is delaware.",
+        fields: {
+          annual_subscription_fee: { type: "number", decimals: 2, unit: "USD", instructions: "Annual platform subscription fee in USD" },
+          onboarding_fee: { type: "number", decimals: 2, unit: "USD", instructions: "One-time implementation and onboarding fee" },
+          overage_rate_pct: { type: "number", decimals: 1, unit: "percent", instructions: "Overage surcharge rate percentage" },
+          renewal_notice_days: { type: "number", integer: true, unit: "days", instructions: "Renewal notice window in days" },
+          milestone_tranches: { type: "list", items: "number", unit: "USD", instructions: "Scheduled milestone payment tranche amounts in USD" },
+          liability_cap: { type: "number", decimals: 2, unit: "USD", instructions: "General liability cap in USD" },
+          assignment_permitted: { type: "boolean", instructions: "Whether assignment without consent is permitted" },
+          early_termination_rebate: { type: "number", decimals: 2, unit: "USD", instructions: "Early termination rebate credit in USD if specified" }
         }
       }
     };
@@ -1154,7 +1295,7 @@
     document.getElementById('run-btn').addEventListener('click', runExtraction);
 
     loadPreset('incident');
-    // Auto-activate the 64.3 MB Int8 ONNX Neural Model on the Hugging Face Space
+    // Auto-activate the 330.1 MB Int8 ONNX Neural Model on the Hugging Face Space
     setTimeout(() => {
       engineBtnOnnx.click();
     }, 150);

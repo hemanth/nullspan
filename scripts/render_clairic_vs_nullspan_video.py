@@ -279,14 +279,14 @@ def render_scene(draw: ImageDraw.ImageDraw, scene_idx: int, local_f: int) -> Non
         )
 
         # Card A: Cloudflare (y = 414..742)
-        draw_studio_card(draw, (56, 414 + dy2, 1024, 742 + dy2), "CLOUDFLARE WORKERS AI (LIVE N = 404 RUN)", "160 RPCs · 226 PASSES")
+        draw_studio_card(draw, (56, 414 + dy2, 1024, 742 + dy2), "CLOUDFLARE WORKERS AI (LIVE N = 500 RUN)", "180 RPCs · 246 PASSES")
         draw_pill_centered(draw, 88, 514 + dy2, "Model 1: @cf/cloudflare/clairic", THEME["null"], font=font_mono_bold(22), pad_x=16, height=48)
-        draw.text((88, 568 + dy2), "Extracts spans & numbers only (2–3 passes/doc · 69,879 tokens).", font=font_sans_med(24), fill=THEME["ink_muted"], anchor="lm")
+        draw.text((88, 568 + dy2), "Extracts spans & numbers only (2–3 passes/doc · 138 docs).", font=font_sans_med(24), fill=THEME["ink_muted"], anchor="lm")
         draw_pill_centered(draw, 88, 636 + dy2, "Model 2: @cf/cloudflare/clef (27B)", THEME["null"], font=font_mono_bold(22), pad_x=16, height=48)
         draw.text((88, 690 + dy2), "Separate HTTP RPC required for boolean (noul) & enum (choice).", font=font_sans_med(24), fill=THEME["ink_muted"], anchor="lm")
 
         # Card B: nullspan (y = 776..1202)
-        draw_studio_card(draw, (56, 776 + dy2, 1024, 1202 + dy2), "NULLSPAN (67M CROSS-ENCODER)", "1 UNIFIED PASS · 0 RPCs")
+        draw_studio_card(draw, (56, 776 + dy2, 1024, 1202 + dy2), "NULLSPAN v2.0 (344M ELECTRA-L + ADAPTER)", "1 UNIFIED PASS · 0 RPCs")
         draw.text((88, 874 + dy2), "All 5 Neural Heads Run Together in 1 Local Pass:", font=font_sans_bold(29), fill=THEME["ink"], anchor="lm")
 
         badges = [
@@ -319,19 +319,19 @@ def render_scene(draw: ImageDraw.ImageDraw, scene_idx: int, local_f: int) -> Non
             56,
             332 + dy1,
             [
-                {"type": "text", "text": "25x Faster Than", "font": f_h1},
+                {"type": "text", "text": "Zero Cloud", "font": f_h1},
                 {"type": "pill", "text": "Edge RPCs.", "font": f_pill_h1, "bg": THEME["null"], "height": 68, "pad_x": 18},
             ],
             gap=18,
         )
 
-        draw_studio_card(draw, (56, 414 + dy2, 1024, 1202 + dy2), "LIVE LATENCY & WEIGHTS COMPARISON (N = 126 DOCS)", "MIT OPEN SOURCE")
+        draw_studio_card(draw, (56, 414 + dy2, 1024, 1202 + dy2), "LIVE LATENCY & WEIGHTS COMPARISON (N = 138 DOCS)", "MIT OPEN SOURCE")
 
         rows = [
-            ("Cloudflare Clairic + Clef", "308.6 ms/doc RPC", "95.0 ms/item p50 (1,021 ms p95) · Closed Cloud", THEME["null"]),
-            ("Tier 1B · Browser WASM", "12.3 ms · 64.3 MB", "25x faster/doc · 100% Client-Side Int8 ONNX", THEME["span"]),
-            ("Tier 1A · PyTorch FP32", "5.6 ms · 256 MB", "55x faster/doc · Open 67M Weights on HF", THEME["list"]),
-            ("Tier 2 · Zero-Dep Fast", "0.005 ms · 0 MB", "Sub-microsecond JS & Python · Offline Ready", THEME["list"]),
+            ("Cloudflare Clairic + Clef", "315.3 ms/doc RPC", "91.3 ms/item p50 (314.0 ms p95) · Closed Cloud", THEME["null"]),
+            ("Tier 1B · Browser WASM", "68.5 ms · 330.1 MB", "3.98x compressed · 100% Client-Side Int8 ONNX", THEME["span"]),
+            ("Tier 1A · PyTorch FP32", "32.4 ms · 1.31 GB", "GCP V100 Trained · Open 344M Weights on HF", THEME["list"]),
+            ("Tier 2 · Zero-Dep Fast", "0.013 ms · 0 MB", "100% Open & Contracts · Offline JS & Python", THEME["list"]),
         ]
         for ri, (rtitle, rpill, rsub, rcol) in enumerate(rows):
             ry = 496 + ri * 168 + dy2
@@ -374,7 +374,7 @@ def render_scene(draw: ImageDraw.ImageDraw, scene_idx: int, local_f: int) -> Non
         )
 
         # Invoice Input Strip (centerline cy = 532)
-        draw_studio_card(draw, (56, 414 + dy2, 1024, 602 + dy2), "INPUT · CLOUD GPU INVOICE #88310 (compute_ledger)", "N = 344 STRUCTURED")
+        draw_studio_card(draw, (56, 414 + dy2, 1024, 602 + dy2), "INPUT · CLOUD INVOICE & 12 CONTRACTS (n = 96)", "100% CONTRACT EM")
         draw_inline_row(
             draw,
             88,
@@ -391,16 +391,16 @@ def render_scene(draw: ImageDraw.ImageDraw, scene_idx: int, local_f: int) -> Non
         )
 
         # Comparison Box
-        draw_studio_card(draw, (56, 636 + dy2, 1024, 1202 + dy2), "LIVE RESULT ON `hourly_rate` & `subtotal == nodes * rate`", "100% VS 89.7%")
+        draw_studio_card(draw, (56, 636 + dy2, 1024, 1202 + dy2), "LIVE RESULT ON CONTRACTS (n=96) & INVARIANTS", "100% VS 89.7% OPEN")
 
         # Clairic Box
         draw.rounded_rectangle([88, 720 + dy2, 992, 896 + dy2], radius=12, fill=THEME["muted_bg"], outline=THEME["ink"], width=2)
-        draw_pill_centered(draw, 116, 768 + dy2, "@cf/cloudflare/clairic (89.7% Struct)", THEME["null"], font=font_mono_bold(21), pad_x=16, height=46)
+        draw_pill_centered(draw, 116, 768 + dy2, "@cf/cloudflare/clairic (89.7% Open · 97.9% Contracts)", THEME["null"], font=font_mono_bold(21), pad_x=16, height=46)
         draw.text((116, 842 + dy2), "✗ Guessed 3.5 but abstained (p_null: 0.991 -> null) · No native math solver", font=font_mono_bold(19.5), fill=THEME["ink_muted"], anchor="lm")
 
         # nullspan Box
         draw.rounded_rectangle([88, 922 + dy2, 992, 1168 + dy2], radius=12, fill=THEME["surface"], outline=THEME["ink"], width=3)
-        draw_pill_centered(draw, 116, 970 + dy2, "nullspan · Algebraic Constraint Verifier (100% Struct)", THEME["list"], font=font_mono_bold(21), pad_x=16, height=46)
+        draw_pill_centered(draw, 116, 970 + dy2, "nullspan · Clause Disambiguator & Verifier (100% Both)", THEME["list"], font=font_mono_bold(21), pad_x=16, height=46)
         draw.text((116, 1040 + dy2), "✓ Extracts hourly_rate: 3.5 (p_null: 0.001) & verifies 4 * 3.5 == 14.0", font=font_mono_bold(20.0), fill=THEME["ink"], anchor="lm")
         draw_inline_row(
             draw,
@@ -442,14 +442,14 @@ def render_scene(draw: ImageDraw.ImageDraw, scene_idx: int, local_f: int) -> Non
             gap=10,
         )
 
-        draw_studio_card(draw, (56, 656 + dy2, 1024, 1202 + dy2), "CALIBRATION & ABSTENTION DIAGNOSTICS (N = 404)", "ECE 0.014 VS 0.064")
+        draw_studio_card(draw, (56, 656 + dy2, 1024, 1202 + dy2), "CALIBRATION & ABSTENTION DIAGNOSTICS (N = 500)", "ECE 0.010 VS 0.052")
 
         draw.rounded_rectangle([88, 740 + dy2, 992, 896 + dy2], radius=12, fill=THEME["muted_bg"], outline=THEME["ink"], width=2)
-        draw_pill_centered(draw, 116, 788 + dy2, "@cf/cloudflare/clairic (ECE 0.064)", THEME["null"], font=font_mono_bold(21), pad_x=16, height=46)
+        draw_pill_centered(draw, 116, 788 + dy2, "@cf/cloudflare/clairic (ECE 0.052 · AUROC 0.990)", THEME["null"], font=font_mono_bold(21), pad_x=16, height=46)
         draw.text((116, 856 + dy2), "Bare p_null only — 24 false abstentions on terse ledger fields.", font=font_sans_bold(24), fill=THEME["ink_muted"], anchor="lm")
 
         draw.rounded_rectangle([88, 922 + dy2, 992, 1168 + dy2], radius=12, fill=THEME["surface"], outline=THEME["ink"], width=3)
-        draw_pill_centered(draw, 116, 970 + dy2, "nullspan · Epistemic Abstention Gate (ECE 0.014)", THEME["list"], font=font_mono_bold(21), pad_x=16, height=46)
+        draw_pill_centered(draw, 116, 970 + dy2, "nullspan · Epistemic Abstention Gate (ECE 0.010 · AUROC 0.998)", THEME["list"], font=font_mono_bold(21), pad_x=16, height=46)
         draw_inline_row(
             draw,
             116,
@@ -465,29 +465,29 @@ def render_scene(draw: ImageDraw.ImageDraw, scene_idx: int, local_f: int) -> Non
 
     else:
         # SCENE 5: 100% Apples-to-Apples Live Head-to-Head Benchmark (Nullspan vs Clairic + Clef)
-        draw_pill_centered(draw, 56, 168 + dy1, "5 · LIVE HEAD-TO-HEAD BENCHMARK (N = 404 SAME ITEMS)", THEME["span"], font=font_mono_bold(17), pad_x=14, height=38, radius=6)
+        draw_pill_centered(draw, 56, 168 + dy1, "5 · LIVE HEAD-TO-HEAD BENCHMARK (N = 500 ZERO-LEAKAGE)", THEME["span"], font=font_mono_bold(17), pad_x=14, height=38, radius=6)
 
         draw_inline_row(
             draw,
             56,
             242 + dy1,
             [
-                {"type": "pill", "text": "[98.8% vs 90.1%]", "font": font_sans_bold(43), "bg": THEME["list"], "height": 66, "pad_x": 16},
-                {"type": "text", "text": "at", "font": font_sans_bold(48)},
-                {"type": "pill", "text": "17x Faster Speed.", "font": font_sans_bold(43), "bg": THEME["span"], "height": 66, "pad_x": 16},
+                {"type": "pill", "text": "[98.0% vs 91.6%]", "font": font_sans_bold(43), "bg": THEME["list"], "height": 66, "pad_x": 16},
+                {"type": "text", "text": "&", "font": font_sans_bold(48)},
+                {"type": "pill", "text": "100% Contracts.", "font": font_sans_bold(43), "bg": THEME["span"], "height": 66, "pad_x": 16},
             ],
             gap=14,
         )
-        draw.text((56, 326 + dy1), "Live evaluation on the exact same 404 items (126 docs · SQuAD v2.0 + Structured):", font=font_sans_med(23.5), fill=THEME["ink_muted"], anchor="lm")
+        draw.text((56, 326 + dy1), "Live evaluation on the exact same 500 items (138 docs · SQuAD v2.0 + 12 Contracts):", font=font_sans_med(23.5), fill=THEME["ink_muted"], anchor="lm")
 
-        draw_studio_card(draw, (56, 384 + dy2, 1024, 1202 + dy2), "SAME-DATASET BENCHMARK · eval_clairic_clef.py (B=1,000 CIs)", "404 ITEMS")
+        draw_studio_card(draw, (56, 384 + dy2, 1024, 1202 + dy2), "19-SYSTEM LEADERBOARD · run_bench.py (B=1,000 CIs)", "500 ITEMS")
 
         bars = [
-            ("1. nullspan-67M (PyTorch FP32)", 98.8, "SQuAD v2.0: 91.7% (0.999 AUC)  ·  Struct/Math: 100%", "5.6 ms · 256 MB", THEME["list"]),
-            ("2. nullspan-67M-Int8 (Browser WASM)", 98.0, "SQuAD v2.0: 90.0% (0.996 AUC)  ·  Struct/Math: 100%", "12.3 ms · 64.3 MB", THEME["span"]),
-            ("3. @cf/cloudflare/clairic + Clef (Live)", 90.1, "SQuAD v2.0: 92.5% (0.988 AUC)  ·  Struct/Math: 89.7%", "95.0 ms (309ms RPC)", THEME["null"]),
-            ("4. nullspan-ZeroDep (Fast Engine)", 88.6, "SQuAD v2.0: 23.3% (Lexical)  ·  Struct/Math: 100%", "0.005 ms · 0 MB", THEME["span"]),
-            ("5. BAAI/bge-small-en-v1.5 (Bi-Encoder)", 17.5, "SQuAD v2.0: 53.3% (0.859 AUC)  ·  Math/Inv: 0%", "7.9 ms · 127 MB", THEME["null"]),
+            ("1. nullspan-344M (PyTorch FP32)", 98.0, "Contracts: 100%  ·  Open: 100%  ·  Calib: 98.8", "32.4 ms · 1.31 GB", THEME["list"]),
+            ("2. nullspan-344M-Int8 (Browser WASM)", 97.8, "Contracts: 100%  ·  Open: 100%  ·  Calib: 98.9", "68.5 ms · 330.1 MB", THEME["span"]),
+            ("3. @cf/cloudflare/clairic + Clef (Live)", 91.6, "Contracts: 97.9%  ·  Open: 89.7%  ·  Calib: 94.9", "91.3 ms (315ms RPC)", THEME["null"]),
+            ("4. nullspan-ZeroDep (Fast Engine)", 90.8, "Contracts: 100%  ·  Open: 100%  ·  SQuAD: 23.3%", "0.013 ms · 0 MB", THEME["span"]),
+            ("5. deberta-v3-base-squad2 (184M QA)", 48.1, "Contracts: 27.6%  ·  SQuAD: 80.0%  ·  Math: 4.9%", "42.5 ms · 701 MB", THEME["null"]),
         ]
         bar_anim = ease_out_cubic(max(0.0, (local_f - 6) / 22.0))
         for bi, (btitle, overall_i, breakdown_s, bmeta, bcol) in enumerate(bars):

@@ -1,14 +1,14 @@
 {
   "system": "@cf/cloudflare/clairic + @cf/cloudflare/clef (Live Workers AI)",
-  "n_items": 404,
-  "n_docs": 126,
-  "total_rpc_calls": 160,
-  "total_passes": 226,
-  "total_input_tokens": 69879,
-  "overall_acc_pct": 90.1,
+  "n_items": 500,
+  "n_docs": 138,
+  "total_rpc_calls": 180,
+  "total_passes": 246,
+  "total_input_tokens": 81206,
+  "overall_acc_pct": 91.6,
   "overall_ci95_pct": [
-    87.5,
-    92.7
+    89.2,
+    93.9
   ],
   "squad_v2_acc_pct": 92.5,
   "squad_v2_ci95_pct": [
@@ -16,27 +16,32 @@
     98.3
   ],
   "squad_v2_auroc": 0.988,
+  "contracts_sealed_acc_pct": 97.9,
+  "contracts_sealed_ci95_pct": [
+    94.8,
+    100.0
+  ],
   "structured_math_acc_pct": 89.7,
   "structured_math_ci95_pct": [
     86.6,
     92.5
   ],
   "adversarial_acc_pct": 87.5,
-  "auroc_all": 0.984,
-  "ece": 0.06449,
-  "brier": 0.05851,
-  "calibration_score": 93.8,
+  "auroc_all": 0.99,
+  "ece": 0.05235,
+  "brier": 0.04728,
+  "calibration_score": 94.9,
   "latency_per_item_ms": {
-    "mean_ms": 141.4615,
-    "p50_ms": 95.0278,
-    "p95_ms": 325.787,
-    "p99_ms": 430.8539
+    "mean_ms": 128.789,
+    "p50_ms": 91.323,
+    "p95_ms": 314.023,
+    "p99_ms": 403.1387
   },
   "latency_per_doc_ms": {
-    "mean_ms": 453.5751,
-    "p50_ms": 308.63,
-    "p95_ms": 1020.5,
-    "p99_ms": 1217.8325
+    "mean_ms": 466.6269,
+    "p50_ms": 315.34,
+    "p95_ms": 1014.932,
+    "p99_ms": 1214.2769
   },
   "by_req_type_pct": {
     "span_open": 83.8,
@@ -44,7 +49,7 @@
     "choice": 100.0,
     "noul_open": 100.0,
     "score": 89.0,
-    "span_sealed": 92.4,
-    "noul_sealed": 90.6
+    "span_sealed": 95.8,
+    "noul_sealed": 93.2
   }
 }

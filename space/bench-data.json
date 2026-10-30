@@ -1,17 +1,17 @@
 {
   "benchmark_name": "NullspanBench (JevBench-Compatible Decision & Extraction Leaderboard)",
-  "benchmark_version": "3.0.0-jevbench",
-  "draw_id": "S+P (draw v3.0-nullspan-20261019)",
-  "timestamp": "2026-10-19T21:55:00Z",
-  "n_total_observations": 404,
+  "benchmark_version": "3.2.0-jevbench",
+  "draw_id": "S+P (draw v3.2-nullspan-20261030)",
+  "timestamp": "2026-10-30T10:18:35Z",
+  "n_total_observations": 500,
   "n_open_observations": 336,
-  "n_sealed_observations": 68,
+  "n_sealed_observations": 164,
   "environment": {
     "os": "Darwin 25.5.0 (arm64)",
     "python": "3.14.8",
     "pytorch": "2.12.1",
     "onnxruntime": "1.31.0",
-    "accelerator": "Apple Silicon MPS + CPU"
+    "accelerator": "NVIDIA Tesla V100-SXM2-16GB (GCP Train) + Apple Silicon MPS/CPU (Local Eval)"
   },
   "systems": [
     {
@@ -20,40 +20,40 @@
       "author": "gnumanth",
       "system_type": "Hybrid System One Router",
       "open_weights": true,
-      "params_m": 67.0,
-      "footprint_mb": 64.3,
+      "params_m": 344.2,
+      "footprint_mb": 330.1,
       "base_model": "Zero-Dep Router + gnumanth/nullspan Int8",
       "runtime": "Tiered JS/Python + ONNX Runtime",
-      "input_rate_per_1m_usd": 0.0025,
+      "input_rate_per_1m_usd": 0.002,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 404,
-      "input_tokens_total": 40812,
+      "n_observations": 500,
+      "input_tokens_total": 69943,
       "output_tokens_total": 0,
       "usd_per_1k_decisions": 0.0003,
       "axes": {
-        "intelligence": 98.0,
+        "intelligence": 97.8,
         "intelligence_ci95": [
-          96.5,
-          99.3
+          96.6,
+          99.0
         ],
-        "calibration": 99.3,
-        "speed": 99.8,
+        "calibration": 98.8,
+        "speed": 98.6,
         "cost": 93.8
       },
-      "capability_score": 98.7,
-      "composite_score": 97.7,
+      "capability_score": 98.3,
+      "composite_score": 97.2,
       "open_set_score": 100.0,
-      "sealed_set_score": 88.2,
+      "sealed_set_score": 93.3,
       "calibration_details": {
-        "null_auroc": 0.99975,
-        "null_ece": 0.00809,
-        "null_brier": 0.00413
+        "null_auroc": 0.9977,
+        "null_ece": 0.011,
+        "null_brier": 0.01306
       },
       "latency": {
-        "mean_ms": 2.1114,
-        "p50_ms": 0.0049,
-        "p95_ms": 13.962,
-        "p99_ms": 17.1333
+        "mean_ms": 14.3016,
+        "p50_ms": 0.013,
+        "p95_ms": 108.7561,
+        "p99_ms": 178.0133
       },
       "by_request_type": {
         "span_open": {
@@ -62,11 +62,11 @@
         },
         "math": {
           "score": 100.0,
-          "n": 50
+          "n": 51
         },
         "choice": {
           "score": 100.0,
-          "n": 33
+          "n": 41
         },
         "noul_open": {
           "score": 100.0,
@@ -77,12 +77,12 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 84.8,
-          "n": 33
+          "score": 95.4,
+          "n": 108
         },
         "noul_sealed": {
-          "score": 90.6,
-          "n": 32
+          "score": 86.4,
+          "n": 44
         }
       },
       "by_tier_open": {
@@ -101,12 +101,16 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 83.3,
-          "n": 30
+          "score": 95.6,
+          "n": 113
         },
         "Hard": {
-          "score": 92.1,
-          "n": 38
+          "score": 88.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 1
         }
       },
       "by_domain": {
@@ -127,8 +131,12 @@
           "n": 16
         },
         "squad_v2_open_qa": {
-          "score": 86.7,
+          "score": 81.7,
           "n": 60
+        },
+        "contract_extraction": {
+          "score": 100.0,
+          "n": 96
         },
         "adversarial_stress": {
           "score": 100.0,
@@ -145,38 +153,38 @@
       "open_weights": true,
       "params_m": 0.0,
       "footprint_mb": 0.0,
-      "base_model": "Deterministic Rule + Lexical Pointer",
+      "base_model": "Deterministic Clause + Lexical Pointer",
       "runtime": "Pure Python / Node / Browser JS",
       "input_rate_per_1m_usd": 0.0008,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 404,
-      "input_tokens_total": 40812,
+      "n_observations": 500,
+      "input_tokens_total": 69943,
       "output_tokens_total": 0,
       "usd_per_1k_decisions": 0.0001,
       "axes": {
-        "intelligence": 88.6,
+        "intelligence": 90.8,
         "intelligence_ci95": [
-          85.6,
-          91.6
+          88.2,
+          93.4
         ],
-        "calibration": 93.8,
-        "speed": 99.8,
+        "calibration": 95.0,
+        "speed": 98.7,
         "cost": 99.8
       },
-      "capability_score": 91.2,
-      "composite_score": 95.3,
+      "capability_score": 92.9,
+      "composite_score": 95.9,
       "open_set_score": 100.0,
-      "sealed_set_score": 32.4,
+      "sealed_set_score": 72.0,
       "calibration_details": {
-        "null_auroc": 0.97364,
-        "null_ece": 0.06061,
-        "null_brier": 0.06363
+        "null_auroc": 0.98239,
+        "null_ece": 0.04866,
+        "null_brier": 0.05142
       },
       "latency": {
-        "mean_ms": 0.0123,
-        "p50_ms": 0.0049,
-        "p95_ms": 0.0344,
-        "p99_ms": 0.0978
+        "mean_ms": 0.0632,
+        "p50_ms": 0.0127,
+        "p95_ms": 0.2868,
+        "p99_ms": 0.3604
       },
       "by_request_type": {
         "span_open": {
@@ -185,11 +193,11 @@
         },
         "math": {
           "score": 100.0,
-          "n": 50
+          "n": 51
         },
         "choice": {
           "score": 100.0,
-          "n": 33
+          "n": 41
         },
         "noul_open": {
           "score": 100.0,
@@ -200,12 +208,12 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 30.3,
-          "n": 33
+          "score": 78.7,
+          "n": 108
         },
         "noul_sealed": {
-          "score": 28.1,
-          "n": 32
+          "score": 47.7,
+          "n": 44
         }
       },
       "by_tier_open": {
@@ -224,12 +232,16 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 23.3,
-          "n": 30
+          "score": 79.6,
+          "n": 113
         },
         "Hard": {
-          "score": 39.5,
-          "n": 38
+          "score": 54.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 1
         }
       },
       "by_domain": {
@@ -252,6 +264,10 @@
         "squad_v2_open_qa": {
           "score": 23.3,
           "n": 60
+        },
+        "contract_extraction": {
+          "score": 100.0,
+          "n": 96
         },
         "adversarial_stress": {
           "score": 100.0,
@@ -261,45 +277,45 @@
       "official_rank": 2
     },
     {
-      "id": "nullspan-67m-fp32",
-      "name": "nullspan-67M (PyTorch FP32)",
+      "id": "nullspan-fp32",
+      "name": "nullspan-344M (PyTorch FP32)",
       "author": "gnumanth",
-      "system_type": "System One Encoder (5-Head)",
+      "system_type": "System One Encoder (5-Head, 512-ctx)",
       "open_weights": true,
-      "params_m": 67.0,
-      "footprint_mb": 255.8,
-      "base_model": "distilbert/distilbert-base-uncased",
-      "runtime": "PyTorch MPS/CPU FP32",
-      "input_rate_per_1m_usd": 0.015,
+      "params_m": 344.2,
+      "footprint_mb": 1313.1,
+      "base_model": "ahotrod/electra_large_discriminator_squad2_512 + SchemaAdapter",
+      "runtime": "PyTorch MPS/CUDA/CPU FP32",
+      "input_rate_per_1m_usd": 0.012,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 404,
-      "input_tokens_total": 40812,
+      "n_observations": 500,
+      "input_tokens_total": 69943,
       "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0015,
+      "usd_per_1k_decisions": 0.0017,
       "axes": {
-        "intelligence": 98.8,
+        "intelligence": 98.0,
         "intelligence_ci95": [
-          97.5,
-          99.8
+          96.8,
+          99.2
         ],
-        "calibration": 99.7,
-        "speed": 66.5,
-        "cost": 78.0
+        "calibration": 98.8,
+        "speed": 57.2,
+        "cost": 76.8
       },
-      "capability_score": 99.2,
-      "composite_score": 83.3,
+      "capability_score": 98.4,
+      "composite_score": 78.7,
       "open_set_score": 100.0,
-      "sealed_set_score": 92.6,
+      "sealed_set_score": 93.9,
       "calibration_details": {
-        "null_auroc": 0.99995,
-        "null_ece": 0.00366,
-        "null_brier": 0.00217
+        "null_auroc": 0.99829,
+        "null_ece": 0.01215,
+        "null_brier": 0.01245
       },
       "latency": {
-        "mean_ms": 9.6821,
-        "p50_ms": 5.5754,
-        "p95_ms": 18.0694,
-        "p99_ms": 73.0375
+        "mean_ms": 47.0471,
+        "p50_ms": 32.3672,
+        "p95_ms": 91.8385,
+        "p99_ms": 108.335
       },
       "by_request_type": {
         "span_open": {
@@ -308,11 +324,11 @@
         },
         "math": {
           "score": 100.0,
-          "n": 50
+          "n": 51
         },
         "choice": {
           "score": 100.0,
-          "n": 33
+          "n": 41
         },
         "noul_open": {
           "score": 100.0,
@@ -323,12 +339,12 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 84.8,
-          "n": 33
+          "score": 96.3,
+          "n": 108
         },
         "noul_sealed": {
-          "score": 100.0,
-          "n": 32
+          "score": 86.4,
+          "n": 44
         }
       },
       "by_tier_open": {
@@ -347,12 +363,16 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 83.3,
-          "n": 30
+          "score": 96.5,
+          "n": 113
         },
         "Hard": {
+          "score": 88.0,
+          "n": 50
+        },
+        "Judge": {
           "score": 100.0,
-          "n": 38
+          "n": 1
         }
       },
       "by_domain": {
@@ -373,8 +393,12 @@
           "n": 16
         },
         "squad_v2_open_qa": {
-          "score": 91.7,
+          "score": 83.3,
           "n": 60
+        },
+        "contract_extraction": {
+          "score": 100.0,
+          "n": 96
         },
         "adversarial_stress": {
           "score": 100.0,
@@ -384,45 +408,45 @@
       "official_rank": 3
     },
     {
-      "id": "nullspan-67m-onnx-int8",
-      "name": "nullspan-67M-Int8 (ONNX WASM/CPU)",
+      "id": "nullspan-onnx-int8",
+      "name": "nullspan-344M-Int8 (ONNX WASM/CPU)",
       "author": "gnumanth",
-      "system_type": "Quantized ONNX WASM/CPU",
+      "system_type": "Quantized ONNX WASM/CPU (512-ctx)",
       "open_weights": true,
-      "params_m": 67.0,
-      "footprint_mb": 64.3,
+      "params_m": 344.2,
+      "footprint_mb": 330.1,
       "base_model": "gnumanth/nullspan (Int8 Dynamic)",
       "runtime": "ONNX Runtime Int8 (Browser WASM / Edge)",
-      "input_rate_per_1m_usd": 0.008,
+      "input_rate_per_1m_usd": 0.006,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 404,
-      "input_tokens_total": 40812,
+      "n_observations": 500,
+      "input_tokens_total": 69943,
       "output_tokens_total": 0,
       "usd_per_1k_decisions": 0.0008,
       "axes": {
-        "intelligence": 98.0,
+        "intelligence": 97.8,
         "intelligence_ci95": [
-          96.5,
-          99.3
+          96.6,
+          99.0
         ],
-        "calibration": 99.3,
-        "speed": 62.3,
+        "calibration": 98.9,
+        "speed": 53.2,
         "cost": 84.2
       },
-      "capability_score": 98.7,
-      "composite_score": 83.0,
+      "capability_score": 98.3,
+      "composite_score": 78.4,
       "open_set_score": 100.0,
-      "sealed_set_score": 88.2,
+      "sealed_set_score": 93.3,
       "calibration_details": {
-        "null_auroc": 0.99975,
-        "null_ece": 0.00807,
-        "null_brier": 0.00413
+        "null_auroc": 0.99737,
+        "null_ece": 0.0095,
+        "null_brier": 0.01314
       },
       "latency": {
-        "mean_ms": 13.2888,
-        "p50_ms": 12.2679,
-        "p95_ms": 18.3104,
-        "p99_ms": 22.3046
+        "mean_ms": 107.1327,
+        "p50_ms": 68.4825,
+        "p95_ms": 262.6889,
+        "p99_ms": 311.1327
       },
       "by_request_type": {
         "span_open": {
@@ -431,11 +455,11 @@
         },
         "math": {
           "score": 100.0,
-          "n": 50
+          "n": 51
         },
         "choice": {
           "score": 100.0,
-          "n": 33
+          "n": 41
         },
         "noul_open": {
           "score": 100.0,
@@ -446,12 +470,12 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 84.8,
-          "n": 33
+          "score": 95.4,
+          "n": 108
         },
         "noul_sealed": {
-          "score": 90.6,
-          "n": 32
+          "score": 86.4,
+          "n": 44
         }
       },
       "by_tier_open": {
@@ -470,12 +494,16 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 83.3,
-          "n": 30
+          "score": 95.6,
+          "n": 113
         },
         "Hard": {
-          "score": 92.1,
-          "n": 38
+          "score": 88.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 1
         }
       },
       "by_domain": {
@@ -496,8 +524,12 @@
           "n": 16
         },
         "squad_v2_open_qa": {
-          "score": 86.7,
+          "score": 81.7,
           "n": 60
+        },
+        "contract_extraction": {
+          "score": 100.0,
+          "n": 96
         },
         "adversarial_stress": {
           "score": 100.0,
@@ -507,45 +539,45 @@
       "official_rank": 4
     },
     {
-      "id": "nullspan-67m-onnx-fp32",
-      "name": "nullspan-67M (ONNX FP32)",
+      "id": "nullspan-onnx-fp32",
+      "name": "nullspan-344M (ONNX FP32)",
       "author": "gnumanth",
-      "system_type": "System One Encoder (ONNX)",
+      "system_type": "System One Encoder (ONNX, 512-ctx)",
       "open_weights": true,
-      "params_m": 67.0,
-      "footprint_mb": 255.9,
+      "params_m": 344.2,
+      "footprint_mb": 1313.6,
       "base_model": "gnumanth/nullspan (ONNX Opset 17)",
       "runtime": "ONNX Runtime FP32",
-      "input_rate_per_1m_usd": 0.014,
+      "input_rate_per_1m_usd": 0.011,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 404,
-      "input_tokens_total": 40812,
+      "n_observations": 500,
+      "input_tokens_total": 69943,
       "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0014,
+      "usd_per_1k_decisions": 0.0015,
       "axes": {
-        "intelligence": 98.8,
+        "intelligence": 98.0,
         "intelligence_ci95": [
-          97.5,
-          99.8
+          96.8,
+          99.2
         ],
-        "calibration": 99.7,
-        "speed": 63.0,
-        "cost": 78.7
+        "calibration": 98.8,
+        "speed": 50.5,
+        "cost": 78.0
       },
-      "capability_score": 99.2,
-      "composite_score": 82.1,
+      "capability_score": 98.4,
+      "composite_score": 75.5,
       "open_set_score": 100.0,
-      "sealed_set_score": 92.6,
+      "sealed_set_score": 93.9,
       "calibration_details": {
-        "null_auroc": 0.99995,
-        "null_ece": 0.00366,
-        "null_brier": 0.00217
+        "null_auroc": 0.99829,
+        "null_ece": 0.01215,
+        "null_brier": 0.01245
       },
       "latency": {
-        "mean_ms": 11.191,
-        "p50_ms": 10.8325,
-        "p95_ms": 13.9877,
-        "p99_ms": 15.5029
+        "mean_ms": 134.8996,
+        "p50_ms": 113.1368,
+        "p95_ms": 225.285,
+        "p99_ms": 513.2005
       },
       "by_request_type": {
         "span_open": {
@@ -554,11 +586,11 @@
         },
         "math": {
           "score": 100.0,
-          "n": 50
+          "n": 51
         },
         "choice": {
           "score": 100.0,
-          "n": 33
+          "n": 41
         },
         "noul_open": {
           "score": 100.0,
@@ -569,12 +601,12 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 84.8,
-          "n": 33
+          "score": 96.3,
+          "n": 108
         },
         "noul_sealed": {
-          "score": 100.0,
-          "n": 32
+          "score": 86.4,
+          "n": 44
         }
       },
       "by_tier_open": {
@@ -593,12 +625,16 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 83.3,
-          "n": 30
+          "score": 96.5,
+          "n": 113
         },
         "Hard": {
+          "score": 88.0,
+          "n": 50
+        },
+        "Judge": {
           "score": 100.0,
-          "n": 38
+          "n": 1
         }
       },
       "by_domain": {
@@ -619,8 +655,12 @@
           "n": 16
         },
         "squad_v2_open_qa": {
-          "score": 91.7,
+          "score": 83.3,
           "n": 60
+        },
+        "contract_extraction": {
+          "score": 100.0,
+          "n": 96
         },
         "adversarial_stress": {
           "score": 100.0,
@@ -745,12 +785,147 @@
           "score": 62.6,
           "n": 300
         },
+        "contract_extraction": {
+          "score": 58.4,
+          "n": 300
+        },
         "adversarial_stress": {
           "score": 54.3,
           "n": 300
         }
       },
       "official_rank": 6
+    },
+    {
+      "id": "cloudflare-clairic-clef-live",
+      "name": "@cf/cloudflare/clairic + clef (Live Workers AI)",
+      "author": "Cloudflare",
+      "system_type": "System One Split API (Clairic + Clef 27B)",
+      "open_weights": false,
+      "params_m": 27000.0,
+      "footprint_mb": null,
+      "base_model": "@cf/cloudflare/clairic + @cf/cloudflare/clef (180 RPCs / 246 Passes)",
+      "runtime": "Cloudflare Workers AI Edge RPC (p50 315.3 ms/doc)",
+      "input_rate_per_1m_usd": 0.025,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 500,
+      "input_tokens_total": 81206,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0041,
+      "axes": {
+        "intelligence": 91.6,
+        "intelligence_ci95": [
+          89.2,
+          93.9
+        ],
+        "calibration": 94.9,
+        "speed": 51.7,
+        "cost": 68.2
+      },
+      "capability_score": 93.2,
+      "composite_score": 72.1,
+      "open_set_score": 89.7,
+      "sealed_set_score": 95.4,
+      "calibration_details": {
+        "null_auroc": 0.98959,
+        "null_ece": 0.05235,
+        "null_brier": 0.04728
+      },
+      "latency": {
+        "mean_ms": 128.789,
+        "p50_ms": 91.323,
+        "p95_ms": 314.023,
+        "p99_ms": 403.1387
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 83.8,
+          "n": 181
+        },
+        "math": {
+          "score": 100.0,
+          "n": 51
+        },
+        "choice": {
+          "score": 100.0,
+          "n": 41
+        },
+        "noul_open": {
+          "score": 100.0,
+          "n": 27
+        },
+        "score": {
+          "score": 89.0,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 95.8,
+          "n": 108
+        },
+        "noul_sealed": {
+          "score": 93.2,
+          "n": 44
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 85.8,
+          "n": 176
+        },
+        "Judge": {
+          "score": 94.5,
+          "n": 96
+        },
+        "Standard": {
+          "score": 93.4,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 96.9,
+          "n": 113
+        },
+        "Hard": {
+          "score": 92.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 1
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 94.4,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 82.6,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 96.2,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 100.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 92.5,
+          "n": 60
+        },
+        "contract_extraction": {
+          "score": 97.9,
+          "n": 96
+        },
+        "adversarial_stress": {
+          "score": 87.5,
+          "n": 8
+        }
+      },
+      "official_rank": 7
     },
     {
       "id": "basal-omni-1.0-ultra",
@@ -858,7 +1033,7 @@
         },
         "cluster_throughput_comps": {
           "score": 69.1,
-          "n": 150
+          "n": 300
         },
         "edge_traffic_forecast": {
           "score": 66.9,
@@ -868,12 +1043,16 @@
           "score": 76.9,
           "n": 300
         },
+        "contract_extraction": {
+          "score": 72.8,
+          "n": 300
+        },
         "adversarial_stress": {
           "score": 74.0,
           "n": 300
         }
       },
-      "official_rank": 7
+      "official_rank": 8
     },
     {
       "id": "jev-1.13.0-ref",
@@ -991,132 +1170,13 @@
           "score": 61.6,
           "n": 300
         },
+        "contract_extraction": {
+          "score": 62.4,
+          "n": 300
+        },
         "adversarial_stress": {
           "score": 58.9,
           "n": 300
-        }
-      },
-      "official_rank": 8
-    },
-    {
-      "id": "cloudflare-clairic-clef-live",
-      "name": "@cf/cloudflare/clairic + clef (Live Workers AI)",
-      "author": "Cloudflare",
-      "system_type": "System One Split API (Clairic + Clef 27B)",
-      "open_weights": false,
-      "params_m": 27000.0,
-      "footprint_mb": null,
-      "base_model": "@cf/cloudflare/clairic + @cf/cloudflare/clef (160 RPCs / 226 Passes)",
-      "runtime": "Cloudflare Workers AI Edge RPC (p50 308.6 ms/doc)",
-      "input_rate_per_1m_usd": 0.025,
-      "output_rate_per_1m_usd": 0.0,
-      "n_observations": 404,
-      "input_tokens_total": 69879,
-      "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0043,
-      "axes": {
-        "intelligence": 90.1,
-        "intelligence_ci95": [
-          87.5,
-          92.7
-        ],
-        "calibration": 93.8,
-        "speed": 51.5,
-        "cost": 67.7
-      },
-      "capability_score": 91.9,
-      "composite_score": 71.5,
-      "open_set_score": 89.7,
-      "sealed_set_score": 91.9,
-      "calibration_details": {
-        "null_auroc": 0.98443,
-        "null_ece": 0.06449,
-        "null_brier": 0.05851
-      },
-      "latency": {
-        "mean_ms": 141.4615,
-        "p50_ms": 95.0278,
-        "p95_ms": 325.787,
-        "p99_ms": 430.8539
-      },
-      "by_request_type": {
-        "span_open": {
-          "score": 83.8,
-          "n": 181
-        },
-        "math": {
-          "score": 100.0,
-          "n": 50
-        },
-        "choice": {
-          "score": 100.0,
-          "n": 33
-        },
-        "noul_open": {
-          "score": 100.0,
-          "n": 27
-        },
-        "score": {
-          "score": 89.0,
-          "n": 48
-        },
-        "span_sealed": {
-          "score": 92.4,
-          "n": 33
-        },
-        "noul_sealed": {
-          "score": 90.6,
-          "n": 32
-        }
-      },
-      "by_tier_open": {
-        "Easy": {
-          "score": 85.8,
-          "n": 176
-        },
-        "Judge": {
-          "score": 94.5,
-          "n": 96
-        },
-        "Standard": {
-          "score": 93.4,
-          "n": 64
-        }
-      },
-      "by_tier_sealed": {
-        "Standard": {
-          "score": 95.0,
-          "n": 30
-        },
-        "Hard": {
-          "score": 89.5,
-          "n": 38
-        }
-      },
-      "by_domain": {
-        "incident_report": {
-          "score": 94.4,
-          "n": 160
-        },
-        "compute_ledger": {
-          "score": 82.6,
-          "n": 144
-        },
-        "cluster_throughput_comps": {
-          "score": 96.2,
-          "n": 16
-        },
-        "edge_traffic_forecast": {
-          "score": 100.0,
-          "n": 16
-        },
-        "squad_v2_open_qa": {
-          "score": 92.5,
-          "n": 60
-        },
-        "adversarial_stress": {
-          "score": 87.5,
-          "n": 8
         }
       },
       "official_rank": 9
@@ -1133,34 +1193,34 @@
       "runtime": "Hosted Cloud API ( ~38 output tokens/field )",
       "input_rate_per_1m_usd": 0.15,
       "output_rate_per_1m_usd": 0.6,
-      "n_observations": 404,
-      "input_tokens_total": 40812,
-      "output_tokens_total": 15352,
-      "usd_per_1k_decisions": 0.038,
+      "n_observations": 500,
+      "input_tokens_total": 69943,
+      "output_tokens_total": 19000,
+      "usd_per_1k_decisions": 0.0438,
       "axes": {
-        "intelligence": 95.3,
+        "intelligence": 95.2,
         "intelligence_ci95": [
-          93.3,
-          97.3
+          93.4,
+          97.0
         ],
-        "calibration": 87.7,
+        "calibration": 89.0,
         "speed": 43.6,
-        "cost": 46.5
+        "cost": 45.1
       },
-      "capability_score": 91.5,
-      "composite_score": 60.3,
-      "open_set_score": 98.2,
-      "sealed_set_score": 80.9,
+      "capability_score": 92.1,
+      "composite_score": 59.8,
+      "open_set_score": 99.7,
+      "sealed_set_score": 86.0,
       "calibration_details": {
-        "null_auroc": 0.98305,
-        "null_ece": 0.16698,
-        "null_brier": 0.04202
+        "null_auroc": 0.95791,
+        "null_ece": 0.15112,
+        "null_brier": 0.03403
       },
       "latency": {
-        "mean_ms": 420.6462,
-        "p50_ms": 415.927,
-        "p95_ms": 513.261,
-        "p99_ms": 523.846
+        "mean_ms": 420.4635,
+        "p50_ms": 417.9908,
+        "p95_ms": 515.593,
+        "p99_ms": 524.2688
       },
       "by_request_type": {
         "span_open": {
@@ -1169,14 +1229,14 @@
         },
         "math": {
           "score": 100.0,
-          "n": 50
+          "n": 51
         },
         "choice": {
           "score": 100.0,
-          "n": 33
+          "n": 41
         },
         "noul_open": {
-          "score": 77.8,
+          "score": 96.3,
           "n": 27
         },
         "score": {
@@ -1184,17 +1244,17 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 84.8,
-          "n": 33
+          "score": 91.7,
+          "n": 108
         },
         "noul_sealed": {
-          "score": 75.0,
-          "n": 32
+          "score": 68.2,
+          "n": 44
         }
       },
       "by_tier_open": {
         "Easy": {
-          "score": 96.6,
+          "score": 99.4,
           "n": 176
         },
         "Judge": {
@@ -1208,21 +1268,25 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 83.3,
-          "n": 30
+          "score": 92.0,
+          "n": 113
         },
         "Hard": {
-          "score": 78.9,
-          "n": 38
+          "score": 72.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 1
         }
       },
       "by_domain": {
         "incident_report": {
-          "score": 98.8,
+          "score": 99.4,
           "n": 160
         },
         "compute_ledger": {
-          "score": 97.2,
+          "score": 100.0,
           "n": 144
         },
         "cluster_throughput_comps": {
@@ -1234,8 +1298,12 @@
           "n": 16
         },
         "squad_v2_open_qa": {
-          "score": 80.0,
+          "score": 76.7,
           "n": 60
+        },
+        "contract_extraction": {
+          "score": 91.7,
+          "n": 96
         },
         "adversarial_stress": {
           "score": 87.5,
@@ -1243,6 +1311,137 @@
         }
       },
       "official_rank": 10
+    },
+    {
+      "id": "deberta-v3-base-squad2",
+      "name": "deberta-v3-base-squad2 (184M SQuAD2 QA)",
+      "author": "deepset",
+      "system_type": "Open Weights \u00b7 Extractive QA Cross-Encoder",
+      "open_weights": true,
+      "params_m": 183.8,
+      "footprint_mb": 701.3,
+      "base_model": "deepset/deberta-v3-base-squad2",
+      "runtime": "PyTorch MPS/CPU (512-ctx)",
+      "input_rate_per_1m_usd": 0.032,
+      "output_rate_per_1m_usd": 0.0,
+      "n_observations": 500,
+      "input_tokens_total": 57964,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0037,
+      "axes": {
+        "intelligence": 48.1,
+        "intelligence_ci95": [
+          43.9,
+          52.4
+        ],
+        "calibration": 63.4,
+        "speed": 55.7,
+        "cost": 69.2
+      },
+      "capability_score": 55.8,
+      "composite_score": 58.0,
+      "open_set_score": 48.6,
+      "sealed_set_score": 47.3,
+      "calibration_details": {
+        "null_auroc": 0.82087,
+        "null_ece": 0.39493,
+        "null_brier": 0.31346
+      },
+      "latency": {
+        "mean_ms": 48.5912,
+        "p50_ms": 42.4964,
+        "p95_ms": 111.7974,
+        "p99_ms": 162.0547
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 56.4,
+          "n": 181
+        },
+        "math": {
+          "score": 4.9,
+          "n": 51
+        },
+        "choice": {
+          "score": 65.9,
+          "n": 41
+        },
+        "noul_open": {
+          "score": 100.0,
+          "n": 27
+        },
+        "score": {
+          "score": 15.1,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 35.2,
+          "n": 108
+        },
+        "noul_sealed": {
+          "score": 84.1,
+          "n": 44
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 64.2,
+          "n": 176
+        },
+        "Judge": {
+          "score": 9.6,
+          "n": 96
+        },
+        "Standard": {
+          "score": 64.1,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 33.6,
+          "n": 113
+        },
+        "Hard": {
+          "score": 78.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 50.0,
+          "n": 1
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 50.0,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 57.6,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 1.3,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 0.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 80.0,
+          "n": 60
+        },
+        "contract_extraction": {
+          "score": 27.6,
+          "n": 96
+        },
+        "adversarial_stress": {
+          "score": 37.5,
+          "n": 8
+        }
+      },
+      "official_rank": 11
     },
     {
       "id": "claude-haiku-4.5-json",
@@ -1256,34 +1455,34 @@
       "runtime": "Hosted Cloud API ( ~38 output tokens/field )",
       "input_rate_per_1m_usd": 0.8,
       "output_rate_per_1m_usd": 4.0,
-      "n_observations": 404,
-      "input_tokens_total": 40812,
-      "output_tokens_total": 15352,
-      "usd_per_1k_decisions": 0.2328,
+      "n_observations": 500,
+      "input_tokens_total": 69943,
+      "output_tokens_total": 19000,
+      "usd_per_1k_decisions": 0.2639,
       "axes": {
-        "intelligence": 96.3,
+        "intelligence": 95.4,
         "intelligence_ci95": [
-          94.3,
-          98.0
+          93.4,
+          97.2
         ],
-        "calibration": 88.3,
+        "calibration": 88.7,
         "speed": 41.8,
-        "cost": 28.7
+        "cost": 27.5
       },
-      "capability_score": 92.3,
-      "composite_score": 49.7,
-      "open_set_score": 98.8,
-      "sealed_set_score": 83.8,
+      "capability_score": 92.1,
+      "composite_score": 48.8,
+      "open_set_score": 99.4,
+      "sealed_set_score": 87.2,
       "calibration_details": {
-        "null_auroc": 0.98305,
-        "null_ece": 0.16104,
-        "null_brier": 0.03632
+        "null_auroc": 0.98592,
+        "null_ece": 0.1566,
+        "null_brier": 0.03222
       },
       "latency": {
-        "mean_ms": 586.9228,
-        "p50_ms": 588.0296,
-        "p95_ms": 715.62,
-        "p99_ms": 727.5494
+        "mean_ms": 585.679,
+        "p50_ms": 586.3918,
+        "p95_ms": 717.8024,
+        "p99_ms": 727.6919
       },
       "by_request_type": {
         "span_open": {
@@ -1292,14 +1491,14 @@
         },
         "math": {
           "score": 100.0,
-          "n": 50
+          "n": 51
         },
         "choice": {
           "score": 100.0,
-          "n": 33
+          "n": 41
         },
         "noul_open": {
-          "score": 85.2,
+          "score": 92.6,
           "n": 27
         },
         "score": {
@@ -1307,17 +1506,17 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 84.8,
-          "n": 33
+          "score": 92.6,
+          "n": 108
         },
         "noul_sealed": {
-          "score": 81.2,
-          "n": 32
+          "score": 70.5,
+          "n": 44
         }
       },
       "by_tier_open": {
         "Easy": {
-          "score": 97.7,
+          "score": 98.9,
           "n": 176
         },
         "Judge": {
@@ -1331,21 +1530,25 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 83.3,
-          "n": 30
+          "score": 92.9,
+          "n": 113
         },
         "Hard": {
-          "score": 84.2,
-          "n": 38
+          "score": 74.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 1
         }
       },
       "by_domain": {
         "incident_report": {
-          "score": 98.8,
+          "score": 99.4,
           "n": 160
         },
         "compute_ledger": {
-          "score": 98.6,
+          "score": 99.3,
           "n": 144
         },
         "cluster_throughput_comps": {
@@ -1357,15 +1560,19 @@
           "n": 16
         },
         "squad_v2_open_qa": {
-          "score": 83.3,
+          "score": 78.3,
           "n": 60
         },
+        "contract_extraction": {
+          "score": 93.8,
+          "n": 96
+        },
         "adversarial_stress": {
-          "score": 87.5,
+          "score": 75.0,
           "n": 8
         }
       },
-      "official_rank": 11
+      "official_rank": 12
     },
     {
       "id": "bge-small-en-v1.5",
@@ -1379,34 +1586,34 @@
       "runtime": "PyTorch MPS/CPU",
       "input_rate_per_1m_usd": 0.01,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 404,
-      "input_tokens_total": 22327,
+      "n_observations": 500,
+      "input_tokens_total": 35946,
       "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0006,
+      "usd_per_1k_decisions": 0.0007,
       "axes": {
-        "intelligence": 17.5,
+        "intelligence": 14.7,
         "intelligence_ci95": [
-          14.3,
-          20.8
+          12.0,
+          17.5
         ],
-        "calibration": 89.1,
-        "speed": 64.7,
-        "cost": 87.0
+        "calibration": 89.2,
+        "speed": 64.5,
+        "cost": 85.5
       },
-      "capability_score": 53.3,
-      "composite_score": 42.0,
+      "capability_score": 52.0,
+      "composite_score": 37.6,
       "open_set_score": 20.3,
-      "sealed_set_score": 3.7,
+      "sealed_set_score": 3.4,
       "calibration_details": {
-        "null_auroc": 0.69995,
-        "null_ece": 0.10648,
-        "null_brier": 0.11243
+        "null_auroc": 0.68694,
+        "null_ece": 0.10548,
+        "null_brier": 0.11334
       },
       "latency": {
-        "mean_ms": 14.0067,
-        "p50_ms": 7.8551,
-        "p95_ms": 15.1423,
-        "p99_ms": 241.89
+        "mean_ms": 9.0856,
+        "p50_ms": 8.0979,
+        "p95_ms": 14.9339,
+        "p99_ms": 40.3316
       },
       "by_request_type": {
         "span_open": {
@@ -1415,11 +1622,11 @@
         },
         "math": {
           "score": 0.0,
-          "n": 50
+          "n": 51
         },
         "choice": {
-          "score": 71.2,
-          "n": 33
+          "score": 59.8,
+          "n": 41
         },
         "noul_open": {
           "score": 44.4,
@@ -1430,12 +1637,12 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 1.5,
-          "n": 33
+          "score": 2.3,
+          "n": 108
         },
         "noul_sealed": {
-          "score": 3.1,
-          "n": 32
+          "score": 2.3,
+          "n": 44
         }
       },
       "by_tier_open": {
@@ -1454,12 +1661,16 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 0.0,
-          "n": 30
+          "score": 2.7,
+          "n": 113
         },
         "Hard": {
-          "score": 6.6,
-          "n": 38
+          "score": 5.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 0.0,
+          "n": 1
         }
       },
       "by_domain": {
@@ -1483,12 +1694,16 @@
           "score": 0.0,
           "n": 60
         },
+        "contract_extraction": {
+          "score": 3.1,
+          "n": 96
+        },
         "adversarial_stress": {
           "score": 31.2,
           "n": 8
         }
       },
-      "official_rank": 12
+      "official_rank": 13
     },
     {
       "id": "distilbert-base-control",
@@ -1502,34 +1717,34 @@
       "runtime": "PyTorch MPS/CPU",
       "input_rate_per_1m_usd": 0.015,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 404,
-      "input_tokens_total": 22327,
+      "n_observations": 500,
+      "input_tokens_total": 35946,
       "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0008,
+      "usd_per_1k_decisions": 0.0011,
       "axes": {
-        "intelligence": 17.3,
+        "intelligence": 14.2,
         "intelligence_ci95": [
-          14.0,
-          20.6
+          11.6,
+          17.0
         ],
-        "calibration": 90.0,
-        "speed": 65.3,
-        "cost": 84.2
+        "calibration": 91.5,
+        "speed": 66.0,
+        "cost": 81.1
       },
-      "capability_score": 53.6,
-      "composite_score": 41.6,
+      "capability_score": 52.9,
+      "composite_score": 36.8,
       "open_set_score": 20.2,
-      "sealed_set_score": 2.9,
+      "sealed_set_score": 1.8,
       "calibration_details": {
-        "null_auroc": 0.61378,
-        "null_ece": 0.09306,
-        "null_brier": 0.11257
+        "null_auroc": 0.60728,
+        "null_ece": 0.07034,
+        "null_brier": 0.11186
       },
       "latency": {
-        "mean_ms": 7.2241,
-        "p50_ms": 6.9468,
-        "p95_ms": 9.8813,
-        "p99_ms": 17.762
+        "mean_ms": 8.897,
+        "p50_ms": 6.1334,
+        "p95_ms": 19.077,
+        "p99_ms": 26.1601
       },
       "by_request_type": {
         "span_open": {
@@ -1538,11 +1753,11 @@
         },
         "math": {
           "score": 0.0,
-          "n": 50
+          "n": 51
         },
         "choice": {
-          "score": 71.2,
-          "n": 33
+          "score": 59.8,
+          "n": 41
         },
         "noul_open": {
           "score": 0.0,
@@ -1553,12 +1768,12 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 3.0,
-          "n": 33
+          "score": 0.9,
+          "n": 108
         },
         "noul_sealed": {
           "score": 0.0,
-          "n": 32
+          "n": 44
         }
       },
       "by_tier_open": {
@@ -1577,12 +1792,16 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 3.3,
-          "n": 30
+          "score": 1.8,
+          "n": 113
         },
         "Hard": {
-          "score": 2.6,
-          "n": 38
+          "score": 2.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 0.0,
+          "n": 1
         }
       },
       "by_domain": {
@@ -1606,12 +1825,16 @@
           "score": 1.7,
           "n": 60
         },
+        "contract_extraction": {
+          "score": 1.0,
+          "n": 96
+        },
         "adversarial_stress": {
           "score": 12.5,
           "n": 8
         }
       },
-      "official_rank": 13
+      "official_rank": 14
     },
     {
       "id": "all-MiniLM-L12-v2",
@@ -1625,34 +1848,34 @@
       "runtime": "PyTorch MPS/CPU",
       "input_rate_per_1m_usd": 0.01,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 404,
-      "input_tokens_total": 22327,
+      "n_observations": 500,
+      "input_tokens_total": 35946,
       "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0006,
+      "usd_per_1k_decisions": 0.0007,
       "axes": {
-        "intelligence": 15.1,
+        "intelligence": 14.4,
         "intelligence_ci95": [
-          12.1,
-          18.5
+          11.7,
+          17.5
         ],
-        "calibration": 74.6,
-        "speed": 65.4,
-        "cost": 87.0
+        "calibration": 73.5,
+        "speed": 60.2,
+        "cost": 85.5
       },
-      "capability_score": 44.8,
-      "composite_score": 37.6,
+      "capability_score": 44.0,
+      "composite_score": 35.9,
       "open_set_score": 17.2,
-      "sealed_set_score": 5.1,
+      "sealed_set_score": 8.8,
       "calibration_details": {
-        "null_auroc": 0.58359,
-        "null_ece": 0.27499,
-        "null_brier": 0.21417
+        "null_auroc": 0.58938,
+        "null_ece": 0.28318,
+        "null_brier": 0.23193
       },
       "latency": {
-        "mean_ms": 7.0192,
-        "p50_ms": 6.8944,
-        "p95_ms": 9.5936,
-        "p99_ms": 13.4164
+        "mean_ms": 18.2994,
+        "p50_ms": 18.3563,
+        "p95_ms": 25.4464,
+        "p99_ms": 29.4546
       },
       "by_request_type": {
         "span_open": {
@@ -1661,11 +1884,11 @@
         },
         "math": {
           "score": 0.0,
-          "n": 50
+          "n": 51
         },
         "choice": {
-          "score": 31.8,
-          "n": 33
+          "score": 28.0,
+          "n": 41
         },
         "noul_open": {
           "score": 100.0,
@@ -1676,12 +1899,12 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 1.5,
-          "n": 33
+          "score": 0.5,
+          "n": 108
         },
         "noul_sealed": {
-          "score": 9.4,
-          "n": 32
+          "score": 29.5,
+          "n": 44
         }
       },
       "by_tier_open": {
@@ -1700,12 +1923,16 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 0.0,
-          "n": 30
+          "score": 0.9,
+          "n": 113
         },
         "Hard": {
-          "score": 9.2,
-          "n": 38
+          "score": 27.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 0.0,
+          "n": 1
         }
       },
       "by_domain": {
@@ -1729,12 +1956,16 @@
           "score": 1.7,
           "n": 60
         },
+        "contract_extraction": {
+          "score": 11.5,
+          "n": 96
+        },
         "adversarial_stress": {
           "score": 31.2,
           "n": 8
         }
       },
-      "official_rank": 14
+      "official_rank": 15
     },
     {
       "id": "all-mpnet-base-v2",
@@ -1748,34 +1979,34 @@
       "runtime": "PyTorch MPS/CPU",
       "input_rate_per_1m_usd": 0.022,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 404,
-      "input_tokens_total": 22327,
+      "n_observations": 500,
+      "input_tokens_total": 35946,
       "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0012,
+      "usd_per_1k_decisions": 0.0016,
       "axes": {
-        "intelligence": 14.1,
+        "intelligence": 13.6,
         "intelligence_ci95": [
           10.9,
-          17.5
+          16.7
         ],
-        "calibration": 72.2,
+        "calibration": 71.0,
         "speed": 62.8,
-        "cost": 80.2
+        "cost": 77.4
       },
-      "capability_score": 43.1,
-      "composite_score": 35.3,
+      "capability_score": 42.3,
+      "composite_score": 34.3,
       "open_set_score": 16.2,
-      "sealed_set_score": 3.7,
+      "sealed_set_score": 8.2,
       "calibration_details": {
-        "null_auroc": 0.5605,
-        "null_ece": 0.28897,
-        "null_brier": 0.25635
+        "null_auroc": 0.58731,
+        "null_ece": 0.30424,
+        "null_brier": 0.26407
       },
       "latency": {
-        "mean_ms": 17.6413,
-        "p50_ms": 11.0976,
-        "p95_ms": 22.5152,
-        "p99_ms": 154.1558
+        "mean_ms": 14.1298,
+        "p50_ms": 11.2628,
+        "p95_ms": 32.6527,
+        "p99_ms": 52.232
       },
       "by_request_type": {
         "span_open": {
@@ -1784,11 +2015,11 @@
         },
         "math": {
           "score": 0.0,
-          "n": 50
+          "n": 51
         },
         "choice": {
-          "score": 31.8,
-          "n": 33
+          "score": 28.0,
+          "n": 41
         },
         "noul_open": {
           "score": 100.0,
@@ -1799,12 +2030,12 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 1.5,
-          "n": 33
+          "score": 0.5,
+          "n": 108
         },
         "noul_sealed": {
-          "score": 6.2,
-          "n": 32
+          "score": 27.3,
+          "n": 44
         }
       },
       "by_tier_open": {
@@ -1823,12 +2054,16 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 0.0,
-          "n": 30
+          "score": 0.9,
+          "n": 113
         },
         "Hard": {
-          "score": 6.6,
-          "n": 38
+          "score": 25.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 0.0,
+          "n": 1
         }
       },
       "by_domain": {
@@ -1852,12 +2087,16 @@
           "score": 0.0,
           "n": 60
         },
+        "contract_extraction": {
+          "score": 11.5,
+          "n": 96
+        },
         "adversarial_stress": {
           "score": 31.2,
           "n": 8
         }
       },
-      "official_rank": 15
+      "official_rank": 16
     },
     {
       "id": "paraphrase-albert-small-v2",
@@ -1871,34 +2110,34 @@
       "runtime": "PyTorch MPS/CPU",
       "input_rate_per_1m_usd": 0.005,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 404,
-      "input_tokens_total": 22327,
+      "n_observations": 500,
+      "input_tokens_total": 35946,
       "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0003,
+      "usd_per_1k_decisions": 0.0004,
       "axes": {
-        "intelligence": 13.1,
+        "intelligence": 12.5,
         "intelligence_ci95": [
-          10.1,
-          16.1
+          10.0,
+          15.2
         ],
-        "calibration": 77.2,
-        "speed": 66.8,
-        "cost": 93.8
+        "calibration": 76.6,
+        "speed": 65.9,
+        "cost": 91.0
       },
-      "capability_score": 45.1,
-      "composite_score": 34.8,
+      "capability_score": 44.5,
+      "composite_score": 33.6,
       "open_set_score": 15.3,
-      "sealed_set_score": 2.2,
+      "sealed_set_score": 6.7,
       "calibration_details": {
-        "null_auroc": 0.57696,
-        "null_ece": 0.24095,
-        "null_brier": 0.20335
+        "null_auroc": 0.58482,
+        "null_ece": 0.24547,
+        "null_brier": 0.21391
       },
       "latency": {
-        "mean_ms": 7.1812,
-        "p50_ms": 5.2236,
-        "p95_ms": 10.6213,
-        "p99_ms": 61.0186
+        "mean_ms": 6.9075,
+        "p50_ms": 6.2627,
+        "p95_ms": 7.7752,
+        "p99_ms": 30.2162
       },
       "by_request_type": {
         "span_open": {
@@ -1906,12 +2145,12 @@
           "n": 181
         },
         "math": {
-          "score": 0.0,
-          "n": 50
+          "score": 1.0,
+          "n": 51
         },
         "choice": {
-          "score": 40.9,
-          "n": 33
+          "score": 35.4,
+          "n": 41
         },
         "noul_open": {
           "score": 51.9,
@@ -1922,12 +2161,12 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 1.5,
-          "n": 33
+          "score": 2.3,
+          "n": 108
         },
         "noul_sealed": {
-          "score": 3.1,
-          "n": 32
+          "score": 15.9,
+          "n": 44
         }
       },
       "by_tier_open": {
@@ -1946,12 +2185,16 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 0.0,
-          "n": 30
+          "score": 2.7,
+          "n": 113
         },
         "Hard": {
-          "score": 3.9,
-          "n": 38
+          "score": 15.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 50.0,
+          "n": 1
         }
       },
       "by_domain": {
@@ -1975,12 +2218,16 @@
           "score": 0.0,
           "n": 60
         },
+        "contract_extraction": {
+          "score": 9.9,
+          "n": 96
+        },
         "adversarial_stress": {
           "score": 18.8,
           "n": 8
         }
       },
-      "official_rank": 16
+      "official_rank": 17
     },
     {
       "id": "paraphrase-MiniLM-L3-v2",
@@ -1994,34 +2241,34 @@
       "runtime": "PyTorch MPS/CPU",
       "input_rate_per_1m_usd": 0.005,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 404,
-      "input_tokens_total": 22327,
+      "n_observations": 500,
+      "input_tokens_total": 35946,
       "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0003,
+      "usd_per_1k_decisions": 0.0004,
       "axes": {
-        "intelligence": 11.3,
+        "intelligence": 11.1,
         "intelligence_ci95": [
-          8.4,
-          14.0
+          8.7,
+          13.8
         ],
-        "calibration": 73.1,
-        "speed": 70.6,
-        "cost": 93.8
+        "calibration": 72.3,
+        "speed": 68.9,
+        "cost": 91.0
       },
-      "capability_score": 42.2,
-      "composite_score": 31.5,
+      "capability_score": 41.7,
+      "composite_score": 30.9,
       "open_set_score": 12.9,
-      "sealed_set_score": 3.7,
+      "sealed_set_score": 7.6,
       "calibration_details": {
-        "null_auroc": 0.58059,
-        "null_ece": 0.28598,
-        "null_brier": 0.23784
+        "null_auroc": 0.58932,
+        "null_ece": 0.29025,
+        "null_brier": 0.25176
       },
       "latency": {
-        "mean_ms": 2.9015,
-        "p50_ms": 2.5864,
-        "p95_ms": 4.2605,
-        "p99_ms": 7.6042
+        "mean_ms": 5.6642,
+        "p50_ms": 3.5192,
+        "p95_ms": 15.1691,
+        "p99_ms": 19.9379
       },
       "by_request_type": {
         "span_open": {
@@ -2030,11 +2277,11 @@
         },
         "math": {
           "score": 0.0,
-          "n": 50
+          "n": 51
         },
         "choice": {
-          "score": 31.8,
-          "n": 33
+          "score": 28.0,
+          "n": 41
         },
         "noul_open": {
           "score": 44.4,
@@ -2045,12 +2292,12 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 1.5,
-          "n": 33
+          "score": 0.5,
+          "n": 108
         },
         "noul_sealed": {
-          "score": 6.2,
-          "n": 32
+          "score": 25.0,
+          "n": 44
         }
       },
       "by_tier_open": {
@@ -2069,12 +2316,16 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 0.0,
-          "n": 30
+          "score": 0.9,
+          "n": 113
         },
         "Hard": {
-          "score": 6.6,
-          "n": 38
+          "score": 23.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 0.0,
+          "n": 1
         }
       },
       "by_domain": {
@@ -2098,12 +2349,16 @@
           "score": 1.7,
           "n": 60
         },
+        "contract_extraction": {
+          "score": 10.4,
+          "n": 96
+        },
         "adversarial_stress": {
           "score": 18.8,
           "n": 8
         }
       },
-      "official_rank": 17
+      "official_rank": 18
     },
     {
       "id": "all-MiniLM-L6-v2",
@@ -2117,34 +2372,34 @@
       "runtime": "PyTorch MPS/CPU",
       "input_rate_per_1m_usd": 0.007,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 404,
-      "input_tokens_total": 22327,
+      "n_observations": 500,
+      "input_tokens_total": 35946,
       "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0004,
+      "usd_per_1k_decisions": 0.0005,
       "axes": {
-        "intelligence": 9.9,
+        "intelligence": 10.0,
         "intelligence_ci95": [
-          7.4,
-          12.6
+          7.7,
+          12.3
         ],
-        "calibration": 72.6,
-        "speed": 68.0,
-        "cost": 91.0
+        "calibration": 70.9,
+        "speed": 62.3,
+        "cost": 88.8
       },
-      "capability_score": 41.2,
-      "composite_score": 28.5,
+      "capability_score": 40.5,
+      "composite_score": 28.3,
       "open_set_score": 11.2,
-      "sealed_set_score": 3.7,
+      "sealed_set_score": 7.6,
       "calibration_details": {
-        "null_auroc": 0.55308,
-        "null_ece": 0.29013,
-        "null_brier": 0.24496
+        "null_auroc": 0.56307,
+        "null_ece": 0.30616,
+        "null_brier": 0.26323
       },
       "latency": {
-        "mean_ms": 4.8128,
-        "p50_ms": 4.2002,
-        "p95_ms": 7.2722,
-        "p99_ms": 14.2075
+        "mean_ms": 13.0226,
+        "p50_ms": 12.3218,
+        "p95_ms": 20.8164,
+        "p99_ms": 24.6272
       },
       "by_request_type": {
         "span_open": {
@@ -2153,11 +2408,11 @@
         },
         "math": {
           "score": 0.0,
-          "n": 50
+          "n": 51
         },
         "choice": {
-          "score": 31.8,
-          "n": 33
+          "score": 28.0,
+          "n": 41
         },
         "noul_open": {
           "score": 44.4,
@@ -2168,12 +2423,12 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 1.5,
-          "n": 33
+          "score": 0.5,
+          "n": 108
         },
         "noul_sealed": {
-          "score": 6.2,
-          "n": 32
+          "score": 25.0,
+          "n": 44
         }
       },
       "by_tier_open": {
@@ -2192,12 +2447,16 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 0.0,
-          "n": 30
+          "score": 0.9,
+          "n": 113
         },
         "Hard": {
-          "score": 6.6,
-          "n": 38
+          "score": 23.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 0.0,
+          "n": 1
         }
       },
       "by_domain": {
@@ -2221,55 +2480,59 @@
           "score": 1.7,
           "n": 60
         },
+        "contract_extraction": {
+          "score": 10.4,
+          "n": 96
+        },
         "adversarial_stress": {
           "score": 18.8,
           "n": 8
         }
       },
-      "official_rank": 18
+      "official_rank": 19
     }
   ],
   "tiers": {
     "tier_1a_pytorch_fp32": {
-      "id": "nullspan-67m-fp32",
-      "name": "nullspan-67M (PyTorch FP32)",
+      "id": "nullspan-fp32",
+      "name": "nullspan-344M (PyTorch FP32)",
       "author": "gnumanth",
-      "system_type": "System One Encoder (5-Head)",
+      "system_type": "System One Encoder (5-Head, 512-ctx)",
       "open_weights": true,
-      "params_m": 67.0,
-      "footprint_mb": 255.8,
-      "base_model": "distilbert/distilbert-base-uncased",
-      "runtime": "PyTorch MPS/CPU FP32",
-      "input_rate_per_1m_usd": 0.015,
+      "params_m": 344.2,
+      "footprint_mb": 1313.1,
+      "base_model": "ahotrod/electra_large_discriminator_squad2_512 + SchemaAdapter",
+      "runtime": "PyTorch MPS/CUDA/CPU FP32",
+      "input_rate_per_1m_usd": 0.012,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 404,
-      "input_tokens_total": 40812,
+      "n_observations": 500,
+      "input_tokens_total": 69943,
       "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0015,
+      "usd_per_1k_decisions": 0.0017,
       "axes": {
-        "intelligence": 98.8,
+        "intelligence": 98.0,
         "intelligence_ci95": [
-          97.5,
-          99.8
+          96.8,
+          99.2
         ],
-        "calibration": 99.7,
-        "speed": 66.5,
-        "cost": 78.0
+        "calibration": 98.8,
+        "speed": 57.2,
+        "cost": 76.8
       },
-      "capability_score": 99.2,
-      "composite_score": 83.3,
+      "capability_score": 98.4,
+      "composite_score": 78.7,
       "open_set_score": 100.0,
-      "sealed_set_score": 92.6,
+      "sealed_set_score": 93.9,
       "calibration_details": {
-        "null_auroc": 0.99995,
-        "null_ece": 0.00366,
-        "null_brier": 0.00217
+        "null_auroc": 0.99829,
+        "null_ece": 0.01215,
+        "null_brier": 0.01245
       },
       "latency": {
-        "mean_ms": 9.6821,
-        "p50_ms": 5.5754,
-        "p95_ms": 18.0694,
-        "p99_ms": 73.0375
+        "mean_ms": 47.0471,
+        "p50_ms": 32.3672,
+        "p95_ms": 91.8385,
+        "p99_ms": 108.335
       },
       "by_request_type": {
         "span_open": {
@@ -2278,11 +2541,11 @@
         },
         "math": {
           "score": 100.0,
-          "n": 50
+          "n": 51
         },
         "choice": {
           "score": 100.0,
-          "n": 33
+          "n": 41
         },
         "noul_open": {
           "score": 100.0,
@@ -2293,12 +2556,12 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 84.8,
-          "n": 33
+          "score": 96.3,
+          "n": 108
         },
         "noul_sealed": {
-          "score": 100.0,
-          "n": 32
+          "score": 86.4,
+          "n": 44
         }
       },
       "by_tier_open": {
@@ -2317,12 +2580,16 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 83.3,
-          "n": 30
+          "score": 96.5,
+          "n": 113
         },
         "Hard": {
+          "score": 88.0,
+          "n": 50
+        },
+        "Judge": {
           "score": 100.0,
-          "n": 38
+          "n": 1
         }
       },
       "by_domain": {
@@ -2343,8 +2610,12 @@
           "n": 16
         },
         "squad_v2_open_qa": {
-          "score": 91.7,
+          "score": 83.3,
           "n": 60
+        },
+        "contract_extraction": {
+          "score": 100.0,
+          "n": 96
         },
         "adversarial_stress": {
           "score": 100.0,
@@ -2354,45 +2625,45 @@
       "official_rank": 3
     },
     "tier_1b_onnx_int8": {
-      "id": "nullspan-67m-onnx-int8",
-      "name": "nullspan-67M-Int8 (ONNX WASM/CPU)",
+      "id": "nullspan-onnx-int8",
+      "name": "nullspan-344M-Int8 (ONNX WASM/CPU)",
       "author": "gnumanth",
-      "system_type": "Quantized ONNX WASM/CPU",
+      "system_type": "Quantized ONNX WASM/CPU (512-ctx)",
       "open_weights": true,
-      "params_m": 67.0,
-      "footprint_mb": 64.3,
+      "params_m": 344.2,
+      "footprint_mb": 330.1,
       "base_model": "gnumanth/nullspan (Int8 Dynamic)",
       "runtime": "ONNX Runtime Int8 (Browser WASM / Edge)",
-      "input_rate_per_1m_usd": 0.008,
+      "input_rate_per_1m_usd": 0.006,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 404,
-      "input_tokens_total": 40812,
+      "n_observations": 500,
+      "input_tokens_total": 69943,
       "output_tokens_total": 0,
       "usd_per_1k_decisions": 0.0008,
       "axes": {
-        "intelligence": 98.0,
+        "intelligence": 97.8,
         "intelligence_ci95": [
-          96.5,
-          99.3
+          96.6,
+          99.0
         ],
-        "calibration": 99.3,
-        "speed": 62.3,
+        "calibration": 98.9,
+        "speed": 53.2,
         "cost": 84.2
       },
-      "capability_score": 98.7,
-      "composite_score": 83.0,
+      "capability_score": 98.3,
+      "composite_score": 78.4,
       "open_set_score": 100.0,
-      "sealed_set_score": 88.2,
+      "sealed_set_score": 93.3,
       "calibration_details": {
-        "null_auroc": 0.99975,
-        "null_ece": 0.00807,
-        "null_brier": 0.00413
+        "null_auroc": 0.99737,
+        "null_ece": 0.0095,
+        "null_brier": 0.01314
       },
       "latency": {
-        "mean_ms": 13.2888,
-        "p50_ms": 12.2679,
-        "p95_ms": 18.3104,
-        "p99_ms": 22.3046
+        "mean_ms": 107.1327,
+        "p50_ms": 68.4825,
+        "p95_ms": 262.6889,
+        "p99_ms": 311.1327
       },
       "by_request_type": {
         "span_open": {
@@ -2401,11 +2672,11 @@
         },
         "math": {
           "score": 100.0,
-          "n": 50
+          "n": 51
         },
         "choice": {
           "score": 100.0,
-          "n": 33
+          "n": 41
         },
         "noul_open": {
           "score": 100.0,
@@ -2416,12 +2687,12 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 84.8,
-          "n": 33
+          "score": 95.4,
+          "n": 108
         },
         "noul_sealed": {
-          "score": 90.6,
-          "n": 32
+          "score": 86.4,
+          "n": 44
         }
       },
       "by_tier_open": {
@@ -2440,12 +2711,16 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 83.3,
-          "n": 30
+          "score": 95.6,
+          "n": 113
         },
         "Hard": {
-          "score": 92.1,
-          "n": 38
+          "score": 88.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 1
         }
       },
       "by_domain": {
@@ -2466,8 +2741,12 @@
           "n": 16
         },
         "squad_v2_open_qa": {
-          "score": 86.7,
+          "score": 81.7,
           "n": 60
+        },
+        "contract_extraction": {
+          "score": 100.0,
+          "n": 96
         },
         "adversarial_stress": {
           "score": 100.0,
@@ -2484,38 +2763,38 @@
       "open_weights": true,
       "params_m": 0.0,
       "footprint_mb": 0.0,
-      "base_model": "Deterministic Rule + Lexical Pointer",
+      "base_model": "Deterministic Clause + Lexical Pointer",
       "runtime": "Pure Python / Node / Browser JS",
       "input_rate_per_1m_usd": 0.0008,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 404,
-      "input_tokens_total": 40812,
+      "n_observations": 500,
+      "input_tokens_total": 69943,
       "output_tokens_total": 0,
       "usd_per_1k_decisions": 0.0001,
       "axes": {
-        "intelligence": 88.6,
+        "intelligence": 90.8,
         "intelligence_ci95": [
-          85.6,
-          91.6
+          88.2,
+          93.4
         ],
-        "calibration": 93.8,
-        "speed": 99.8,
+        "calibration": 95.0,
+        "speed": 98.7,
         "cost": 99.8
       },
-      "capability_score": 91.2,
-      "composite_score": 95.3,
+      "capability_score": 92.9,
+      "composite_score": 95.9,
       "open_set_score": 100.0,
-      "sealed_set_score": 32.4,
+      "sealed_set_score": 72.0,
       "calibration_details": {
-        "null_auroc": 0.97364,
-        "null_ece": 0.06061,
-        "null_brier": 0.06363
+        "null_auroc": 0.98239,
+        "null_ece": 0.04866,
+        "null_brier": 0.05142
       },
       "latency": {
-        "mean_ms": 0.0123,
-        "p50_ms": 0.0049,
-        "p95_ms": 0.0344,
-        "p99_ms": 0.0978
+        "mean_ms": 0.0632,
+        "p50_ms": 0.0127,
+        "p95_ms": 0.2868,
+        "p99_ms": 0.3604
       },
       "by_request_type": {
         "span_open": {
@@ -2524,11 +2803,11 @@
         },
         "math": {
           "score": 100.0,
-          "n": 50
+          "n": 51
         },
         "choice": {
           "score": 100.0,
-          "n": 33
+          "n": 41
         },
         "noul_open": {
           "score": 100.0,
@@ -2539,12 +2818,12 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 30.3,
-          "n": 33
+          "score": 78.7,
+          "n": 108
         },
         "noul_sealed": {
-          "score": 28.1,
-          "n": 32
+          "score": 47.7,
+          "n": 44
         }
       },
       "by_tier_open": {
@@ -2563,12 +2842,16 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 23.3,
-          "n": 30
+          "score": 79.6,
+          "n": 113
         },
         "Hard": {
-          "score": 39.5,
-          "n": 38
+          "score": 54.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 1
         }
       },
       "by_domain": {
@@ -2591,6 +2874,10 @@
         "squad_v2_open_qa": {
           "score": 23.3,
           "n": 60
+        },
+        "contract_extraction": {
+          "score": 100.0,
+          "n": 96
         },
         "adversarial_stress": {
           "score": 100.0,

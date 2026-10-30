@@ -13,18 +13,20 @@ tags:
   - structured-extraction
   - calibrated-abstention
   - prompt-injection-resistance
+  - contract-extraction
 size_categories:
   - 1K<n<10K
 ---
 
 # `gnumanth/nullspan-dataset`
 
-Multi-task **System One structured extraction, calibrated abstention, boolean/enum judgment, cross-field invariant verification, and distributional quantile estimation** dataset for [`gnumanth/nullspan`](https://huggingface.co/gnumanth/nullspan).
+Multi-task **System One structured extraction, multi-numeric commercial contract disambiguation, calibrated abstention (`p_null`), boolean/enum judgment, cross-field invariant verification, and distributional quantile estimation** dataset for [`gnumanth/nullspan`](https://huggingface.co/gnumanth/nullspan) (`344.2M` `ELECTRA-Large` + `SchemaAdapterBlock` 512-token cross-encoder).
 
-## Splits & Composition
+## Splits & Zero-Leakage Composition
 
-- `train.jsonl`: `2,090` field-level training instances across `400` documents (`incident_report`, `compute_ledger`, `cluster_throughput_comps`, `edge_traffic_forecast`, `adversarial_stress`).
-- `val.jsonl`: `336` field-level validation instances across `64` documents.
+- `train.jsonl`: `8,290` field-level training instances across structured telemetry, multi-numeric commercial contracts, and strictly disjoint SQuAD v2.0 training passages (`0%` context/question overlap with `NullspanBench`).
+- `cal_dev.jsonl`: `720` disjoint calibration instances used exclusively for post-hoc temperature scaling (`null_temperature`, `span_temperature`, `null_threshold_bias`).
+- `val.jsonl`: `336` field-level Open Pool validation instances across `64` documents.
 - `golden_eval.json`: `4` canonical multi-field scenarios + `2` adversarial prompt-injection & decoy stress scenarios + `24` held-out validation documents.
 
 ## Supervision Targets per Instance
