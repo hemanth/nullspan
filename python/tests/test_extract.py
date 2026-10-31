@@ -263,6 +263,41 @@ class TestNullspan(unittest.TestCase):
             self.assertIn("france", str(res_ox["region_country"]["value"]).lower())
             self.assertIsNone(res_ox["unanswerable_king"]["value"])
 
+    def test_systemone_v3_reconciliation_and_noul_none_criteria(self) -> None:
+        from nullspan.systemone import canonical_options, compact_state_text
+
+        noul_opts = canonical_options({"type": "noul", "instructions": "Is the balance zero?", "criteria": None})
+        self.assertEqual([k for k, _ in noul_opts], ["false", "true"])
+
+        partial_state = {
+            "invoice": {
+                "currency": "EUR",
+                "subtotal_usd": 725.0,
+                "tax_usd": 0.0,
+                "total_usd": 725.0,
+                "lines": [
+                    {"sku": "SKU-1", "qty": 6, "unit_usd": 100.0, "line_usd": 600.0},
+                    {"sku": "FREIGHT", "qty": 1, "unit_usd": 125.0, "line_usd": 125.0},
+                ],
+            },
+            "purchase_order": {
+                "currency": "USD",
+                "freight_terms": "Prepaid — freight not separately billable",
+                "subtotal_usd": 1000.0,
+                "total_usd": 1000.0,
+                "lines": [{"sku": "SKU-1", "qty": 10, "unit_usd": 100.0, "line_usd": 1000.0}],
+            },
+            "delivery": {
+                "ordered_qty": 10,
+                "received_qty": 6,
+                "damaged_qty": 0,
+            },
+        }
+        rendered = compact_state_text(partial_state)
+        self.assertIn("PARTIAL_DELIVERY_BILLED_FOR_RECEIVED=True", rendered)
+        self.assertIn("UNPERMITTED_BY_FREIGHT_TERMS=True", rendered)
+        self.assertIn("_reconcile.currency_mismatch:", rendered)
+
     def test_systemone_decide_if_available(self) -> None:
         from nullspan import decide
 
@@ -270,8 +305,9 @@ class TestNullspan(unittest.TestCase):
         if not (artifact_dir / "systemone_decision.pt").exists():
             self.skipTest("Local System One decision checkpoint not built yet")
 
+        st = {"invoice": {"id": "INV-42", "total_usd": 1200.0}, "po": {"id": "PO-42", "total_usd": 1200.0}}
         out = decide(
-            state={"invoice": {"id": "INV-42", "total_usd": 1200.0}, "po": {"id": "PO-42", "total_usd": 1200.0}},
+            state=st,
             questions={
                 "exact_match": {
                     "type": "noul",
@@ -289,6 +325,34 @@ class TestNullspan(unittest.TestCase):
         self.assertEqual(out["usage"]["output_tokens"], 0)
         self.assertIn("exact_match", out["answers"])
         self.assertEqual(out["answers"]["disposition"]["choice"], "approve")
+
+        # Verify option-order & A/B/C label permutation invariance on `choice`
+        p1 = decide(
+            state=st,
+            questions={
+                "q": {
+                    "type": "choice",
+                    "instructions": "Select action.",
+                    "criteria": {"A": "Approve payment", "B": "Hold for audit", "C": "Reject invoice"},
+                }
+            },
+            model_id=str(artifact_dir),
+        )["answers"]["q"]["probabilities"]
+        p2 = decide(
+            state=st,
+            questions={
+                "q": {
+                    "type": "choice",
+                    "instructions": "Select action.",
+                    "criteria": {"C": "Approve payment", "A": "Reject invoice", "B": "Hold for audit"},
+                }
+            },
+            model_id=str(artifact_dir),
+        )["answers"]["q"]["probabilities"]
+        # Exact 0.0 diff in FP32; ~5e-4 under bfloat16 SDPA reduction order
+        self.assertAlmostEqual(p1["A"], p2["C"], delta=2e-3)
+        self.assertAlmostEqual(p1["B"], p2["B"], delta=2e-3)
+        self.assertAlmostEqual(p1["C"], p2["A"], delta=2e-3)
 
 
 if __name__ == "__main__":

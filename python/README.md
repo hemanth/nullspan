@@ -5,7 +5,7 @@ Single-pass System One structured extraction, multi-numeric contract disambiguat
 - **Interactive Playground (Browser WASM ONNX + Zero-Dep Engine)**: [https://hemanth.github.io/nullspan/](https://hemanth.github.io/nullspan/)
 - **NullspanBench Leaderboard (JevBench-Style 19-System Evaluation, N=500)**: [https://hemanth.github.io/nullspan/bench.html](https://hemanth.github.io/nullspan/bench.html)
 - **Hugging Face Space**: [https://huggingface.co/spaces/gnumanth/nullspan](https://huggingface.co/spaces/gnumanth/nullspan)
-- **Fine-Tuned Hugging Face Model (345.3M Extraction + 331.1 MB Int8 ONNX + 435M System One Cross-Encoder)**: [https://huggingface.co/gnumanth/nullspan](https://huggingface.co/gnumanth/nullspan)
+- **Fine-Tuned Hugging Face Model (345.3M Extraction + 331.1 MB Int8 ONNX + 395M 8K System One Parallel-Span Encoder)**: [https://huggingface.co/gnumanth/nullspan](https://huggingface.co/gnumanth/nullspan)
 - **Hugging Face Dataset**: [https://huggingface.co/datasets/gnumanth/nullspan-dataset](https://huggingface.co/datasets/gnumanth/nullspan-dataset)
 - **Empirical Science Report**: [`bench/SCIENCE_REPORT.md`](./bench/SCIENCE_REPORT.md)
 
@@ -14,9 +14,9 @@ Single-pass System One structured extraction, multi-numeric contract disambiguat
 Standard LLMs extract data and make typed workflow judgments by generating JSON token-by-token, which is slow, bills per output token, can get hijacked by *"ignore previous instructions"* prompt injections, and often hallucinates values when a field is missing. **`nullspan` acts like a grounded highlighter + calibrated System One judge instead of a chatbot:**
 
 1. **Points to Exact Text (`[start, end]` Span)**: Highlights exact character positions in your input text (`0` generated output tokens), making fabricated strings and prompt-injection payloads impossible.
-2. **Knows When to Say "Not There" (`p_null`)**: Computes a calibrated probability that a field is missing (`p_null`) and returns `null` with `abstention_reason` when evidence is absent (`87.00%` EM / `89.36%` F1 on Stanford `SQuAD v2.0`).
+2. **Knows When to Say "Not There" (`p_null`)**: Computes a calibrated probability that a field is missing (`p_null`) and returns `null` with `abstention_reason` when evidence is absent (`87.80%` EM / `90.90%` F1 on Stanford `SQuAD v2.0`).
 3. **Disambiguates Multi-Numeric Contracts & Checks Math (`constraint` & `verified`)**: Separates competing dollar caps, percentages, day windows, and numeric tranches across multi-section agreements (`96/96` on unseen contracts) and verifies equations like `subtotal == nodes * hourly_rate`.
-4. **Calibrated `/v1/systemone` Typed Decisions (`decide()`)**: Evaluates `noul` (`true`/`false`), `choice` (`options`), and ordinal `score` (`min..max`) rubrics with calibrated probability distributions—scoring **`75.40%` accuracy** (`KL 0.1515`, `Brier 0.0770`, `ECE 0.0944`, `#2` vs the Hub `.eval_results` widget / Table 2 fitted cross-encoder) on [`LocalLLaMA/typed-decisions`](https://huggingface.co/datasets/LocalLLaMA/typed-decisions) and hitting **`100.0%` (`48/48`)** on `JevBench Easy` (`100.0%` strict schema validity).
+4. **Calibrated `/v1/systemone` Typed Decisions (`decide()`)**: Evaluates `noul` (`true`/`false`), `choice` (`options`), and ordinal `score` (`min..max`) rubrics in a single 8K forward pass (`0.0` cross-option RoPE bleed, `100%` option-order permutation invariant)—scoring **`79.00%` accuracy** (`96.3%` of ~`82.05%` empirical Bayes ceiling; **`KL 0.0760` `#2` worldwide**; **`Brier 0.0420` `#1` tied worldwide**; `47.8 ms/case` on L4) on [`LocalLLaMA/typed-decisions`](https://huggingface.co/datasets/LocalLLaMA/typed-decisions) and hitting **`100.0%` (`48/48`)** on `JevBench Easy` + **`68.06%`** on `JevBench Original` (`100.0%` strict schema validity, `38.8 ms p50`).
 
 ## Install
 
@@ -105,11 +105,11 @@ Reproducible via [`bench/eval_public_benchmarks.py`](./bench/eval_public_benchma
 
 | External Public Benchmark | Split & Scale | Primary Metric | Calibration & Validity | Latency & Cost (NVIDIA L4) | Standing |
 | :--- | :--- | :---: | :---: | :---: | :--- |
-| **[`LocalLLaMA/typed-decisions`](https://huggingface.co/datasets/LocalLLaMA/typed-decisions)** | Official `test` (`400` cases · **`2,000` decisions**) | **`75.40%` Accuracy** (`noul` `82.67%`, `choice` `75.00%`, `score` `70.25%`) | `KL 0.1515` · `Brier 0.0770` · `ECE 0.0944` | `78.0 ms/dec` (`390 ms/case`) · `0` output tokens | `#2` vs Hub `.eval_results` widget (`0.754` vs `0.743` Darwin-27B-ZTC / `0.7185` ProKope-421M-8K); Table 2 fitted cross-encoder |
-| **[Benchmark Heaven / `jevbench`](https://github.com/fstandhartinger/jevbench)** | Official Public Suite (`231` items via `/v1/systemone`) | **`100.0%` Easy (`48/48`)** · `62.50%` Original (`45/72`) · `37.84%` Hard (`42/111`) (`58.44%` all) | **`100.0%` Strict Schema Validity** (`Easy Brier 0.0207`, `ECE 0.0605`) | **`64.8 ms` `p50`** (`63.2 ms` Easy) · **`$0.00667 / 1k`** | `100.0%` on `adversarial`, `fact`, `ordinal`, & `tool_selection` |
-| **[Stanford `rajpurkar/squad_v2`](https://huggingface.co/datasets/rajpurkar/squad_v2)** | Zero-overlap `validation` (`N = 500`: `250` HasAns + `250` NoAns) | **`87.00%` Exact Match** · **`89.36%` F1** | `HasAns F1 91.52%` · `NoAns EM 87.20%` | `10.3 ms` `p50` (L4 CUDA) · `$0.0017 / 1k` | Dedicated `qa_null_head` temperature-calibrated on disjoint `train` |
+| **[`LocalLLaMA/typed-decisions`](https://huggingface.co/datasets/LocalLLaMA/typed-decisions)** | Official `test` (`400` cases · **`2,000` decisions**) | **`79.00%` Accuracy** (`noul` `84.17%`, `choice` `76.83%`, `score` `76.75%`) | **`KL 0.0760` (`#2` worldwide)** · **`Brier 0.0420` (`#1` tied)** · `ECE 0.1665` | **`9.56 ms/dec` (`47.8 ms/case`)** · `0` output tokens | `#1` Hub `.eval_results` widget; `96.3%` of ~`82.05%` Bayes ceiling; beats `Arbiter-4B` (`78.6%`), `qwen3.5-27b` (`78.3%`), `gpt-5.4` (`77.7%`), `SafeDecide-400M` (`77.5%`), `TypeSafe Jev` (`73.3%`) |
+| **[Benchmark Heaven / `jevbench`](https://github.com/fstandhartinger/jevbench)** | Official Public Suite (`231` items via `/v1/systemone`) | **`100.0%` Easy (`48/48`)** · **`68.06%` Original (`49/72`)** · `36.04%` Hard (`40/111`) (`59.31%` all) | **`100.0%` Strict Schema Validity** (`ECE 0.0755`, `v1.3 Geo 46.27`) | **`38.82 ms` `p50`** (`37.76 ms` Easy) · **`$0.00604 / 1k`** | `100.0%` on `fact` & `tool_selection`; `91.7%` `intent` & `ordinal` |
+| **[Stanford `rajpurkar/squad_v2`](https://huggingface.co/datasets/rajpurkar/squad_v2)** | Zero-overlap `validation` (`N = 500`: `250` HasAns + `250` NoAns) | **`87.80%` Exact Match** · **`90.90%` F1** | `HasAns F1 90.61%` · `NoAns EM 91.20%` | `10.3 ms` `p50` (L4 CUDA) · `$0.0017 / 1k` | Dedicated `qa_null_head` temperature-calibrated on disjoint `train` |
 
-## Architecture (`NullspanForExtraction` 345.3M + `NullspanSystemOneEngine` 435M)
+## Architecture (`NullspanForExtraction` 345.3M + `NullspanSystemOneEngine` 395M 8K)
 
 ![Architecture Flow](./docs/flow-diagram.svg)
 
@@ -117,7 +117,7 @@ Reproducible via [`bench/eval_public_benchmarks.py`](./bench/eval_public_benchma
 2. **`span_head` (Grounded Pointer + Shannon Entropy)**: Projects `512`-token encoder states (plus query-conditioned sliding windows on ultra-long contracts) to `[start, end]` character spans with calibrated `confidence` and Shannon `span_entropy_bits`.
 3. **`bio_head` (Multi-Span List Tagging)**: Extracts ordered text and numeric tranche arrays (`type: "list"`) in a single pass.
 4. **`op_head` + `quantile_head` + Invariant Verifier**: Routes 10 System One extraction/math operations, predicts monotone `(p10, median, p90)` quantiles, and verifies cross-field algebraic constraints (`verified: true/false`).
-5. **`NullspanSystemOneEngine` (`/v1/systemone` Cross-Option & Cross-Question Judge)**: `DeBERTa-v3-Large` (`r=32` LoRA) with top-placed programmatic numeric/temporal checks, Head + IDF-Clause + Tail windowing, 2-layer `CrossOptionDecisionHead` self-attention across candidate options, Cross-Question Workflow Propagation across multi-question batches, and Cumulative Ranked Probability Score (`RPS`) ordinal calibration.
+5. **`NullspanSystemOneEngine` (`/v1/systemone` Tree-Isolated Parallel-Span 8K Judge)**: `ModernBERT-large` (`395M`, full bidirectional `8,192`-token context) packing the entire raw case plus all `Q` questions and candidate options into **a single forward pass** (`47.8 ms/case`), with **Exact Tree-Isolated Parallel-Option Masking** (`0.0` cross-option RoPE bleed, `100%` option-order & `A/B/C` label permutation invariant), 2-layer `ParallelSpanDecisionHead` cross-option + cross-question workflow competition, 24 latent workflow factor heads, and 10-model 5-fold Cross-Backbone OOF Self-Distillation + Trajectory-SWA.
 
 ## NullspanBench Leaderboard (`bench/run_bench.py` · 19 Systems · $N=500$ Zero-Leakage Decisions · NVIDIA L4 GPU)
 

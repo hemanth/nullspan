@@ -36,25 +36,27 @@ case "${cmd}" in
     INSTANCE_NAME="nullspan-goal-gpu-$(date +%s)"
     ACTIVE_ZONE=""
     GPU_MODE=""
-    PY_REMOTE="/opt/conda/bin/python"
+    PY_REMOTE="python3"
 
     # Priority 1: NVIDIA L4 (24GB Ada sm_89, native BF16/FP16, pre-baked PyTorch 2.9 + CUDA 12.9, ~45s boot)
-    for z in us-central1-a us-central1-b us-central1-c us-east4-a us-east4-c us-west1-a us-west1-b us-east1-b us-east1-c; do
-      echo "  Trying L4 (g2-standard-8) in ${z}..."
-      if gcloud compute instances create "${INSTANCE_NAME}" \
-          --project="${PROJECT_ID}" \
-          --zone="${z}" \
-          --machine-type="g2-standard-8" \
-          --maintenance-policy=TERMINATE \
-          --image-project="deeplearning-platform-release" \
-          --image-family="pytorch-2-9-cu129-ubuntu-2204-nvidia-580" \
-          --boot-disk-size=120GB \
-          --boot-disk-type=pd-ssd \
-          --quiet 2>/dev/null; then
-        ACTIVE_ZONE="${z}"
-        GPU_MODE="l4_dlvm"
-        break
-      fi
+    for mtype in g2-standard-8 g2-standard-4; do
+      for z in us-west4-a us-west4-c us-west1-c northamerica-northeast1-b northamerica-northeast1-c northamerica-northeast2-a northamerica-northeast2-b europe-west4-a europe-west4-b europe-west4-c europe-west1-b europe-west1-c europe-west2-a europe-west3-a us-central1-a us-central1-b us-central1-c us-east4-a us-east4-c us-west1-a us-west1-b; do
+        echo "  Trying L4 (${mtype}) in ${z}..."
+        if gcloud compute instances create "${INSTANCE_NAME}" \
+            --project="${PROJECT_ID}" \
+            --zone="${z}" \
+            --machine-type="${mtype}" \
+            --maintenance-policy=TERMINATE \
+            --image-project="deeplearning-platform-release" \
+            --image-family="pytorch-2-9-cu129-ubuntu-2204-nvidia-580" \
+            --boot-disk-size=120GB \
+            --boot-disk-type=pd-ssd \
+            --quiet 2>/dev/null; then
+          ACTIVE_ZONE="${z}"
+          GPU_MODE="l4_dlvm"
+          break 2
+        fi
+      done
     done
 
     # Priority 2: NVIDIA Tesla T4 (16GB Turing sm_75, native FP16 TensorCores, supported by nvidia-open 580, ~45s boot)
@@ -163,7 +165,7 @@ EOF
 
   push)
     source "${STATE_FILE}"
-    TMP_TAR="$(mktemp /tmp/nullspan_push_XXXXXX.tar.gz)"
+    TMP_TAR="$(mktemp /tmp/nullspan_push.XXXXXX)"
     COPYFILE_DISABLE=1 tar -czf "${TMP_TAR}" -C "${ROOT_DIR}" "$@"
     gcloud compute scp "${TMP_TAR}" "${INSTANCE_NAME}:~/push_bundle.tar.gz" --project="${PROJECT_ID}" --zone="${ACTIVE_ZONE}" --quiet
     rm -f "${TMP_TAR}"
@@ -177,11 +179,11 @@ EOF
 
   pull)
     source "${STATE_FILE}"
-    TMP_TAR="$(mktemp /tmp/nullspan_pull_XXXXXX.tar.gz)"
+    TMP_TAR="$(mktemp /tmp/nullspan_pull.XXXXXX)"
     gcloud compute ssh "${INSTANCE_NAME}" --project="${PROJECT_ID}" --zone="${ACTIVE_ZONE}" --quiet --command="cd ~/work && tar -czf ~/pull_bundle.tar.gz $*"
     gcloud compute scp "${INSTANCE_NAME}:~/pull_bundle.tar.gz" "${TMP_TAR}" --project="${PROJECT_ID}" --zone="${ACTIVE_ZONE}" --quiet
     tar -xzf "${TMP_TAR}" -C "${ROOT_DIR}"
-    rm -f "${TMP_TAR}"
+    rm -f "${TMP_TAR}" ~/pull_bundle.tar.gz 2>/dev/null || true
     ;;
 
   down)

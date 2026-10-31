@@ -1,40 +1,40 @@
 - dataset:
     id: LocalLLaMA/typed-decisions
     task_id: accuracy
-  value: 0.754
-  date: "2026-10-30"
+  value: 0.79
+  date: "2026-10-31"
   source:
     url: https://huggingface.co/datasets/LocalLLaMA/typed-decisions
     name: "Typed Decisions"
     user: gnumanth
-  notes: "Pure non-LLM bidirectional cross-encoder (DeBERTa-v3-Large 435M + LoRA + Cross-Option & Cross-Question Workflow Competition Head, 0 generated output tokens). Fine-tuned on the Typed Decisions train split alongside public BoolQ/ARC-Challenge/SciQ train splits and programmatic System One rubrics; not zero-shot. Official test split (untouched during training & calibration): 400 cases, 2,000 decisions, one /v1/systemone request per case, zero errors."
+  notes: "Pure non-LLM 8K bidirectional encoder (NullspanSystemOneEngine v1.3.0 · 395M ModernBERT-large with Exact Tree-Isolated Parallel-Option Masking, Cross-Question Workflow Competition, and 24 Latent Factor Heads; 1 forward pass per case, 0 generated output tokens, 47.8 ms/case on L4). Mode: specialist (fine-tuned via 10-model 5-fold OOF cross-backbone self-distillation on Typed Decisions train + public BoolQ/ARC/SciQ train splits + programmatic System One rubrics; not zero-shot). Official test split (strictly untouched during training & OOF calibration): 400 cases, 2,000 decisions, zero errors."
 - dataset:
     id: LocalLLaMA/typed-decisions
     task_id: kl_from_gold
-  value: 0.1515
-  date: "2026-10-30"
+  value: 0.076
+  date: "2026-10-31"
   source:
     url: https://huggingface.co/datasets/LocalLLaMA/typed-decisions
     name: "Typed Decisions"
     user: gnumanth
-  notes: "Pure non-LLM bidirectional cross-encoder (0 generated output tokens). Fine-tuned on Typed Decisions train + public train splits; evaluated once on 400 test cases (2,000 decisions)."
+  notes: "Pure non-LLM 395M 8K Tree-Isolated Parallel-Span ModernBERT-large (0 generated output tokens, 1 forward pass per case). Mode: specialist (fine-tuned on Typed Decisions train + public train splits); evaluated once on 400 untouched test cases (2,000 decisions)."
 - dataset:
     id: LocalLLaMA/typed-decisions
     task_id: brier
-  value: 0.077
-  date: "2026-10-30"
+  value: 0.042
+  date: "2026-10-31"
   source:
     url: https://huggingface.co/datasets/LocalLLaMA/typed-decisions
     name: "Typed Decisions"
     user: gnumanth
-  notes: "Pure non-LLM bidirectional cross-encoder (0 generated output tokens). Fine-tuned on Typed Decisions train + public train splits; evaluated once on 400 test cases (2,000 decisions)."
+  notes: "Pure non-LLM 395M 8K Tree-Isolated Parallel-Span ModernBERT-large (0 generated output tokens, 1 forward pass per case). Mode: specialist (fine-tuned on Typed Decisions train + public train splits); evaluated once on 400 untouched test cases (2,000 decisions)."
 - dataset:
     id: LocalLLaMA/typed-decisions
     task_id: ece
-  value: 0.0944
-  date: "2026-10-30"
+  value: 0.1665
+  date: "2026-10-31"
   source:
     url: https://huggingface.co/datasets/LocalLLaMA/typed-decisions
     name: "Typed Decisions"
     user: gnumanth
-  notes: "Pure non-LLM bidirectional cross-encoder (0 generated output tokens). Fine-tuned on Typed Decisions train + public train splits; evaluated once on 400 test cases (2,000 decisions)."
+  notes: "Pure non-LLM 395M 8K Tree-Isolated Parallel-Span ModernBERT-large (0 generated output tokens, 1 forward pass per case). Mode: specialist (fine-tuned on Typed Decisions train + public train splits); evaluated once on 400 untouched test cases (2,000 decisions)."

@@ -508,24 +508,24 @@
               <tr style="background: #FBFAF7;">
                 <td><strong><a href="https://huggingface.co/datasets/LocalLLaMA/typed-decisions" target="_blank" rel="noopener" style="color: var(--ink);">LocalLLaMA/typed-decisions</a></strong></td>
                 <td>Official <code>test</code> (400 cases · 2,000 decisions)</td>
-                <td><strong>75.40% Accuracy</strong> (noul 82.7%, choice 75.0%, score 70.3%)</td>
-                <td>KL <strong>0.1515</strong> · Brier <strong>0.0770</strong> · ECE <strong>0.0944</strong></td>
-                <td>78.0 ms/dec · 0 output tokens</td>
-                <td>Table 2 (general + <code>train</code>) · <strong>#2 vs Hub widget</strong></td>
+                <td><strong>79.00% Accuracy</strong> (noul 84.2%, choice 76.8%, score 76.8%)</td>
+                <td>KL <strong>0.0760 (#2)</strong> · Brier <strong>0.0420 (#1 tied)</strong> · ECE <strong>0.1665</strong></td>
+                <td><strong>9.56 ms/dec</strong> (47.8 ms/case) · 0 output tokens</td>
+                <td>Specialist (general + <code>train</code>) · <strong>#1 Hub widget · 96.3% of Bayes ceiling</strong></td>
               </tr>
               <tr>
                 <td><strong><a href="https://github.com/fstandhartinger/jevbench" target="_blank" rel="noopener" style="color: var(--ink);">Benchmark Heaven / fstandhartinger/jevbench</a></strong></td>
                 <td>Public Suite (231 items via <code>/v1/systemone</code>)</td>
-                <td><strong>100.0% Easy (48/48)</strong> · 62.50% Original · 37.84% Hard</td>
-                <td><strong>100.0% Strict Valid</strong> · Easy ECE <strong>0.0605</strong></td>
-                <td><strong>64.8 ms p50</strong> · <strong>$0.00667 / 1k</strong></td>
-                <td>100% adversarial, fact, ordinal &amp; tool_selection</td>
+                <td><strong>100.0% Easy (48/48)</strong> · <strong>68.06% Original</strong> · 36.04% Hard</td>
+                <td><strong>100.0% Strict Valid</strong> · ECE <strong>0.0755</strong> · v1.3 Geo <strong>46.27</strong></td>
+                <td><strong>38.82 ms p50</strong> · <strong>$0.00604 / 1k</strong></td>
+                <td>100% fact &amp; tool_selection · 91.7% intent &amp; ordinal</td>
               </tr>
               <tr style="background: #FBFAF7;">
                 <td><strong><a href="https://huggingface.co/datasets/rajpurkar/squad_v2" target="_blank" rel="noopener" style="color: var(--ink);">Stanford rajpurkar/squad_v2</a></strong></td>
                 <td>Zero-Overlap <code>validation</code> (500 items)</td>
-                <td><strong>87.00% Exact Match · 89.36% F1</strong></td>
-                <td>HasAns F1 <strong>91.52%</strong> · NoAns EM <strong>87.20%</strong></td>
+                <td><strong>87.80% Exact Match · 90.90% F1</strong></td>
+                <td>HasAns F1 <strong>90.61%</strong> · NoAns EM <strong>91.20%</strong></td>
                 <td><strong>10.30 ms p50</strong> · <strong>$0.0017 / 1k</strong></td>
                 <td>NullspanForExtraction 345.3M + <code>qa_null_head</code></td>
               </tr>
