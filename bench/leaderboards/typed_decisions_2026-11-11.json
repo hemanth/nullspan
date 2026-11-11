@@ -1,0 +1,866 @@
+[
+  {
+    "model": "Quyet-1.0-Large",
+    "params_m": 31000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.791,
+    "kl": 0.281,
+    "brier": 0.114,
+    "ece": 0.093
+  },
+  {
+    "model": "meraGPT Decider 1",
+    "params_m": null,
+    "mode": "zero_shot",
+    "accuracy": 0.768,
+    "kl": 0.096,
+    "brier": 0.052,
+    "ece": 0.18
+  },
+  {
+    "model": "Baseten Mammoth 1",
+    "params_m": 27000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.768,
+    "kl": 0.122,
+    "brier": 0.063,
+    "ece": 0.153
+  },
+  {
+    "model": "Amos 1 medium",
+    "params_m": 9000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.7645,
+    "kl": 0.151,
+    "brier": 0.08,
+    "ece": 0.103
+  },
+  {
+    "model": "Amos 1 large",
+    "params_m": 27000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.761,
+    "kl": 0.126,
+    "brier": 0.069,
+    "ece": 0.097
+  },
+  {
+    "model": "pplx-decider-v1.1-27b",
+    "params_m": 27000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.753,
+    "kl": 0.441,
+    "brier": 0.16,
+    "ece": 0.06
+  },
+  {
+    "model": "FastBrain-9B",
+    "params_m": 9000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.7525,
+    "kl": 0.151,
+    "brier": 0.08,
+    "ece": 0.085
+  },
+  {
+    "model": "d3",
+    "params_m": 27000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.749,
+    "kl": 0.409,
+    "brier": 0.146,
+    "ece": 0.049
+  },
+  {
+    "model": "Baseten Elephant 1",
+    "params_m": 9000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.748,
+    "kl": 0.134,
+    "brier": 0.069,
+    "ece": 0.162
+  },
+  {
+    "model": "Darwin-27B-ZTC",
+    "params_m": 27000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.743,
+    "kl": 0.204,
+    "brier": 0.097,
+    "ece": null
+  },
+  {
+    "model": "d3-mini",
+    "params_m": 4000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.743,
+    "kl": 0.319,
+    "brier": 0.123,
+    "ece": 0.047
+  },
+  {
+    "model": "Liquid AI d1",
+    "params_m": null,
+    "mode": "zero_shot",
+    "accuracy": 0.742,
+    "kl": 0.475,
+    "brier": 0.155,
+    "ece": 0.124
+  },
+  {
+    "model": "linne-oak 1.0",
+    "params_m": 31000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.739,
+    "kl": 0.709,
+    "brier": 0.191,
+    "ece": null
+  },
+  {
+    "model": "vLLM-SR d3",
+    "params_m": 26000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.739,
+    "kl": 0.437,
+    "brier": 0.151,
+    "ece": 0.124
+  },
+  {
+    "model": "d3-turbo",
+    "params_m": 26000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.736,
+    "kl": 0.438,
+    "brier": 0.162,
+    "ece": 0.069
+  },
+  {
+    "model": "clef",
+    "params_m": 27000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.728,
+    "kl": 0.191,
+    "brier": 0.103,
+    "ece": 0.025
+  },
+  {
+    "model": "openjev",
+    "params_m": 27000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.728,
+    "kl": 0.506,
+    "brier": 0.191,
+    "ece": 0.101
+  },
+  {
+    "model": "TypeSafe Jev 1.13.0",
+    "params_m": null,
+    "mode": "zero_shot",
+    "accuracy": 0.727,
+    "kl": 1.442,
+    "brier": 0.148,
+    "ece": 0.144
+  },
+  {
+    "model": "Blink v0.3",
+    "params_m": 26000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.727,
+    "kl": 0.153,
+    "brier": 0.079,
+    "ece": 0.129
+  },
+  {
+    "model": "d3-flash",
+    "params_m": 9000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.717,
+    "kl": 0.322,
+    "brier": 0.131,
+    "ece": 0.031
+  },
+  {
+    "model": "Featherless Simple Jev",
+    "params_m": 35000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.716,
+    "kl": 0.488,
+    "brier": 0.176,
+    "ece": null
+  },
+  {
+    "model": "jev-vision-27b",
+    "params_m": 27000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.714,
+    "kl": 0.318,
+    "brier": 0.129,
+    "ece": 0.026
+  },
+  {
+    "model": "signpost-d-4b",
+    "params_m": 4500.0,
+    "mode": "zero_shot",
+    "accuracy": 0.712,
+    "kl": 0.162,
+    "brier": 0.085,
+    "ece": 0.091
+  },
+  {
+    "model": "clef-flash",
+    "params_m": 9000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.71,
+    "kl": 0.209,
+    "brier": 0.111,
+    "ece": 0.016
+  },
+  {
+    "model": "prima-ratio + 12B",
+    "params_m": 12000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.702,
+    "kl": 0.564,
+    "brier": 0.234,
+    "ece": 0.146
+  },
+  {
+    "model": "JEV-35B",
+    "params_m": 35000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.7,
+    "kl": 0.526,
+    "brier": 0.169,
+    "ece": 0.062
+  },
+  {
+    "model": "JEV-27B-VL",
+    "params_m": 27000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.688,
+    "kl": 0.544,
+    "brier": 0.194,
+    "ece": 0.113
+  },
+  {
+    "model": "clef-omni",
+    "params_m": 35000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.673,
+    "kl": 0.247,
+    "brier": 0.123,
+    "ece": 0.03
+  },
+  {
+    "model": "OpenDecider-small",
+    "params_m": 4000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.671,
+    "kl": 0.211,
+    "brier": 0.117,
+    "ece": null
+  },
+  {
+    "model": "Qwen3.8-27B",
+    "params_m": 27000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.661,
+    "kl": 0.59,
+    "brier": 0.214,
+    "ece": 0.143
+  },
+  {
+    "model": "d1-3B",
+    "params_m": 3000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.656,
+    "kl": 0.286,
+    "brier": 0.144,
+    "ece": 0.037
+  },
+  {
+    "model": "d1-2B-OptiQ-4bit",
+    "params_m": 2000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.641,
+    "kl": 0.283,
+    "brier": 0.139,
+    "ece": 0.126
+  },
+  {
+    "model": "d1-2B",
+    "params_m": 2000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.637,
+    "kl": 0.282,
+    "brier": 0.137,
+    "ece": 0.124
+  },
+  {
+    "model": "d3-nano",
+    "params_m": 2000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.629,
+    "kl": 0.545,
+    "brier": 0.211,
+    "ece": 0.113
+  },
+  {
+    "model": "Bongard-mini",
+    "params_m": 4000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.594,
+    "kl": 0.256,
+    "brier": 0.132,
+    "ece": 0.067
+  },
+  {
+    "model": "Jeff-Gemma4-E2B",
+    "params_m": 2000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.561,
+    "kl": 0.403,
+    "brier": 0.219,
+    "ece": 0.188
+  },
+  {
+    "model": "d3-lite",
+    "params_m": 800.0,
+    "mode": "zero_shot",
+    "accuracy": 0.531,
+    "kl": 0.518,
+    "brier": 0.244,
+    "ece": 0.13
+  },
+  {
+    "model": "GEV-26B-Decide",
+    "params_m": 26000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.522,
+    "kl": 0.423,
+    "brier": 0.215,
+    "ece": 0.066
+  },
+  {
+    "model": "Jeff-Qwen3.5-2B",
+    "params_m": 2000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.511,
+    "kl": 0.46,
+    "brier": 0.237,
+    "ece": 0.203
+  },
+  {
+    "model": "JEV-27B",
+    "params_m": 27000.0,
+    "mode": "zero_shot",
+    "accuracy": 0.495,
+    "kl": 0.55,
+    "brier": 0.253,
+    "ece": 0.136
+  },
+  {
+    "model": "Jeff-Qwen3.5-0.8B",
+    "params_m": 800.0,
+    "mode": "zero_shot",
+    "accuracy": 0.483,
+    "kl": 0.679,
+    "brier": 0.313,
+    "ece": 0.251
+  },
+  {
+    "model": "d3-edge",
+    "params_m": 600.0,
+    "mode": "zero_shot",
+    "accuracy": 0.425,
+    "kl": 1.176,
+    "brier": 0.456,
+    "ece": 0.341
+  },
+  {
+    "model": "THX-01",
+    "params_m": 300.0,
+    "mode": "zero_shot",
+    "accuracy": 0.377,
+    "kl": 0.62,
+    "brier": 0.32,
+    "ece": 0.203
+  },
+  {
+    "model": "Prior",
+    "params_m": null,
+    "mode": "zero_shot",
+    "accuracy": 0.47,
+    "kl": 0.347,
+    "brier": 0.189,
+    "ece": 0.088
+  },
+  {
+    "model": "Uniform",
+    "params_m": null,
+    "mode": "zero_shot",
+    "accuracy": 0.308,
+    "kl": 0.444,
+    "brier": 0.238,
+    "ece": 0.169
+  },
+  {
+    "model": "ZhiPan-Z3-Pro",
+    "params_m": 4000.0,
+    "mode": "fitted",
+    "accuracy": 0.8265,
+    "kl": 0.8033,
+    "brier": 0.1515,
+    "ece": 0.0741
+  },
+  {
+    "model": "Decider-4B",
+    "params_m": 4000.0,
+    "mode": "fitted",
+    "accuracy": 0.826,
+    "kl": 0.0803,
+    "brier": 0.043,
+    "ece": 0.16
+  },
+  {
+    "model": "K-Decision-9B",
+    "params_m": 9000.0,
+    "mode": "fitted",
+    "accuracy": 0.818,
+    "kl": null,
+    "brier": null,
+    "ece": null
+  },
+  {
+    "model": "Arbiter-4B",
+    "params_m": 4000.0,
+    "mode": "fitted",
+    "accuracy": 0.817,
+    "kl": 0.092,
+    "brier": 0.048,
+    "ece": 0.184
+  },
+  {
+    "model": "Darwin-27B-ZTC-v5",
+    "params_m": 27000.0,
+    "mode": "fitted",
+    "accuracy": 0.812,
+    "kl": null,
+    "brier": null,
+    "ece": null
+  },
+  {
+    "model": "ministral3-3b-reasoning-typed-decisions",
+    "params_m": 3000.0,
+    "mode": "fitted",
+    "accuracy": 0.808,
+    "kl": 0.077,
+    "brier": 0.042,
+    "ece": 0.182
+  },
+  {
+    "model": "Amos 1 large",
+    "params_m": 27000.0,
+    "mode": "fitted",
+    "accuracy": 0.8025,
+    "kl": 0.122,
+    "brier": null,
+    "ece": null
+  },
+  {
+    "model": "sysone-typed-decisions-0.4B",
+    "params_m": 400.0,
+    "mode": "fitted",
+    "accuracy": 0.8025,
+    "kl": 0.08,
+    "brier": 0.0438,
+    "ece": 0.174
+  },
+  {
+    "model": "OpenDecider-large-td",
+    "params_m": 80000.0,
+    "mode": "fitted",
+    "accuracy": 0.801,
+    "kl": 0.081,
+    "brier": 0.044,
+    "ece": null
+  },
+  {
+    "model": "pramana-2b",
+    "params_m": 2000.0,
+    "mode": "fitted",
+    "accuracy": 0.8005,
+    "kl": 0.0755,
+    "brier": 0.0415,
+    "ece": 0.1675
+  },
+  {
+    "model": "ZhiPan2.1-4B",
+    "params_m": 4000.0,
+    "mode": "fitted",
+    "accuracy": 0.8005,
+    "kl": 0.0967,
+    "brier": 0.0503,
+    "ece": 0.1598
+  },
+  {
+    "model": "od1-typed-decisions",
+    "params_m": 4000.0,
+    "mode": "fitted",
+    "accuracy": 0.797,
+    "kl": 0.082,
+    "brier": 0.045,
+    "ece": 0.156
+  },
+  {
+    "model": "pramana-0.8b",
+    "params_m": 800.0,
+    "mode": "fitted",
+    "accuracy": 0.797,
+    "kl": 0.0819,
+    "brier": 0.0446,
+    "ece": 0.1646
+  },
+  {
+    "model": "FastBrain-9B",
+    "params_m": 9000.0,
+    "mode": "fitted",
+    "accuracy": 0.797,
+    "kl": 0.0816,
+    "brier": 0.0437,
+    "ece": 0.167
+  },
+  {
+    "model": "OpenDecider-nano",
+    "params_m": 400.0,
+    "mode": "fitted",
+    "accuracy": 0.796,
+    "kl": 0.079,
+    "brier": 0.043,
+    "ece": null
+  },
+  {
+    "model": "Rev-gen1-midi",
+    "params_m": 25600.0,
+    "mode": "fitted",
+    "accuracy": 0.7945,
+    "kl": 0.086,
+    "brier": 0.047,
+    "ece": 0.127
+  },
+  {
+    "model": "OpenDecider-small-td",
+    "params_m": 4000.0,
+    "mode": "fitted",
+    "accuracy": 0.792,
+    "kl": 0.08,
+    "brier": 0.043,
+    "ece": null
+  },
+  {
+    "model": "Phocinae-Largha-150M-v1",
+    "params_m": 144.3,
+    "mode": "fitted",
+    "accuracy": 0.791,
+    "kl": null,
+    "brier": null,
+    "ece": null
+  },
+  {
+    "model": "nullspan",
+    "params_m": 395.0,
+    "mode": "fitted",
+    "accuracy": 0.79,
+    "kl": 0.076,
+    "brier": 0.042,
+    "ece": 0.1665
+  },
+  {
+    "model": "Rev-gen1-midi-lite",
+    "params_m": 15700.0,
+    "mode": "fitted",
+    "accuracy": 0.7885,
+    "kl": 0.083,
+    "brier": 0.046,
+    "ece": 0.124
+  },
+  {
+    "model": "OpenDecider-medium-td",
+    "params_m": 30000.0,
+    "mode": "fitted",
+    "accuracy": 0.788,
+    "kl": 0.081,
+    "brier": 0.044,
+    "ece": null
+  },
+  {
+    "model": "SafeDecide-400M",
+    "params_m": 400.0,
+    "mode": "fitted",
+    "accuracy": 0.787,
+    "kl": 0.083,
+    "brier": 0.045,
+    "ece": 0.171
+  },
+  {
+    "model": "Rev-gen1-mini-lite",
+    "params_m": 2800.0,
+    "mode": "fitted",
+    "accuracy": 0.7775,
+    "kl": 0.1,
+    "brier": 0.055,
+    "ece": 0.11
+  },
+  {
+    "model": "Rev-gen1-mini",
+    "params_m": 4200.0,
+    "mode": "fitted",
+    "accuracy": 0.776,
+    "kl": 0.096,
+    "brier": 0.052,
+    "ece": 0.121
+  },
+  {
+    "model": "soft-decider-421m",
+    "params_m": 421.0,
+    "mode": "fitted",
+    "accuracy": 0.774,
+    "kl": null,
+    "brier": null,
+    "ece": 0.141
+  },
+  {
+    "model": "Qwen3.5-4B-typed-decisions",
+    "params_m": 4000.0,
+    "mode": "fitted",
+    "accuracy": 0.7725,
+    "kl": 0.0992,
+    "brier": 0.0543,
+    "ece": 0.139
+  },
+  {
+    "model": "ZhiPan2-4B",
+    "params_m": 4000.0,
+    "mode": "fitted",
+    "accuracy": 0.771,
+    "kl": 0.1105,
+    "brier": 0.0587,
+    "ece": 0.1625
+  },
+  {
+    "model": "lazydecider-0.8b",
+    "params_m": 800.0,
+    "mode": "fitted",
+    "accuracy": 0.77,
+    "kl": 0.0938,
+    "brier": 0.051,
+    "ece": 0.1454
+  },
+  {
+    "model": "embeddinggemma-2-ft-typed-decision",
+    "params_m": 300.0,
+    "mode": "fitted",
+    "accuracy": 0.77,
+    "kl": 0.119,
+    "brier": 0.065,
+    "ece": 0.155
+  },
+  {
+    "model": "Laya typed-decisions",
+    "params_m": 421.3,
+    "mode": "fitted",
+    "accuracy": 0.766,
+    "kl": null,
+    "brier": null,
+    "ece": null
+  },
+  {
+    "model": "Rev-gen1-micro-lite",
+    "params_m": 1300.0,
+    "mode": "fitted",
+    "accuracy": 0.7645,
+    "kl": 0.106,
+    "brier": 0.058,
+    "ece": 0.107
+  },
+  {
+    "model": "Rev-gen1-micro",
+    "params_m": 1900.0,
+    "mode": "fitted",
+    "accuracy": 0.7645,
+    "kl": 0.15,
+    "brier": 0.08,
+    "ece": 0.223
+  },
+  {
+    "model": "Rev-gen1-UltraBERT-150M",
+    "params_m": 150.0,
+    "mode": "fitted",
+    "accuracy": 0.763,
+    "kl": 0.173,
+    "brier": 0.092,
+    "ece": 0.228
+  },
+  {
+    "model": "Rev-gen1-UltraBERT-380M",
+    "params_m": 378.0,
+    "mode": "fitted",
+    "accuracy": 0.762,
+    "kl": 0.144,
+    "brier": 0.075,
+    "ece": 0.203
+  },
+  {
+    "model": "gemma3-270m-typed-decisions",
+    "params_m": 270.0,
+    "mode": "fitted",
+    "accuracy": 0.761,
+    "kl": 0.132,
+    "brier": 0.072,
+    "ece": 0.148
+  },
+  {
+    "model": "nanoGentzen-v3",
+    "params_m": 4.93,
+    "mode": "fitted",
+    "accuracy": 0.7585,
+    "kl": 0.207,
+    "brier": 0.1,
+    "ece": 0.065
+  },
+  {
+    "model": "SafeDecide-140M",
+    "params_m": 140.0,
+    "mode": "fitted",
+    "accuracy": 0.754,
+    "kl": 0.126,
+    "brier": 0.069,
+    "ece": 0.147
+  },
+  {
+    "model": "Seb-9B",
+    "params_m": 9000.0,
+    "mode": "fitted",
+    "accuracy": 0.754,
+    "kl": 0.349,
+    "brier": 0.131,
+    "ece": 0.031
+  },
+  {
+    "model": "tasksource-decider-nano",
+    "params_m": 149.0,
+    "mode": "fitted",
+    "accuracy": 0.7515,
+    "kl": 0.1125,
+    "brier": 0.0621,
+    "ece": 0.125
+  },
+  {
+    "model": "Rev-gen1-nano",
+    "params_m": 752.0,
+    "mode": "fitted",
+    "accuracy": 0.7515,
+    "kl": 0.117,
+    "brier": 0.064,
+    "ece": 0.094
+  },
+  {
+    "model": "ProKope-421M-8K",
+    "params_m": 421.0,
+    "mode": "fitted",
+    "accuracy": 0.7185,
+    "kl": null,
+    "brier": 0.385,
+    "ece": null
+  },
+  {
+    "model": "serin-0.8b",
+    "params_m": 800.0,
+    "mode": "fitted",
+    "accuracy": 0.7165,
+    "kl": 0.9577,
+    "brier": 0.1502,
+    "ece": 0.1122
+  },
+  {
+    "model": "gemma3-270m-typed-decisions",
+    "params_m": 270.0,
+    "mode": "fitted",
+    "accuracy": 0.702,
+    "kl": 0.156,
+    "brier": 0.091,
+    "ece": 0.128
+  },
+  {
+    "model": "SAP RPT 1.6",
+    "params_m": null,
+    "mode": "fitted",
+    "accuracy": 0.672,
+    "kl": 0.646,
+    "brier": 0.151,
+    "ece": 0.019
+  },
+  {
+    "model": "Bekko System One v0 400M",
+    "params_m": 400.0,
+    "mode": "fitted",
+    "accuracy": 0.668,
+    "kl": 0.214,
+    "brier": 0.113,
+    "ece": 0.143
+  },
+  {
+    "model": "vega-08b-public-intents",
+    "params_m": 800.0,
+    "mode": "fitted",
+    "accuracy": 0.663,
+    "kl": 0.435,
+    "brier": 0.191,
+    "ece": 0.074
+  },
+  {
+    "model": "ModernBERT-base",
+    "params_m": 149.0,
+    "mode": "fitted",
+    "accuracy": 0.646,
+    "kl": 0.223,
+    "brier": 0.119,
+    "ece": 0.179
+  },
+  {
+    "model": "Rev-gen1-EmbeddingGemma-2-Frozen",
+    "params_m": 272.0,
+    "mode": "fitted",
+    "accuracy": 0.6015,
+    "kl": 0.248,
+    "brier": 0.142,
+    "ece": 0.042
+  },
+  {
+    "model": "MiniLM-L6",
+    "params_m": 22.0,
+    "mode": "fitted",
+    "accuracy": 0.587,
+    "kl": 0.262,
+    "brier": 0.143,
+    "ece": 0.108
+  },
+  {
+    "model": "Bekko System One v0 68M",
+    "params_m": 68.0,
+    "mode": "fitted",
+    "accuracy": 0.537,
+    "kl": 0.293,
+    "brier": 0.16,
+    "ece": 0.116
+  },
+  {
+    "model": "Bekko System One v0 17M",
+    "params_m": 17.0,
+    "mode": "fitted",
+    "accuracy": 0.483,
+    "kl": 0.344,
+    "brier": 0.203,
+    "ece": 0.136
+  }
+]
