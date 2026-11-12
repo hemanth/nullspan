@@ -721,6 +721,64 @@ class TestSynthJevCases(unittest.TestCase):
         self.assertIn("temperature", captured_bodies[1])
         self.assertNotIn("temperature", captured_bodies[2])
 
+    def test_hf_blind_reviewer_preserves_full_35k_char_long_policy_middle_sections(self):
+        import torch
+        from training.synth_jev_cases import HFBlindReviewer
+
+        rev = HFBlindReviewer.__new__(HFBlindReviewer)
+        rev.device = "cpu"
+        seen_calls: list[tuple[list[str], int]] = []
+
+        class _FakeTok:
+            pad_token = "<pad>"
+            eos_token = "<eos>"
+            pad_token_id = 0
+            padding_side = "left"
+
+            def apply_chat_template(self, msgs, tokenize=False, add_generation_prompt=True, **kwargs):
+                return f"<|user|>\n{msgs[0]['content']}\n<|assistant|>\n"
+
+            def __call__(self, txts, return_tensors="pt", padding=True, truncation=True, max_length=6144):
+                seen_calls.append((list(txts), int(max_length)))
+
+                class _Batch(dict):
+                    def to(self, _dev):
+                        return self
+
+                return _Batch({"input_ids": torch.ones((len(txts), 8), dtype=torch.long)})
+
+            def decode(self, ids, skip_special_tokens=True):
+                return '{"reason": "Clause 7.4 applies.", "predicted": "2"}'
+
+        class _FakeModel:
+            def generate(self, **kwargs):
+                b = kwargs["input_ids"].shape[0]
+                return torch.ones((b, 12), dtype=torch.long)
+
+        rev.tok = _FakeTok()
+        rev.model = _FakeModel()
+
+        middle_needle = "GOVERNING_CARVEOUT_CLAUSE_7_4_SCORE_BAND_2"
+        long_state = ("A" * 16500) + middle_needle + ("B" * 16500)
+        rec = {
+            "id": "jev-hard-score-00388",
+            "family": "long_policy",
+            "state": long_state,
+            "question": {
+                "type": "score",
+                "instructions": "Score the compliance handling from 0 to 3.",
+                "criteria": ["0 - Bad", "1 - Weak", "2 - Compliant", "3 - Over"],
+            },
+            "labels": ["0", "1", "2", "3"],
+            "expected": 2,
+        }
+        outs = rev.review_batch([rec], batch_size=4)
+        self.assertEqual(outs[0]["predicted"], "2")
+        self.assertEqual(len(seen_calls), 1)
+        prompt_txt, max_len = seen_calls[0]
+        self.assertIn(middle_needle, prompt_txt[0])
+        self.assertGreaterEqual(max_len, 12288)
+
 
 if __name__ == "__main__":
     unittest.main()

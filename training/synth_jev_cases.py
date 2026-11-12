@@ -996,8 +996,8 @@ class HFBlindReviewer:
         prompts: list[str] = []
         for r in records:
             st = r["state"] if isinstance(r["state"], str) else json.dumps(r["state"], ensure_ascii=False)
-            if len(st) > 18000:
-                st = st[:9000] + "\n...\n" + st[-9000:]
+            if len(st) > 48000:
+                st = st[:24000] + "\n...\n" + st[-24000:]
             q = r["question"]
             lbs = [str(x) for x in r["labels"]]
             crit_s = json.dumps(q["criteria"], ensure_ascii=False)
@@ -1046,7 +1046,7 @@ class HFBlindReviewer:
                     return_tensors="pt",
                     padding=True,
                     truncation=True,
-                    max_length=6144,
+                    max_length=12288,
                 ).to(self.device)
                 in_len = enc["input_ids"].shape[1]
                 with torch.no_grad():
