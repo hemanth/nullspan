@@ -252,6 +252,8 @@ def _call_anthropic_batch_states(
         "tool_choice": {"type": "tool", "name": "emit_states"},
         "messages": [{"role": "user", "content": prompt}],
     }
+    if re.search(r"claude-[a-z]+-(?:5|6|7)(?:-|$|\.)", model):
+        body.pop("temperature", None)
     req = urllib.request.Request(
         "https://api.anthropic.com/v1/messages",
         data=json.dumps(body).encode("utf-8"),

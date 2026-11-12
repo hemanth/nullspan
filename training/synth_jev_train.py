@@ -617,6 +617,15 @@ def build_family_c_candidate(
     )
 
 
+def configure_vllm_runtime_env() -> None:
+    """Disable FlashInfer runtime C++ JIT sampler (avoids missing-ninja crashes) and expose venv bin on PATH."""
+    os.environ.setdefault("VLLM_USE_FLASHINFER_SAMPLER", "0")
+    venv_bin = os.path.dirname(sys.executable)
+    cur_path = os.environ.get("PATH", "")
+    if venv_bin and venv_bin not in cur_path.split(os.pathsep):
+        os.environ["PATH"] = f"{venv_bin}{os.pathsep}{cur_path}" if cur_path else venv_bin
+
+
 def select_vllm_dtype_for_teacher(model_id: str) -> str:
     low = str(model_id).lower()
     if any(tag in low for tag in ("fp8", "awq", "gptq", "int4", "int8")):
@@ -651,6 +660,7 @@ class DualRunRationaleTeacherRunner:
         self.device: str = "cpu"
 
         try:
+            configure_vllm_runtime_env()
             from transformers import AutoTokenizer
             from vllm import LLM, SamplingParams  # type: ignore
 

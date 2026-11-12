@@ -241,10 +241,9 @@ def _sample_anthropic_case(
         }
 
     prompt = build_teacher_prompt(state, questions)
-    body = {
+    body: dict[str, Any] = {
         "model": model,
         "max_tokens": 1024,
-        "temperature": temperature,
         "tools": [
             {
                 "name": "emit_probabilities",
@@ -259,6 +258,8 @@ def _sample_anthropic_case(
         "tool_choice": {"type": "tool", "name": "emit_probabilities"},
         "messages": [{"role": "user", "content": prompt}],
     }
+    if not re.search(r"claude-[a-z]+-(?:5|6|7)(?:-|$|\.)", model):
+        body["temperature"] = temperature
     encoded = json.dumps(body).encode("utf-8")
     samples: list[dict[str, dict[str, float]]] = []
 
@@ -306,6 +307,15 @@ def _sample_anthropic_case(
     return aggregate_teacher_samples(questions, samples)
 
 
+def configure_vllm_runtime_env() -> None:
+    """Disable FlashInfer runtime C++ JIT sampler (avoids missing-ninja crashes) and expose venv bin on PATH."""
+    os.environ.setdefault("VLLM_USE_FLASHINFER_SAMPLER", "0")
+    venv_bin = os.path.dirname(sys.executable)
+    cur_path = os.environ.get("PATH", "")
+    if venv_bin and venv_bin not in cur_path.split(os.pathsep):
+        os.environ["PATH"] = f"{venv_bin}{os.pathsep}{cur_path}" if cur_path else venv_bin
+
+
 class PersistentHFTeacherLabeller:
     """Persistent GPU teacher runner (`vLLM` continuous batching or `transformers` fallback)."""
 
@@ -328,6 +338,7 @@ class PersistentHFTeacherLabeller:
         self.device: str = "cpu"
 
         try:
+            configure_vllm_runtime_env()
             from transformers import AutoTokenizer
             from vllm import LLM, SamplingParams  # type: ignore
 

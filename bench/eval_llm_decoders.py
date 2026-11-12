@@ -177,23 +177,23 @@ def normalize_llm_prediction(raw: dict[str, Any], spec: dict[str, Any]) -> dict[
 
 def _call_anthropic_json(model_api_id: str, prompt: str, api_key: str, retries: int = 4) -> tuple[dict[str, Any], float, int, int]:
     url = "https://api.anthropic.com/v1/messages"
-    body = json.dumps(
-        {
-            "model": model_api_id,
-            "max_tokens": 256,
-            "temperature": 0.0,
-            "system": SYSTEM_PROMPT,
-            "tools": [
-                {
-                    "name": "submit_extraction",
-                    "description": "Submit structured field extraction with calibrated abstention probability.",
-                    "input_schema": EXTRACTION_JSON_SCHEMA,
-                }
-            ],
-            "tool_choice": {"type": "tool", "name": "submit_extraction"},
-            "messages": [{"role": "user", "content": prompt}],
-        }
-    ).encode("utf-8")
+    payload_dict: dict[str, Any] = {
+        "model": model_api_id,
+        "max_tokens": 256,
+        "system": SYSTEM_PROMPT,
+        "tools": [
+            {
+                "name": "submit_extraction",
+                "description": "Submit structured field extraction with calibrated abstention probability.",
+                "input_schema": EXTRACTION_JSON_SCHEMA,
+            }
+        ],
+        "tool_choice": {"type": "tool", "name": "submit_extraction"},
+        "messages": [{"role": "user", "content": prompt}],
+    }
+    if not re.search(r"claude-[a-z]+-(?:5|6|7)(?:-|$|\.)", model_api_id):
+        payload_dict["temperature"] = 0.0
+    body = json.dumps(payload_dict).encode("utf-8")
 
     for attempt in range(retries):
         t0 = time.perf_counter()

@@ -570,6 +570,157 @@ class TestSynthJevCases(unittest.TestCase):
         self.assertIn("HEAD", capped)
         self.assertIn("TAIL_END", capped)
 
+    def test_vllm_runtime_env_disables_flashinfer_jit_sampler_and_exposes_venv_bin(self):
+        import os
+        import sys
+        from training.label_td_teacher import configure_vllm_runtime_env as cfg_td
+        from training.synth_jev_train import configure_vllm_runtime_env as cfg_jev
+
+        old_fi = os.environ.pop("VLLM_USE_FLASHINFER_SAMPLER", None)
+        try:
+            cfg_td()
+            self.assertEqual(os.environ.get("VLLM_USE_FLASHINFER_SAMPLER"), "0")
+            self.assertIn(os.path.dirname(sys.executable), os.environ.get("PATH", "").split(os.pathsep))
+            os.environ.pop("VLLM_USE_FLASHINFER_SAMPLER", None)
+            cfg_jev()
+            self.assertEqual(os.environ.get("VLLM_USE_FLASHINFER_SAMPLER"), "0")
+        finally:
+            if old_fi is not None:
+                os.environ["VLLM_USE_FLASHINFER_SAMPLER"] = old_fi
+
+    def test_validate_tier_calibration_hygiene_rejects_leaked_criteria_and_verbose_easy(self):
+        from training.synth_jev_cases import validate_tier_calibration_hygiene
+
+        bad_leaked_noul = {
+            "id": "jev-easy-noul-00201",
+            "family": "policy",
+            "state": "Facility capacity is 3.8 MW, notice was 28 minutes, credit is 12.5 MWh of 285 MWh.",
+            "question": {
+                "type": "noul",
+                "instructions": "May the solar farm claim curtailment credits?",
+                "criteria": {
+                    "true": "Approve: capacity is 3.8 MW, notice 28 minutes, credit 12.5 MWh of 285 MWh.",
+                    "false": "Deny: capacity is 3.8 MW, notice 28 minutes, credit 12.5 MWh of 285 MWh.",
+                },
+            },
+            "labels": ["no", "yes"],
+            "expected": "yes",
+            "provenance": {"tier": "easy"},
+        }
+        self.assertFalse(validate_tier_calibration_hygiene(bad_leaked_noul))
+
+        bad_verbose_easy = {
+            "id": "jev-easy-choice-00001",
+            "family": "routing",
+            "state": {"blob": "x" * 400},
+            "question": {
+                "type": "choice",
+                "instructions": "Route ticket.",
+                "criteria": {"billing": "Invoices", "shipping": "Delivery"},
+            },
+            "labels": ["billing", "shipping"],
+            "expected": "billing",
+            "provenance": {"tier": "easy"},
+        }
+        self.assertFalse(validate_tier_calibration_hygiene(bad_verbose_easy))
+
+        good_easy = {
+            "id": "jev-easy-noul-00201",
+            "family": "policy",
+            "state": "Parcel weighs 2.4 kg; courier limit is 5.0 kg.",
+            "question": {
+                "type": "noul",
+                "instructions": "Is the parcel within the courier weight limit?",
+                "criteria": {"false": "Exceeds the weight limit.", "true": "Within the weight limit."},
+            },
+            "labels": ["no", "yes"],
+            "expected": "yes",
+            "provenance": {"tier": "easy"},
+        }
+        self.assertTrue(validate_tier_calibration_hygiene(good_easy))
+
+    def test_anthropic_5_series_models_omit_deprecated_temperature_parameter(self):
+        import io
+        import json
+        from unittest import mock
+        from training.synth_jev_cases import _author_batch_anthropic
+        from bench.eval_llm_decoders import _call_anthropic_json
+
+        captured_bodies: list[dict] = []
+
+        class _Resp:
+            def __init__(self, payload: dict):
+                self._raw = json.dumps(payload).encode("utf-8")
+
+            def read(self) -> bytes:
+                return self._raw
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+        def _fake_urlopen(req, timeout=60):
+            body = json.loads(req.data.decode("utf-8"))
+            captured_bodies.append(body)
+            if any(t.get("name") == "emit_jev_items" for t in body.get("tools", [])):
+                return _Resp(
+                    {
+                        "content": [
+                            {
+                                "type": "tool_use",
+                                "name": "emit_jev_items",
+                                "input": {
+                                    "items": [
+                                        {
+                                            "state": "Order total is $42; free shipping threshold is $50.",
+                                            "instructions": "Does the order qualify for free shipping?",
+                                            "criteria": {
+                                                "false": "Order total is below threshold.",
+                                                "true": "Order total meets threshold.",
+                                            },
+                                            "expected": "no",
+                                            "rationale": "42 < 50.",
+                                        }
+                                    ]
+                                },
+                            }
+                        ]
+                    }
+                )
+            return _Resp(
+                {
+                    "usage": {"input_tokens": 12, "output_tokens": 8},
+                    "content": [
+                        {
+                            "type": "tool_use",
+                            "name": "submit_extraction",
+                            "input": {"value": None, "null_probability": 0.95},
+                        }
+                    ],
+                }
+            )
+
+        with mock.patch("urllib.request.urlopen", side_effect=_fake_urlopen):
+            _author_batch_anthropic(
+                [{"index": 0, "cell_id": "c0", "family": "policy", "tier": "easy", "qtype": "noul"}],
+                author_model="claude-haiku-5-5",
+                api_key="test-key",
+                seed=1,
+            )
+            _author_batch_anthropic(
+                [{"index": 0, "cell_id": "c0", "family": "policy", "tier": "easy", "qtype": "noul"}],
+                author_model="claude-haiku-4-5-20251001",
+                api_key="test-key",
+                seed=1,
+            )
+            _call_anthropic_json("claude-opus-5-5", "Extract amount", "test-key")
+
+        self.assertNotIn("temperature", captured_bodies[0])
+        self.assertIn("temperature", captured_bodies[1])
+        self.assertNotIn("temperature", captured_bodies[2])
+
 
 if __name__ == "__main__":
     unittest.main()

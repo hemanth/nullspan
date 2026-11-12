@@ -731,6 +731,46 @@ def check_dev_tier_alignment(
     return {"usable": all_ok, "tolerance": tol, "tiers": per_tier}
 
 
+def validate_tier_calibration_hygiene(rec: dict[str, Any]) -> bool:
+    """Ensure generic state-independent criteria rubrics and realistic tier-matched state lengths."""
+    tier = str((rec.get("provenance") or {}).get("tier", "hard"))
+    st_val = rec.get("state")
+    st_str = st_val if isinstance(st_val, str) else json.dumps(st_val, ensure_ascii=False)
+    q = rec.get("question") or {}
+    qtype = str(q.get("type", ""))
+    instr = str(q.get("instructions") or "")
+    crit = q.get("criteria")
+
+    if isinstance(crit, dict):
+        crit_texts = [str(v) for v in crit.values() if v is not None]
+    elif isinstance(crit, list):
+        crit_texts = [str(v) for v in crit if v is not None]
+    else:
+        crit_texts = []
+
+    # Rubrics must be concise and state-independent (never pasting specific state numbers into both options)
+    state_nums = set(re.findall(r"\b\d+(?:\.\d+)?\b", st_str)) - {"0", "1", "2", "3", "4", "5", "10", "100"}
+    max_opt_len = 135 if tier == "easy" else 220
+    for ct in crit_texts:
+        if len(ct) > max_opt_len:
+            return False
+        ct_nums = set(re.findall(r"\b\d+(?:\.\d+)?\b", ct)) - {"0", "1", "2", "3", "4", "5", "10", "100"}
+        if len(ct_nums & state_nums) >= 2:
+            return False
+
+    if qtype == "noul" and isinstance(crit, dict):
+        t_toks = set(re.findall(r"[a-z0-9]{3,}", str(crit.get("true", "")).lower()))
+        f_toks = set(re.findall(r"[a-z0-9]{3,}", str(crit.get("false", "")).lower()))
+        union_n = len(t_toks | f_toks)
+        if union_n >= 6 and (len(t_toks & f_toks) / union_n) > 0.65:
+            return False
+
+    if tier == "easy":
+        if len(st_str) > 260 or len(instr) > 220:
+            return False
+    return True
+
+
 def _author_batch_anthropic(
     cell_specs: list[dict[str, Any]],
     author_model: str,
@@ -748,17 +788,23 @@ def _author_batch_anthropic(
         qtype = sp["qtype"]
         guide = _FAMILY_GUIDANCE.get(fam, "Realistic structured decision problem.")
         tier_note = {
-            "easy": "EASY tier: straightforward 1-step lookup/classification with zero ambiguity; an attentive small classifier should get ~95-100%.",
-            "standard": (
-                "STANDARD tier: moderate 2-condition rule or threshold boundary with one plausible distractor detail "
-                "(include a subtle boundary or distractor so keyword-only matching misses ~30% of items)."
-                if difficulty_shift >= 0
-                else "STANDARD tier: clear 2-condition workflow check."
+            "easy": (
+                "EASY tier: `state` MUST be a short 1-to-2 sentence plain-text string (40-180 chars total, never a large JSON object), "
+                "`instructions` MUST be 1 crisp question sentence (<= 140 chars), and `criteria` MUST be short generic 4-10 word rubrics "
+                "(NEVER repeat specific numbers or entity names from `state` inside `criteria`!). Zero ambiguity; a 395M classifier must get ~98-100%."
             ),
-            "judge": "JUDGE tier: include both ground-truth system context AND a candidate agent action/reply in `state`, judging policy/factual adequacy.",
+            "standard": (
+                "STANDARD tier: concise 2-to-3 sentence `state` (70-320 chars) with a clean 2-condition rule or threshold check and generic 6-14 word `criteria` rubrics "
+                "(NEVER repeat case-specific numbers from `state` inside `criteria`)."
+                if difficulty_shift >= 0
+                else "STANDARD tier: clear 2-condition workflow check with concise 2-sentence `state`."
+            ),
+            "judge": (
+                "JUDGE tier: include both ground-truth system context AND a candidate agent action/reply in `state`, judging policy/factual adequacy with generic `criteria` rubrics."
+            ),
             "hard": (
-                "HARD tier: genuinely tricky multi-constraint reasoning where surface keyword overlap favors a plausible WRONG distractor, "
-                "and only exact multi-hop / numeric / exception-clause synthesis identifies the true answer (a 395M encoder without reasoning distillation should score ~30-42%)."
+                "HARD tier: genuinely tricky multi-constraint reasoning (`state` >= 900 chars) where surface keyword overlap strongly favors a plausible WRONG distractor option, "
+                "and ONLY exact multi-hop / arithmetic / negation / exception-clause synthesis identifies `expected` (generic `criteria` rubrics <= 20 words each; a 395M encoder without reasoning distillation should score ~30-40%)."
             ),
         }[tier]
         q_shape_hint = {
@@ -798,10 +844,9 @@ def _author_batch_anthropic(
         + "\n\n".join(spec_lines)
     )
 
-    body = {
+    body: dict[str, Any] = {
         "model": author_model,
         "max_tokens": 6400,
-        "temperature": 0.85,
         "tools": [
             {
                 "name": "emit_jev_items",
@@ -834,6 +879,8 @@ def _author_batch_anthropic(
         "tool_choice": {"type": "tool", "name": "emit_jev_items"},
         "messages": [{"role": "user", "content": prompt}],
     }
+    if not re.search(r"claude-[a-z]+-(?:5|6|7)(?:-|$|\.)", author_model):
+        body["temperature"] = 0.85
     req = urllib.request.Request(
         "https://api.anthropic.com/v1/messages",
         data=json.dumps(body).encode("utf-8"),
@@ -905,6 +952,8 @@ def _author_batch_anthropic(
                 rationale=str(raw.get("rationale") or ""),
                 gold_probs=raw.get("gold_probs") if isinstance(raw.get("gold_probs"), dict) else None,
             )
+            if not validate_tier_calibration_hygiene(rec):
+                continue
             formatted.append(rec)
         except Exception:
             continue
