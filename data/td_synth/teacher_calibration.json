@@ -1,0 +1,32 @@
+{
+  "candidates": {
+    "Qwen/Qwen3-4B-Instruct-2507": {
+      "n_cases": 1200,
+      "n_decisions": 6000,
+      "accuracy": 0.522667,
+      "mean_kl": 0.372444,
+      "mean_brier": 0.200984,
+      "per_type_kl": {
+        "choice": 0.401342,
+        "noul": 0.262352,
+        "score": 0.43334
+      },
+      "max_kl_threshold": 0.1,
+      "accepted": false,
+      "teacher": "Qwen/Qwen3-4B-Instruct-2507",
+      "samples": 3,
+      "temperature": 0.7,
+      "note": "Measured 3-sample vLLM calibration across all 1,200 train cases (3,600 prompts)."
+    },
+    "skamalj/signpost-d-4b": {
+      "n_cases": 1200,
+      "accuracy": 0.72,
+      "mean_kl": 0.166,
+      "max_kl_threshold": 0.1,
+      "accepted": false,
+      "teacher": "skamalj/signpost-d-4b",
+      "note": "Published HF model card evaluation on all 1,200 LocalLLaMA/typed-decisions train cases."
+    }
+  },
+  "accepted": false
+}

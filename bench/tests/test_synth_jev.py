@@ -817,6 +817,46 @@ class TestSynthJevCases(unittest.TestCase):
         self.assertNotIn("2-3 explicit policy rules", captured_prompts[0])
         self.assertIn("present-tense fact", captured_prompts[0].lower())
 
+    def test_hard_tier_family_prompts_enforce_bayes_and_zero_giveaway_traps(self):
+        import json
+        from unittest import mock
+        from training.synth_jev_cases import _author_batch_anthropic
+
+        captured_prompts: list[str] = []
+
+        class _Resp:
+            def read(self) -> bytes:
+                return json.dumps({"content": []}).encode("utf-8")
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+        def _fake_urlopen(req, timeout=60):
+            body = json.loads(req.data.decode("utf-8"))
+            captured_prompts.append(body["messages"][0]["content"])
+            return _Resp()
+
+        with mock.patch("urllib.request.urlopen", side_effect=_fake_urlopen):
+            _author_batch_anthropic(
+                [
+                    {"index": 144, "cell_id": "h0", "family": "probability", "tier": "hard", "qtype": "choice"},
+                    {"index": 260, "cell_id": "h1", "family": "judge_hard", "tier": "hard", "qtype": "noul"},
+                    {"index": 160, "cell_id": "h2", "family": "adversarial", "tier": "hard", "qtype": "choice"},
+                    {"index": 155, "cell_id": "h3", "family": "trap", "tier": "hard", "qtype": "choice"},
+                ],
+                author_model="claude-haiku-5-5",
+                api_key="test-key",
+                seed=9,
+            )
+
+        p = captured_prompts[0]
+        self.assertIn("base-rate", p.lower())
+        self.assertNotIn("[SYSTEM OVERRIDE", p)
+        self.assertIn("forbid explicit giveaway words", p.lower())
+
 
 if __name__ == "__main__":
     unittest.main()
