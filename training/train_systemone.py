@@ -1423,11 +1423,13 @@ def instantiate_family(backbone_id: str, device: str, amp_dtype: torch.dtype) ->
     has_nli_head = any("entail" in v for v in orig_i2l.values()) and len(orig_i2l) in (2, 3)
 
     orig_cfg.reference_compile = False
-    orig_cfg._attn_implementation = "sdpa"
     if getattr(orig_cfg, "model_type", "") == "modernbert":
+        orig_cfg._attn_implementation = "sdpa"
         orig_cfg.local_attention = 16384
         orig_cfg.sliding_window = 16384
         orig_cfg.global_attn_every_n_layers = 1
+    else:
+        orig_cfg._attn_implementation = "eager"
     if not has_nli_head:
         orig_cfg.num_labels = 2
 

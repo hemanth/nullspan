@@ -89,6 +89,16 @@ class TestGeminiDecision1Comparison(unittest.TestCase):
         self.assertIn("92.2%", md)
         self.assertIn("published", md.lower())
 
+    def test_load_local_nullspan_summary_reads_kl_from_gold(self) -> None:
+        from compare_decision1 import load_local_nullspan_summary, render_decision1_comparison_md
+
+        summary = load_local_nullspan_summary(version="v1.3.1")
+        self.assertIsNotNone(summary["td_test_acc"])
+        self.assertIsNotNone(summary["td_test_kl"])
+        self.assertIsNotNone(summary["td_test_brier"])
+        md = render_decision1_comparison_md(summary, snapshot_date="2026-11-12")
+        self.assertNotIn("Pending test slot", md)
+
 
 if __name__ == "__main__":
     unittest.main()

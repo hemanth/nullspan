@@ -262,7 +262,7 @@ def load_local_nullspan_summary(
         "version": version,
         "params": "395M (`ModernBERT-large`, Apache-2.0)",
         "td_test_acc": td.get("accuracy"),
-        "td_test_kl": td.get("kl"),
+        "td_test_kl": td.get("kl", td.get("kl_from_gold")),
         "td_test_brier": td.get("brier"),
         "jev_public_acc": jb.get("overall_accuracy"),
         "jev_v16_capability": cap.get("capability", 0.0),
@@ -278,7 +278,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--version", default="v1.4.0")
     ap.add_argument("--snapshot-date", default="2026-11-11")
     ap.add_argument("--live", action="store_true", help="Run live Gemini Decisions API eval if GEMINI_API_KEY is set")
-    ap.add_argument("--jevbench-dir", type=Path, default=Path("/tmp/jevbench_v161"))
+    ap.add_argument("--jevbench-dir", type=Path, default=Path("/Users/lika/labs/jevbench_ref"))
     args = ap.parse_args(argv)
 
     ns_summary = load_local_nullspan_summary(version=args.version)

@@ -508,6 +508,97 @@ class TestTypedDecisionsUpgrades(unittest.TestCase):
             self.assertAlmostEqual(loaded["oof_acc"], 0.8002, places=6)
             self.assertTrue(torch.allclose(loaded["oof_logits_by_case"][0][0], torch.tensor([0.2, 0.8])))
 
+    def test_instantiate_family_and_training_loop_support_deberta_v2(self) -> None:
+        from unittest.mock import patch
+        from transformers import AutoModelForSequenceClassification, DebertaV2Config
+        from train_systemone import _pack_single_case, instantiate_family, run_training_loop
+
+        class DummyTok:
+            cls_token_id = 1
+            sep_token_id = 2
+            pad_token_id = 0
+            bos_token_id = 1
+            eos_token_id = 2
+            model_max_length = 512
+
+            def encode(self, text: str, add_special_tokens: bool = False) -> list[int]:
+                return [3 + (ord(ch) % 180) for ch in text[:96]]
+
+        tiny_deb_cfg = DebertaV2Config(
+            vocab_size=256,
+            hidden_size=64,
+            num_hidden_layers=2,
+            num_attention_heads=4,
+            intermediate_size=128,
+        )
+
+        def fake_from_pretrained(backbone_id: str, config: object = None, **kwargs: object) -> object:
+            return AutoModelForSequenceClassification.from_config(config)
+
+        with (
+            patch("transformers.AutoConfig.from_pretrained", return_value=tiny_deb_cfg),
+            patch("transformers.AutoTokenizer.from_pretrained", return_value=DummyTok()),
+            patch("train_systemone.AutoTokenizer.from_pretrained", return_value=DummyTok()),
+            patch("train_systemone.AutoModelForSequenceClassification.from_pretrained", side_effect=fake_from_pretrained),
+        ):
+            tok, bb_model, head = instantiate_family("microsoft/deberta-v3-large", device="cpu", amp_dtype=torch.float32)
+
+        self.assertEqual(getattr(bb_model.config, "_attn_implementation", "eager"), "eager")
+        tr_cases = [
+            _pack_single_case(
+                tok,
+                {"invoice": {"qty": 5 + i}, "delivery": {"qty": 5 + i}},
+                {"q1": {"type": "choice", "instructions": "Pick disposition", "criteria": {"ok": "Approve", "hold": "Hold"}}},
+                {"q1": {"probabilities": {"ok": 0.9, "hold": 0.1}}},
+                case_id=10 + i,
+                max_state_tokens=384,
+                max_total_tokens=512,
+            )
+            for i in range(4)
+        ]
+        bb_sd, hd_sd, (v_acc, v_kl, _, _, _) = run_training_loop(
+            backbone=bb_model,
+            head=head,
+            aux_head=None,
+            train_cases=tr_cases[:3],
+            val_cases=tr_cases[3:],
+            pad_id=0,
+            device="cpu",
+            amp_dtype=torch.float32,
+            epochs=1,
+            backbone_lr=1e-4,
+            head_lr=2e-4,
+            batch_cases=2,
+            grad_accum=1,
+            seed=42,
+            tag="deberta_smoke",
+            header_attends_options=True,
+            max_seq_pad=512,
+        )
+        self.assertTrue(len(bb_sd) > 0 and len(hd_sd) > 0)
+        self.assertGreaterEqual(v_acc, 0.0)
+        self.assertGreaterEqual(v_kl, 0.0)
+
+    def test_rationale_teacher_prompt_preserves_middle_clauses_in_25k_char_long_policy(self) -> None:
+        from synth_jev_train import build_rationale_teacher_prompt, truncate_chat_prompt_chars
+
+        filler_left = "A" * 12000
+        middle_clause = "\nSECTION_B_UNIQUE_CARVEOUT_98765: Direct release up to 36h when logger present.\n"
+        filler_right = "B" * 12000
+        rec = {
+            "state": filler_left + middle_clause + filler_right,
+            "labels": ["no", "yes"],
+            "question": {
+                "type": "noul",
+                "instructions": "Can shipment be released directly?",
+                "criteria": {"false": "No", "true": "Yes"},
+            },
+        }
+        prompt = build_rationale_teacher_prompt(rec)
+        capped = truncate_chat_prompt_chars(prompt)
+        self.assertIn("SECTION_B_UNIQUE_CARVEOUT_98765", prompt)
+        self.assertIn("SECTION_B_UNIQUE_CARVEOUT_98765", capped)
+
 
 if __name__ == "__main__":
     unittest.main()

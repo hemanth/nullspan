@@ -1,0 +1,357 @@
+{
+  "n_cases": 1200,
+  "n_decisions": 6000,
+  "oof_accuracy": 0.799,
+  "oof_kl": 0.086761,
+  "oof_brier": 0.049603,
+  "oof_ece": 0.175654,
+  "schema_prior_oof_accuracy": 0.496167,
+  "schemas_where_prior_beats_model": [],
+  "total_errors": 1206,
+  "errors_gold_top1_le_two_thirds": 1028,
+  "share_errors_gold_top1_le_two_thirds": 0.852405,
+  "share_all_decisions_gold_top1_le_two_thirds": 0.566833,
+  "gold_matching_predictor_ece": 0.326438,
+  "ece_stays_off_target_list": true,
+  "state_token_stats": {
+    "min": 93,
+    "p50": 288,
+    "p90": 808,
+    "p95": 821,
+    "p98": 918,
+    "p99": 959,
+    "max": 987,
+    "cases_gt_2560": 0,
+    "pct_cases_gt_2560": 0.0
+  },
+  "by_token_bucket": {
+    "0000_0512": {
+      "n_decisions": 4440,
+      "accuracy": 0.792568,
+      "error_rate": 0.207432,
+      "errors": 921,
+      "kl": 0.083683
+    },
+    "0513_1024": {
+      "n_decisions": 1560,
+      "accuracy": 0.817308,
+      "error_rate": 0.182692,
+      "errors": 285,
+      "kl": 0.095523
+    }
+  },
+  "top_recoverable_schemas": [
+    {
+      "schema": "customer_service::needs_human",
+      "n": 300,
+      "qtype": "noul",
+      "accuracy": 0.756667,
+      "prior_accuracy": 0.656667,
+      "kl": 0.077342,
+      "brier": 0.066764,
+      "errors": 73,
+      "recoverable_errors": 24
+    },
+    {
+      "schema": "customer_service::action",
+      "n": 300,
+      "qtype": "choice",
+      "accuracy": 0.676667,
+      "prior_accuracy": 0.566667,
+      "kl": 0.214438,
+      "brier": 0.111922,
+      "errors": 97,
+      "recoverable_errors": 22
+    },
+    {
+      "schema": "invoice_processing::discrepancy_severity",
+      "n": 300,
+      "qtype": "score",
+      "accuracy": 0.72,
+      "prior_accuracy": 0.446667,
+      "kl": 0.166779,
+      "brier": 0.092132,
+      "errors": 84,
+      "recoverable_errors": 18
+    },
+    {
+      "schema": "security_incidents::credential_compromise",
+      "n": 300,
+      "qtype": "noul",
+      "accuracy": 0.743333,
+      "prior_accuracy": 0.466667,
+      "kl": 0.049877,
+      "brier": 0.042906,
+      "errors": 77,
+      "recoverable_errors": 17
+    },
+    {
+      "schema": "security_incidents::disposition",
+      "n": 300,
+      "qtype": "choice",
+      "accuracy": 0.79,
+      "prior_accuracy": 0.713333,
+      "kl": 0.101159,
+      "brier": 0.056671,
+      "errors": 63,
+      "recoverable_errors": 11
+    },
+    {
+      "schema": "invoice_processing::matches_order",
+      "n": 300,
+      "qtype": "noul",
+      "accuracy": 0.88,
+      "prior_accuracy": 0.496667,
+      "kl": 0.069142,
+      "brier": 0.052015,
+      "errors": 36,
+      "recoverable_errors": 11
+    },
+    {
+      "schema": "invoice_processing::duplicate",
+      "n": 300,
+      "qtype": "noul",
+      "accuracy": 0.933333,
+      "prior_accuracy": 0.913333,
+      "kl": 0.024897,
+      "brier": 0.018545,
+      "errors": 20,
+      "recoverable_errors": 11
+    },
+    {
+      "schema": "customer_service::category",
+      "n": 300,
+      "qtype": "choice",
+      "accuracy": 0.933333,
+      "prior_accuracy": 0.01,
+      "kl": 0.089528,
+      "brier": 0.038424,
+      "errors": 20,
+      "recoverable_errors": 9
+    },
+    {
+      "schema": "invoice_processing::disposition",
+      "n": 300,
+      "qtype": "choice",
+      "accuracy": 0.766667,
+      "prior_accuracy": 0.4,
+      "kl": 0.128181,
+      "brier": 0.069426,
+      "errors": 70,
+      "recoverable_errors": 8
+    },
+    {
+      "schema": "security_incidents::urgency",
+      "n": 300,
+      "qtype": "score",
+      "accuracy": 0.68,
+      "prior_accuracy": 0.526667,
+      "kl": 0.107416,
+      "brier": 0.053947,
+      "errors": 96,
+      "recoverable_errors": 7
+    }
+  ],
+  "by_schema": {
+    "agent_trace_observability::action": {
+      "n": 300,
+      "qtype": "choice",
+      "accuracy": 0.786667,
+      "prior_accuracy": 0.473333,
+      "kl": 0.058412,
+      "brier": 0.030087,
+      "errors": 64,
+      "recoverable_errors": 1
+    },
+    "agent_trace_observability::needs_review": {
+      "n": 300,
+      "qtype": "noul",
+      "accuracy": 0.84,
+      "prior_accuracy": 0.47,
+      "kl": 0.02378,
+      "brier": 0.01962,
+      "errors": 48,
+      "recoverable_errors": 3
+    },
+    "agent_trace_observability::outcome": {
+      "n": 300,
+      "qtype": "choice",
+      "accuracy": 0.806667,
+      "prior_accuracy": 0.47,
+      "kl": 0.07669,
+      "brier": 0.044091,
+      "errors": 58,
+      "recoverable_errors": 6
+    },
+    "agent_trace_observability::risk": {
+      "n": 300,
+      "qtype": "score",
+      "accuracy": 0.863333,
+      "prior_accuracy": 0.353333,
+      "kl": 0.067559,
+      "brier": 0.038578,
+      "errors": 41,
+      "recoverable_errors": 5
+    },
+    "agent_trace_observability::urgency": {
+      "n": 300,
+      "qtype": "score",
+      "accuracy": 0.756667,
+      "prior_accuracy": 0.51,
+      "kl": 0.078068,
+      "brier": 0.042335,
+      "errors": 73,
+      "recoverable_errors": 5
+    },
+    "customer_service::action": {
+      "n": 300,
+      "qtype": "choice",
+      "accuracy": 0.676667,
+      "prior_accuracy": 0.566667,
+      "kl": 0.214438,
+      "brier": 0.111922,
+      "errors": 97,
+      "recoverable_errors": 22
+    },
+    "customer_service::category": {
+      "n": 300,
+      "qtype": "choice",
+      "accuracy": 0.933333,
+      "prior_accuracy": 0.01,
+      "kl": 0.089528,
+      "brier": 0.038424,
+      "errors": 20,
+      "recoverable_errors": 9
+    },
+    "customer_service::churn_risk": {
+      "n": 300,
+      "qtype": "score",
+      "accuracy": 0.813333,
+      "prior_accuracy": 0.486667,
+      "kl": 0.094932,
+      "brier": 0.047062,
+      "errors": 56,
+      "recoverable_errors": 5
+    },
+    "customer_service::needs_human": {
+      "n": 300,
+      "qtype": "noul",
+      "accuracy": 0.756667,
+      "prior_accuracy": 0.656667,
+      "kl": 0.077342,
+      "brier": 0.066764,
+      "errors": 73,
+      "recoverable_errors": 24
+    },
+    "customer_service::urgency": {
+      "n": 300,
+      "qtype": "score",
+      "accuracy": 0.786667,
+      "prior_accuracy": 0.403333,
+      "kl": 0.097574,
+      "brier": 0.053113,
+      "errors": 64,
+      "recoverable_errors": 5
+    },
+    "invoice_processing::discrepancy_severity": {
+      "n": 300,
+      "qtype": "score",
+      "accuracy": 0.72,
+      "prior_accuracy": 0.446667,
+      "kl": 0.166779,
+      "brier": 0.092132,
+      "errors": 84,
+      "recoverable_errors": 18
+    },
+    "invoice_processing::disposition": {
+      "n": 300,
+      "qtype": "choice",
+      "accuracy": 0.766667,
+      "prior_accuracy": 0.4,
+      "kl": 0.128181,
+      "brier": 0.069426,
+      "errors": 70,
+      "recoverable_errors": 8
+    },
+    "invoice_processing::duplicate": {
+      "n": 300,
+      "qtype": "noul",
+      "accuracy": 0.933333,
+      "prior_accuracy": 0.913333,
+      "kl": 0.024897,
+      "brier": 0.018545,
+      "errors": 20,
+      "recoverable_errors": 11
+    },
+    "invoice_processing::matches_order": {
+      "n": 300,
+      "qtype": "noul",
+      "accuracy": 0.88,
+      "prior_accuracy": 0.496667,
+      "kl": 0.069142,
+      "brier": 0.052015,
+      "errors": 36,
+      "recoverable_errors": 11
+    },
+    "invoice_processing::urgency": {
+      "n": 300,
+      "qtype": "score",
+      "accuracy": 0.783333,
+      "prior_accuracy": 0.443333,
+      "kl": 0.082257,
+      "brier": 0.040703,
+      "errors": 65,
+      "recoverable_errors": 2
+    },
+    "security_incidents::credential_compromise": {
+      "n": 300,
+      "qtype": "noul",
+      "accuracy": 0.743333,
+      "prior_accuracy": 0.466667,
+      "kl": 0.049877,
+      "brier": 0.042906,
+      "errors": 77,
+      "recoverable_errors": 17
+    },
+    "security_incidents::disposition": {
+      "n": 300,
+      "qtype": "choice",
+      "accuracy": 0.79,
+      "prior_accuracy": 0.713333,
+      "kl": 0.101159,
+      "brier": 0.056671,
+      "errors": 63,
+      "recoverable_errors": 11
+    },
+    "security_incidents::severity": {
+      "n": 300,
+      "qtype": "score",
+      "accuracy": 0.783333,
+      "prior_accuracy": 0.44,
+      "kl": 0.081045,
+      "brier": 0.035806,
+      "errors": 65,
+      "recoverable_errors": 1
+    },
+    "security_incidents::true_positive": {
+      "n": 300,
+      "qtype": "noul",
+      "accuracy": 0.88,
+      "prior_accuracy": 0.676667,
+      "kl": 0.046149,
+      "brier": 0.037921,
+      "errors": 36,
+      "recoverable_errors": 7
+    },
+    "security_incidents::urgency": {
+      "n": 300,
+      "qtype": "score",
+      "accuracy": 0.68,
+      "prior_accuracy": 0.526667,
+      "kl": 0.107416,
+      "brier": 0.053947,
+      "errors": 96,
+      "recoverable_errors": 7
+    }
+  }
+}

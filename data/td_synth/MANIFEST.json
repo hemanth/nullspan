@@ -1,5 +1,5 @@
 {
   "status": "stopped_at_step2_gate",
-  "reason": "Best 4B teacher mean_kl >= 0.10 threshold on 1,200 real train cases (Qwen3-4B-Instruct-2507 mean_kl=0.3724, signpost-d-4b mean_kl=0.1660); plan.md Task 4 Step 2 stop rule triggered.",
+  "reason": "Best 4B teacher mean_kl=0.1660 >= 0.10 threshold (plan.md Task 4 Step 2 stop rule).",
   "calibration_report": "data/td_synth/teacher_calibration.json"
 }

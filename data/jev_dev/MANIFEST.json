@@ -1,0 +1,7 @@
+{
+  "n_items": 400,
+  "author_model_family_a": "claude-haiku-5-5",
+  "reviewer_model_family_b": "microsoft/Phi-4-mini-instruct",
+  "pool_candidates_evaluated": 0,
+  "shingle_k": 12
+}

@@ -163,8 +163,8 @@ def parse_rationale_teacher_output(raw_text: str, labels: list[str]) -> dict[str
 
 def build_rationale_teacher_prompt(record: dict[str, Any]) -> str:
     st = record["state"] if isinstance(record["state"], str) else json.dumps(record["state"], ensure_ascii=False)
-    if len(st) > 20000:
-        st = st[:10000] + "\n...\n" + st[-10000:]
+    if len(st) > 32000:
+        st = st[:16000] + "\n...\n" + st[-16000:]
     q = record["question"]
     labels = [str(x) for x in record["labels"]]
     example_p = {lb: round(1.0 / max(1, len(labels)), 2) for lb in labels}
@@ -633,7 +633,7 @@ def select_vllm_dtype_for_teacher(model_id: str) -> str:
     return "bfloat16"
 
 
-def truncate_chat_prompt_chars(chat_txt: str, max_chars: int = 20000) -> str:
+def truncate_chat_prompt_chars(chat_txt: str, max_chars: int = 34000) -> str:
     if len(chat_txt) <= max_chars:
         return chat_txt
     half = max(100, (max_chars - 16) // 2)
@@ -670,7 +670,7 @@ class DualRunRationaleTeacherRunner:
             self.llm = LLM(
                 model=teacher_model,
                 dtype=v_dtype,
-                max_model_len=6144,
+                max_model_len=8192,
                 gpu_memory_utilization=0.88,
             )
             self.sp = SamplingParams(n=2, temperature=temperature, top_p=0.92, max_tokens=220)
@@ -696,7 +696,7 @@ class DualRunRationaleTeacherRunner:
     def _format_chat_prompts(self, prompts: list[str]) -> list[str]:
         chat_prompts: list[str] = []
         for p in prompts:
-            p_cap = truncate_chat_prompt_chars(p, max_chars=20000)
+            p_cap = truncate_chat_prompt_chars(p, max_chars=34000)
             msgs = [{"role": "user", "content": p_cap}]
             try:
                 chat_prompts.append(

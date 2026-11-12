@@ -15,6 +15,9 @@ node_modules/
 artifacts/nullspan/onnx/
 artifacts/nullspan/systemone/
 artifacts/nullspan/oof_report.json
+artifacts/phase1_rc/
+artifacts/unified_rc/
 data/td_synth/*.jsonl
 data/jev_dev/candidates_pool.jsonl
-data/jev_train/
+data/jev_dev/missing_cells.json
+data/jev_train/*.jsonl

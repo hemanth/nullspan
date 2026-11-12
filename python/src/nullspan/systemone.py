@@ -958,7 +958,7 @@ def configure_modernbert_full_bidir(backbone: Any, tokenizer: Any | None = None)
     if tokenizer is not None:
         tokenizer.model_max_length = 8192
     cfg = getattr(backbone, "config", None)
-    if cfg is not None:
+    if cfg is not None and getattr(cfg, "model_type", "") == "modernbert":
         cfg.local_attention = 16384
         cfg.sliding_window = 16384
         cfg.global_attn_every_n_layers = 1
@@ -1263,11 +1263,14 @@ class NullspanSystemOneEngine:
         tok = AutoTokenizer.from_pretrained(backbone_src, config=bb_cfg)
         if arch_version >= 3:
             bb_cfg.reference_compile = False
-            bb_cfg._attn_implementation = "sdpa"
-            bb_cfg.local_attention = 16384
-            bb_cfg.global_attn_every_n_layers = 1
-            if hasattr(bb_cfg, "layer_types"):
-                bb_cfg.layer_types = ["full_attention"] * int(bb_cfg.num_hidden_layers)
+            if getattr(bb_cfg, "model_type", "") == "modernbert":
+                bb_cfg._attn_implementation = "sdpa"
+                bb_cfg.local_attention = 16384
+                bb_cfg.global_attn_every_n_layers = 1
+                if hasattr(bb_cfg, "layer_types"):
+                    bb_cfg.layer_types = ["full_attention"] * int(bb_cfg.num_hidden_layers)
+            else:
+                bb_cfg._attn_implementation = "eager"
         nli_model = AutoModelForSequenceClassification.from_pretrained(backbone_src, config=bb_cfg)
         hidden_size = int(nli_model.config.hidden_size)
 
