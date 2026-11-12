@@ -1,17 +1,19 @@
 {
-  "benchmark_name": "NullspanBench (JevBench-Compatible Decision & Extraction Leaderboard)",
-  "benchmark_version": "3.2.0-jevbench",
-  "draw_id": "S+P (draw v3.2-nullspan-20261030)",
-  "timestamp": "2026-10-30T13:11:15Z",
+  "benchmark_name": "NullspanBench (Measured Decision & Extraction Leaderboard)",
+  "benchmark_version": "3.3.0-measured",
+  "headline_pool": "sealed",
+  "open_pool_disclosure": "Open Pool (n=336) items come from data/val.jsonl produced by training/generate_dataset.py (disjoint seed range, 0% text overlap with train/cal_dev), which shares structural templates with the deterministic nullspan-ZeroDep rule engine. Therefore, the Sealed Pool (n=164: Stanford SQuAD v2.0 prose QA, 12 unseen multi-numeric legal/commercial agreements, and adversarial prompt-injection traps) is the headline NullspanBench table.",
+  "draw_id": "Sealed P=164 Headline + Open S=336 Separate (v3.3-measured)",
+  "timestamp": "2026-11-12T01:14:06Z",
   "n_total_observations": 500,
   "n_open_observations": 336,
   "n_sealed_observations": 164,
   "environment": {
-    "os": "Linux 6.8.0-1070-gcp (x86_64)",
-    "python": "3.10.12",
-    "pytorch": "2.9.1+cu129",
-    "onnxruntime": "1.23.2",
-    "accelerator": "NVIDIA L4 (GCP CUDA Eval)"
+    "os": "Darwin 25.5.0 (arm64)",
+    "python": "3.14.8",
+    "pytorch": "2.12.1",
+    "onnxruntime": "1.31.0",
+    "accelerator": "NVIDIA Tesla V100-SXM2-16GB (GCP Train) + Apple Silicon MPS/CPU (Local Eval)"
   },
   "systems": [
     {
@@ -26,34 +28,118 @@
       "runtime": "Tiered JS/Python + ONNX Runtime",
       "input_rate_per_1m_usd": 0.002,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 500,
+      "measured": true,
+      "predictions_sha256": "986301d101206b7ce96831c7e9121f4b12d4fd996230e5f78a20c1ae19422875",
+      "n_observations": 164,
+      "n_total_observations": 500,
       "input_tokens_total": 69943,
       "output_tokens_total": 0,
       "usd_per_1k_decisions": 0.0003,
       "axes": {
-        "intelligence": 97.8,
+        "intelligence": 94.5,
         "intelligence_ci95": [
-          96.6,
-          99.0
+          90.9,
+          97.6
         ],
-        "calibration": 98.6,
-        "speed": 92.7,
+        "calibration": 95.5,
+        "speed": 83.0,
         "cost": 93.8
       },
-      "capability_score": 98.2,
-      "composite_score": 95.7,
+      "capability_score": 95.0,
+      "composite_score": 91.4,
       "open_set_score": 100.0,
-      "sealed_set_score": 93.3,
+      "sealed_set_score": 94.5,
       "calibration_details": {
-        "null_auroc": 0.99629,
-        "null_ece": 0.01392,
-        "null_brier": 0.01516
+        "null_auroc": 0.9803,
+        "null_ece": 0.04549,
+        "null_brier": 0.0443
       },
       "latency": {
-        "mean_ms": 16.8098,
-        "p50_ms": 0.0397,
-        "p95_ms": 126.6229,
-        "p99_ms": 209.086
+        "mean_ms": 63.0486,
+        "p50_ms": 0.2482,
+        "p95_ms": 247.0378,
+        "p99_ms": 368.8361
+      },
+      "sealed_pool": {
+        "n_observations": 164,
+        "axes": {
+          "intelligence": 94.5,
+          "intelligence_ci95": [
+            90.9,
+            97.6
+          ],
+          "calibration": 95.5,
+          "speed": 83.0,
+          "cost": 93.8
+        },
+        "capability_score": 95.0,
+        "composite_score": 91.4,
+        "calibration_details": {
+          "null_auroc": 0.9803,
+          "null_ece": 0.04549,
+          "null_brier": 0.0443
+        },
+        "latency": {
+          "mean_ms": 63.0486,
+          "p50_ms": 0.2482,
+          "p95_ms": 247.0378,
+          "p99_ms": 368.8361
+        },
+        "usd_per_1k_decisions": 0.0003
+      },
+      "open_pool": {
+        "n_observations": 336,
+        "axes": {
+          "intelligence": 100.0,
+          "intelligence_ci95": [
+            100.0,
+            100.0
+          ],
+          "calibration": 99.9,
+          "speed": 99.8,
+          "cost": 93.8
+        },
+        "capability_score": 100.0,
+        "composite_score": 98.3,
+        "calibration_details": {
+          "null_auroc": 1.0,
+          "null_ece": 0.00201,
+          "null_brier": 2e-05
+        },
+        "latency": {
+          "mean_ms": 0.0278,
+          "p50_ms": 0.0074,
+          "p95_ms": 0.0408,
+          "p99_ms": 0.4413
+        },
+        "usd_per_1k_decisions": 0.0003
+      },
+      "combined_pool": {
+        "n_observations": 500,
+        "axes": {
+          "intelligence": 98.2,
+          "intelligence_ci95": [
+            97.0,
+            99.2
+          ],
+          "calibration": 98.6,
+          "speed": 98.3,
+          "cost": 93.8
+        },
+        "capability_score": 98.4,
+        "composite_score": 97.2,
+        "calibration_details": {
+          "null_auroc": 0.99238,
+          "null_ece": 0.01357,
+          "null_brier": 0.01454
+        },
+        "latency": {
+          "mean_ms": 20.6986,
+          "p50_ms": 0.0138,
+          "p95_ms": 164.8607,
+          "p99_ms": 258.931
+        },
+        "usd_per_1k_decisions": 0.0003
       },
       "by_request_type": {
         "span_open": {
@@ -77,11 +163,11 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 96.3,
+          "score": 97.2,
           "n": 108
         },
         "noul_sealed": {
-          "score": 84.1,
+          "score": 86.4,
           "n": 44
         }
       },
@@ -101,11 +187,11 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 96.5,
+          "score": 97.3,
           "n": 113
         },
         "Hard": {
-          "score": 86.0,
+          "score": 88.0,
           "n": 50
         },
         "Judge": {
@@ -131,7 +217,7 @@
           "n": 16
         },
         "squad_v2_open_qa": {
-          "score": 81.7,
+          "score": 85.0,
           "n": 60
         },
         "contract_extraction": {
@@ -157,34 +243,118 @@
       "runtime": "Pure Python / Node / Browser JS",
       "input_rate_per_1m_usd": 0.0008,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 500,
+      "measured": true,
+      "predictions_sha256": "be3de37219d217d33904ec382248ff1502140dacd5b5acb7de4ee8eb39d92ebe",
+      "n_observations": 164,
+      "n_total_observations": 500,
       "input_tokens_total": 69943,
       "output_tokens_total": 0,
       "usd_per_1k_decisions": 0.0001,
       "axes": {
-        "intelligence": 90.8,
+        "intelligence": 72.0,
         "intelligence_ci95": [
-          88.2,
-          93.4
+          65.2,
+          78.7
         ],
-        "calibration": 95.0,
-        "speed": 93.5,
+        "calibration": 84.6,
+        "speed": 86.1,
         "cost": 99.8
       },
-      "capability_score": 92.9,
-      "composite_score": 94.7,
+      "capability_score": 78.3,
+      "composite_score": 84.5,
       "open_set_score": 100.0,
       "sealed_set_score": 72.0,
       "calibration_details": {
-        "null_auroc": 0.98239,
-        "null_ece": 0.04866,
-        "null_brier": 0.05142
+        "null_auroc": 0.89839,
+        "null_ece": 0.15249,
+        "null_brier": 0.15672
       },
       "latency": {
-        "mean_ms": 0.1345,
-        "p50_ms": 0.0342,
-        "p95_ms": 0.6895,
-        "p99_ms": 0.8689
+        "mean_ms": 0.1456,
+        "p50_ms": 0.1374,
+        "p95_ms": 0.3377,
+        "p99_ms": 0.8821
+      },
+      "sealed_pool": {
+        "n_observations": 164,
+        "axes": {
+          "intelligence": 72.0,
+          "intelligence_ci95": [
+            65.2,
+            78.7
+          ],
+          "calibration": 84.6,
+          "speed": 86.1,
+          "cost": 99.8
+        },
+        "capability_score": 78.3,
+        "composite_score": 84.5,
+        "calibration_details": {
+          "null_auroc": 0.89839,
+          "null_ece": 0.15249,
+          "null_brier": 0.15672
+        },
+        "latency": {
+          "mean_ms": 0.1456,
+          "p50_ms": 0.1374,
+          "p95_ms": 0.3377,
+          "p99_ms": 0.8821
+        },
+        "usd_per_1k_decisions": 0.0001
+      },
+      "open_pool": {
+        "n_observations": 336,
+        "axes": {
+          "intelligence": 100.0,
+          "intelligence_ci95": [
+            100.0,
+            100.0
+          ],
+          "calibration": 99.9,
+          "speed": 99.8,
+          "cost": 99.8
+        },
+        "capability_score": 100.0,
+        "composite_score": 99.9,
+        "calibration_details": {
+          "null_auroc": 1.0,
+          "null_ece": 0.00201,
+          "null_brier": 2e-05
+        },
+        "latency": {
+          "mean_ms": 0.0278,
+          "p50_ms": 0.0074,
+          "p95_ms": 0.0408,
+          "p99_ms": 0.4413
+        },
+        "usd_per_1k_decisions": 0.0001
+      },
+      "combined_pool": {
+        "n_observations": 500,
+        "axes": {
+          "intelligence": 90.8,
+          "intelligence_ci95": [
+            88.2,
+            93.4
+          ],
+          "calibration": 95.0,
+          "speed": 98.4,
+          "cost": 99.8
+        },
+        "capability_score": 92.9,
+        "composite_score": 95.9,
+        "calibration_details": {
+          "null_auroc": 0.98239,
+          "null_ece": 0.04866,
+          "null_brier": 0.05142
+        },
+        "latency": {
+          "mean_ms": 0.0664,
+          "p50_ms": 0.0135,
+          "p95_ms": 0.2901,
+          "p99_ms": 0.4926
+        },
+        "usd_per_1k_decisions": 0.0001
       },
       "by_request_type": {
         "span_open": {
@@ -277,6 +447,221 @@
       "official_rank": 2
     },
     {
+      "id": "nullspan-onnx-int8",
+      "name": "nullspan-345M-Int8 (ONNX WASM/CPU)",
+      "author": "gnumanth",
+      "system_type": "Quantized ONNX WASM/CPU (512-ctx)",
+      "open_weights": true,
+      "params_m": 345.3,
+      "footprint_mb": 331.1,
+      "base_model": "gnumanth/nullspan (Int8 Dynamic)",
+      "runtime": "ONNX Runtime Int8 (Browser WASM / Edge)",
+      "input_rate_per_1m_usd": 0.006,
+      "output_rate_per_1m_usd": 0.0,
+      "measured": true,
+      "predictions_sha256": "22d5544220f57ebdbc1c8047f042111348af54d7f31b6642d266f4cc2123a64f",
+      "n_observations": 164,
+      "n_total_observations": 500,
+      "input_tokens_total": 69943,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0008,
+      "axes": {
+        "intelligence": 94.5,
+        "intelligence_ci95": [
+          90.9,
+          97.6
+        ],
+        "calibration": 95.8,
+        "speed": 47.5,
+        "cost": 84.2
+      },
+      "capability_score": 95.2,
+      "composite_score": 74.1,
+      "open_set_score": 100.0,
+      "sealed_set_score": 94.5,
+      "calibration_details": {
+        "null_auroc": 0.97614,
+        "null_ece": 0.04136,
+        "null_brier": 0.04455
+      },
+      "latency": {
+        "mean_ms": 203.0401,
+        "p50_ms": 201.6991,
+        "p95_ms": 292.1634,
+        "p99_ms": 368.8361
+      },
+      "sealed_pool": {
+        "n_observations": 164,
+        "axes": {
+          "intelligence": 94.5,
+          "intelligence_ci95": [
+            90.9,
+            97.6
+          ],
+          "calibration": 95.8,
+          "speed": 47.5,
+          "cost": 84.2
+        },
+        "capability_score": 95.2,
+        "composite_score": 74.1,
+        "calibration_details": {
+          "null_auroc": 0.97614,
+          "null_ece": 0.04136,
+          "null_brier": 0.04455
+        },
+        "latency": {
+          "mean_ms": 203.0401,
+          "p50_ms": 201.6991,
+          "p95_ms": 292.1634,
+          "p99_ms": 368.8361
+        },
+        "usd_per_1k_decisions": 0.0008
+      },
+      "open_pool": {
+        "n_observations": 336,
+        "axes": {
+          "intelligence": 100.0,
+          "intelligence_ci95": [
+            100.0,
+            100.0
+          ],
+          "calibration": 99.9,
+          "speed": 51.1,
+          "cost": 84.2
+        },
+        "capability_score": 100.0,
+        "composite_score": 77.7,
+        "calibration_details": {
+          "null_auroc": 1.0,
+          "null_ece": 0.00222,
+          "null_brier": 2e-05
+        },
+        "latency": {
+          "mean_ms": 110.4293,
+          "p50_ms": 101.0107,
+          "p95_ms": 169.4236,
+          "p99_ms": 241.4742
+        },
+        "usd_per_1k_decisions": 0.0008
+      },
+      "combined_pool": {
+        "n_observations": 500,
+        "axes": {
+          "intelligence": 98.2,
+          "intelligence_ci95": [
+            97.0,
+            99.2
+          ],
+          "calibration": 98.7,
+          "speed": 50.8,
+          "cost": 84.2
+        },
+        "capability_score": 98.5,
+        "composite_score": 77.1,
+        "calibration_details": {
+          "null_auroc": 0.99166,
+          "null_ece": 0.01207,
+          "null_brier": 0.01462
+        },
+        "latency": {
+          "mean_ms": 140.8057,
+          "p50_ms": 107.0085,
+          "p95_ms": 264.4929,
+          "p99_ms": 292.3606
+        },
+        "usd_per_1k_decisions": 0.0008
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 100.0,
+          "n": 181
+        },
+        "math": {
+          "score": 100.0,
+          "n": 51
+        },
+        "choice": {
+          "score": 100.0,
+          "n": 41
+        },
+        "noul_open": {
+          "score": 100.0,
+          "n": 27
+        },
+        "score": {
+          "score": 100.0,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 97.2,
+          "n": 108
+        },
+        "noul_sealed": {
+          "score": 86.4,
+          "n": 44
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 100.0,
+          "n": 176
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 96
+        },
+        "Standard": {
+          "score": 100.0,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 97.3,
+          "n": 113
+        },
+        "Hard": {
+          "score": 88.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 1
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 100.0,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 100.0,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 100.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 100.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 85.0,
+          "n": 60
+        },
+        "contract_extraction": {
+          "score": 100.0,
+          "n": 96
+        },
+        "adversarial_stress": {
+          "score": 100.0,
+          "n": 8
+        }
+      },
+      "official_rank": 3
+    },
+    {
       "id": "nullspan-fp32",
       "name": "nullspan-345M (PyTorch FP32)",
       "author": "gnumanth",
@@ -288,34 +673,118 @@
       "runtime": "PyTorch MPS/CUDA/CPU FP32",
       "input_rate_per_1m_usd": 0.012,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 500,
+      "measured": true,
+      "predictions_sha256": "91f8dd7ef01eb004f9c3e07eca2c0ca7705f6316f3f2126f6a59533f8a87fb87",
+      "n_observations": 164,
+      "n_total_observations": 500,
       "input_tokens_total": 69943,
       "output_tokens_total": 0,
       "usd_per_1k_decisions": 0.0017,
       "axes": {
-        "intelligence": 98.0,
+        "intelligence": 93.9,
         "intelligence_ci95": [
-          96.8,
-          99.2
+          90.2,
+          97.0
         ],
-        "calibration": 98.5,
-        "speed": 63.2,
+        "calibration": 95.3,
+        "speed": 49.9,
         "cost": 76.8
       },
-      "capability_score": 98.2,
-      "composite_score": 81.3,
+      "capability_score": 94.6,
+      "composite_score": 73.8,
       "open_set_score": 100.0,
       "sealed_set_score": 93.9,
       "calibration_details": {
-        "null_auroc": 0.99327,
-        "null_ece": 0.01419,
-        "null_brier": 0.01532
+        "null_auroc": 0.98542,
+        "null_ece": 0.04785,
+        "null_brier": 0.04668
       },
       "latency": {
-        "mean_ms": 16.9035,
-        "p50_ms": 10.2968,
-        "p95_ms": 33.0811,
-        "p99_ms": 37.3921
+        "mean_ms": 128.5135,
+        "p50_ms": 127.6058,
+        "p95_ms": 175.881,
+        "p99_ms": 254.4876
+      },
+      "sealed_pool": {
+        "n_observations": 164,
+        "axes": {
+          "intelligence": 93.9,
+          "intelligence_ci95": [
+            90.2,
+            97.0
+          ],
+          "calibration": 95.3,
+          "speed": 49.9,
+          "cost": 76.8
+        },
+        "capability_score": 94.6,
+        "composite_score": 73.8,
+        "calibration_details": {
+          "null_auroc": 0.98542,
+          "null_ece": 0.04785,
+          "null_brier": 0.04668
+        },
+        "latency": {
+          "mean_ms": 128.5135,
+          "p50_ms": 127.6058,
+          "p95_ms": 175.881,
+          "p99_ms": 254.4876
+        },
+        "usd_per_1k_decisions": 0.0017
+      },
+      "open_pool": {
+        "n_observations": 336,
+        "axes": {
+          "intelligence": 100.0,
+          "intelligence_ci95": [
+            100.0,
+            100.0
+          ],
+          "calibration": 99.9,
+          "speed": 54.9,
+          "cost": 76.8
+        },
+        "capability_score": 100.0,
+        "composite_score": 78.1,
+        "calibration_details": {
+          "null_auroc": 1.0,
+          "null_ece": 0.00225,
+          "null_brier": 2e-05
+        },
+        "latency": {
+          "mean_ms": 66.2503,
+          "p50_ms": 49.5557,
+          "p95_ms": 107.1403,
+          "p99_ms": 275.8887
+        },
+        "usd_per_1k_decisions": 0.0017
+      },
+      "combined_pool": {
+        "n_observations": 500,
+        "axes": {
+          "intelligence": 98.0,
+          "intelligence_ci95": [
+            96.8,
+            99.2
+          ],
+          "calibration": 98.5,
+          "speed": 54.3,
+          "cost": 76.8
+        },
+        "capability_score": 98.2,
+        "composite_score": 77.2,
+        "calibration_details": {
+          "null_auroc": 0.99327,
+          "null_ece": 0.01419,
+          "null_brier": 0.01532
+        },
+        "latency": {
+          "mean_ms": 86.6726,
+          "p50_ms": 55.206,
+          "p95_ms": 160.6231,
+          "p99_ms": 270.4781
+        },
+        "usd_per_1k_decisions": 0.0017
       },
       "by_request_type": {
         "span_open": {
@@ -405,48 +874,132 @@
           "n": 8
         }
       },
-      "official_rank": 3
+      "official_rank": 4
     },
     {
-      "id": "nullspan-onnx-int8",
-      "name": "nullspan-345M-Int8 (ONNX WASM/CPU)",
+      "id": "nullspan-onnx-fp32",
+      "name": "nullspan-345M (ONNX FP32)",
       "author": "gnumanth",
-      "system_type": "Quantized ONNX WASM/CPU (512-ctx)",
+      "system_type": "System One Encoder (ONNX, 512-ctx)",
       "open_weights": true,
       "params_m": 345.3,
-      "footprint_mb": 331.1,
-      "base_model": "gnumanth/nullspan (Int8 Dynamic)",
-      "runtime": "ONNX Runtime Int8 (Browser WASM / Edge)",
-      "input_rate_per_1m_usd": 0.006,
+      "footprint_mb": 1313.6,
+      "base_model": "gnumanth/nullspan (ONNX Opset 17)",
+      "runtime": "ONNX Runtime FP32",
+      "input_rate_per_1m_usd": 0.011,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 500,
+      "measured": true,
+      "predictions_sha256": "7a1b74a627789f05d069229df78fb8153257a79c82c2c2e32dfe5de7411a1f2f",
+      "n_observations": 164,
+      "n_total_observations": 500,
       "input_tokens_total": 69943,
       "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0008,
+      "usd_per_1k_decisions": 0.0015,
       "axes": {
-        "intelligence": 97.8,
+        "intelligence": 93.9,
         "intelligence_ci95": [
-          96.6,
-          99.0
+          90.2,
+          97.0
         ],
-        "calibration": 98.6,
-        "speed": 52.7,
-        "cost": 84.2
+        "calibration": 96.5,
+        "speed": 47.6,
+        "cost": 78.0
       },
-      "capability_score": 98.2,
-      "composite_score": 78.1,
+      "capability_score": 95.2,
+      "composite_score": 72.9,
       "open_set_score": 100.0,
-      "sealed_set_score": 93.3,
+      "sealed_set_score": 93.9,
       "calibration_details": {
-        "null_auroc": 0.99511,
-        "null_ece": 0.01267,
-        "null_brier": 0.01523
+        "null_auroc": 0.99015,
+        "null_ece": 0.03405,
+        "null_brier": 0.03793
       },
       "latency": {
-        "mean_ms": 108.0495,
-        "p50_ms": 75.9329,
-        "p95_ms": 207.004,
-        "p99_ms": 369.9251
+        "mean_ms": 188.3131,
+        "p50_ms": 196.4426,
+        "p95_ms": 266.5202,
+        "p99_ms": 337.8913
+      },
+      "sealed_pool": {
+        "n_observations": 164,
+        "axes": {
+          "intelligence": 93.9,
+          "intelligence_ci95": [
+            90.2,
+            97.0
+          ],
+          "calibration": 96.5,
+          "speed": 47.6,
+          "cost": 78.0
+        },
+        "capability_score": 95.2,
+        "composite_score": 72.9,
+        "calibration_details": {
+          "null_auroc": 0.99015,
+          "null_ece": 0.03405,
+          "null_brier": 0.03793
+        },
+        "latency": {
+          "mean_ms": 188.3131,
+          "p50_ms": 196.4426,
+          "p95_ms": 266.5202,
+          "p99_ms": 337.8913
+        },
+        "usd_per_1k_decisions": 0.0015
+      },
+      "open_pool": {
+        "n_observations": 336,
+        "axes": {
+          "intelligence": 100.0,
+          "intelligence_ci95": [
+            100.0,
+            100.0
+          ],
+          "calibration": 99.9,
+          "speed": 51.7,
+          "cost": 78.0
+        },
+        "capability_score": 100.0,
+        "composite_score": 76.7,
+        "calibration_details": {
+          "null_auroc": 1.0,
+          "null_ece": 0.00225,
+          "null_brier": 2e-05
+        },
+        "latency": {
+          "mean_ms": 98.6641,
+          "p50_ms": 90.9101,
+          "p95_ms": 164.1157,
+          "p99_ms": 219.525
+        },
+        "usd_per_1k_decisions": 0.0015
+      },
+      "combined_pool": {
+        "n_observations": 500,
+        "axes": {
+          "intelligence": 98.0,
+          "intelligence_ci95": [
+            96.8,
+            99.2
+          ],
+          "calibration": 98.8,
+          "speed": 51.3,
+          "cost": 78.0
+        },
+        "capability_score": 98.4,
+        "composite_score": 76.0,
+        "calibration_details": {
+          "null_auroc": 0.99829,
+          "null_ece": 0.01215,
+          "null_brier": 0.01245
+        },
+        "latency": {
+          "mean_ms": 128.069,
+          "p50_ms": 97.6215,
+          "p95_ms": 235.067,
+          "p99_ms": 266.5202
+        },
+        "usd_per_1k_decisions": 0.0015
       },
       "by_request_type": {
         "span_open": {
@@ -474,7 +1027,7 @@
           "n": 108
         },
         "noul_sealed": {
-          "score": 84.1,
+          "score": 86.4,
           "n": 44
         }
       },
@@ -498,7 +1051,7 @@
           "n": 113
         },
         "Hard": {
-          "score": 86.0,
+          "score": 88.0,
           "n": 50
         },
         "Judge": {
@@ -524,7 +1077,7 @@
           "n": 16
         },
         "squad_v2_open_qa": {
-          "score": 81.7,
+          "score": 83.3,
           "n": 60
         },
         "contract_extraction": {
@@ -534,133 +1087,6 @@
         "adversarial_stress": {
           "score": 100.0,
           "n": 8
-        }
-      },
-      "official_rank": 4
-    },
-    {
-      "id": "h2o-lightning-4b",
-      "name": "H2O-Lightning-4B v1.1 (JevBench #1 Comp)",
-      "author": "H2O.ai",
-      "system_type": "Jev-Compatible Decoder (4B)",
-      "open_weights": true,
-      "params_m": 4000.0,
-      "footprint_mb": 8100.0,
-      "base_model": "Qwen/Qwen3.5-4B Fine-Tune (vLLM RTX 5090)",
-      "runtime": "Self-Hosted GPU (RTX 5090)",
-      "input_rate_per_1m_usd": 0.027,
-      "output_rate_per_1m_usd": 0.0,
-      "n_observations": 1500,
-      "input_tokens_total": 1152000,
-      "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0211,
-      "axes": {
-        "intelligence": 60.0,
-        "intelligence_ci95": [
-          57.8,
-          62.3
-        ],
-        "calibration": 90.0,
-        "speed": 92.6,
-        "cost": 60.3
-      },
-      "capability_score": 75.0,
-      "composite_score": 72.5,
-      "open_set_score": 64.1,
-      "sealed_set_score": 59.0,
-      "calibration_details": {
-        "null_auroc": 0.908,
-        "null_ece": 0.0502,
-        "null_brier": 0.0645
-      },
-      "latency": {
-        "mean_ms": 34.1,
-        "p50_ms": 29.285,
-        "p95_ms": 58.4,
-        "p99_ms": 74.0
-      },
-      "by_request_type": {
-        "span_open": {
-          "score": 61.5,
-          "n": 300
-        },
-        "span_sealed": {
-          "score": 58.2,
-          "n": 300
-        },
-        "noul_open": {
-          "score": 60.9,
-          "n": 150
-        },
-        "noul_sealed": {
-          "score": 68.1,
-          "n": 150
-        },
-        "choice": {
-          "score": 75.2,
-          "n": 300
-        },
-        "math": {
-          "score": 57.6,
-          "n": 150
-        },
-        "score": {
-          "score": 47.0,
-          "n": 150
-        }
-      },
-      "by_tier_open": {
-        "Easy": {
-          "score": 88.2,
-          "n": 100
-        },
-        "Standard": {
-          "score": 57.6,
-          "n": 100
-        },
-        "Judge": {
-          "score": 61.0,
-          "n": 100
-        }
-      },
-      "by_tier_sealed": {
-        "Standard": {
-          "score": 62.6,
-          "n": 600
-        },
-        "Hard": {
-          "score": 54.3,
-          "n": 600
-        }
-      },
-      "by_domain": {
-        "incident_report": {
-          "score": 69.4,
-          "n": 300
-        },
-        "compute_ledger": {
-          "score": 59.2,
-          "n": 300
-        },
-        "cluster_throughput_comps": {
-          "score": 47.0,
-          "n": 150
-        },
-        "edge_traffic_forecast": {
-          "score": 44.3,
-          "n": 150
-        },
-        "squad_v2_open_qa": {
-          "score": 62.6,
-          "n": 300
-        },
-        "contract_extraction": {
-          "score": 58.4,
-          "n": 300
-        },
-        "adversarial_stress": {
-          "score": 54.3,
-          "n": 300
         }
       },
       "official_rank": 5
@@ -677,34 +1103,118 @@
       "runtime": "Cloudflare Workers AI Edge RPC (p50 315.3 ms/doc)",
       "input_rate_per_1m_usd": 0.025,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 500,
+      "measured": true,
+      "predictions_sha256": "378692149bafcdea8d8e7e9d3bae2ed81aa6e71e8d14767a4838b9426910f5c0",
+      "n_observations": 164,
+      "n_total_observations": 500,
       "input_tokens_total": 81206,
       "output_tokens_total": 0,
       "usd_per_1k_decisions": 0.0041,
       "axes": {
-        "intelligence": 91.6,
+        "intelligence": 95.4,
         "intelligence_ci95": [
-          89.2,
-          93.9
+          92.1,
+          98.2
         ],
-        "calibration": 94.9,
-        "speed": 51.7,
+        "calibration": 97.8,
+        "speed": 50.5,
         "cost": 68.2
       },
-      "capability_score": 93.2,
-      "composite_score": 72.1,
+      "capability_score": 96.6,
+      "composite_score": 72.5,
       "open_set_score": 89.7,
       "sealed_set_score": 95.4,
       "calibration_details": {
-        "null_auroc": 0.98959,
-        "null_ece": 0.05235,
-        "null_brier": 0.04728
+        "null_auroc": 0.99242,
+        "null_ece": 0.02146,
+        "null_brier": 0.02327
       },
       "latency": {
-        "mean_ms": 128.789,
-        "p50_ms": 91.323,
-        "p95_ms": 314.023,
-        "p99_ms": 403.1387
+        "mean_ms": 167.0995,
+        "p50_ms": 113.8012,
+        "p95_ms": 373.1545,
+        "p99_ms": 460.0218
+      },
+      "sealed_pool": {
+        "n_observations": 164,
+        "axes": {
+          "intelligence": 95.4,
+          "intelligence_ci95": [
+            92.1,
+            98.2
+          ],
+          "calibration": 97.8,
+          "speed": 50.5,
+          "cost": 68.2
+        },
+        "capability_score": 96.6,
+        "composite_score": 72.5,
+        "calibration_details": {
+          "null_auroc": 0.99242,
+          "null_ece": 0.02146,
+          "null_brier": 0.02327
+        },
+        "latency": {
+          "mean_ms": 167.0995,
+          "p50_ms": 113.8012,
+          "p95_ms": 373.1545,
+          "p99_ms": 460.0218
+        },
+        "usd_per_1k_decisions": 0.0041
+      },
+      "open_pool": {
+        "n_observations": 336,
+        "axes": {
+          "intelligence": 89.7,
+          "intelligence_ci95": [
+            86.5,
+            92.8
+          ],
+          "calibration": 92.8,
+          "speed": 52.0,
+          "cost": 68.2
+        },
+        "capability_score": 91.2,
+        "composite_score": 71.7,
+        "calibration_details": {
+          "null_auroc": 1.0,
+          "null_ece": 0.07908,
+          "null_brier": 0.05899
+        },
+        "latency": {
+          "mean_ms": 110.0899,
+          "p50_ms": 86.1611,
+          "p95_ms": 272.4725,
+          "p99_ms": 360.5915
+        },
+        "usd_per_1k_decisions": 0.0041
+      },
+      "combined_pool": {
+        "n_observations": 500,
+        "axes": {
+          "intelligence": 91.6,
+          "intelligence_ci95": [
+            89.2,
+            93.9
+          ],
+          "calibration": 94.9,
+          "speed": 51.7,
+          "cost": 68.2
+        },
+        "capability_score": 93.2,
+        "composite_score": 72.1,
+        "calibration_details": {
+          "null_auroc": 0.98959,
+          "null_ece": 0.05235,
+          "null_brier": 0.04728
+        },
+        "latency": {
+          "mean_ms": 128.789,
+          "p50_ms": 91.323,
+          "p95_ms": 314.023,
+          "p99_ms": 403.1387
+        },
+        "usd_per_1k_decisions": 0.0041
       },
       "by_request_type": {
         "span_open": {
@@ -797,391 +1307,6 @@
       "official_rank": 6
     },
     {
-      "id": "basal-omni-1.0-ultra",
-      "name": "basal-omni-1.0-ultra (JevBench #1 Cap)",
-      "author": "Remek Kinas",
-      "system_type": "Jev-Compatible Decoder (31B)",
-      "open_weights": true,
-      "params_m": 31000.0,
-      "footprint_mb": 62000.0,
-      "base_model": "Gemma-4-31B-it + Merged LoRA (Typed Readout)",
-      "runtime": "Self-Hosted GPU (p50 102 ms)",
-      "input_rate_per_1m_usd": 0.058,
-      "output_rate_per_1m_usd": 0.0,
-      "n_observations": 1500,
-      "input_tokens_total": 1152000,
-      "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0447,
-      "axes": {
-        "intelligence": 74.1,
-        "intelligence_ci95": [
-          71.8,
-          76.3
-        ],
-        "calibration": 91.0,
-        "speed": 87.3,
-        "cost": 50.5
-      },
-      "capability_score": 82.5,
-      "composite_score": 71.8,
-      "open_set_score": 76.7,
-      "sealed_set_score": 73.1,
-      "calibration_details": {
-        "null_auroc": 0.924,
-        "null_ece": 0.0449,
-        "null_brier": 0.055
-      },
-      "latency": {
-        "mean_ms": 114.2,
-        "p50_ms": 102.0,
-        "p95_ms": 168.0,
-        "p99_ms": 210.0
-      },
-      "by_request_type": {
-        "span_open": {
-          "score": 75.4,
-          "n": 300
-        },
-        "span_sealed": {
-          "score": 73.8,
-          "n": 300
-        },
-        "noul_open": {
-          "score": 68.4,
-          "n": 150
-        },
-        "noul_sealed": {
-          "score": 72.5,
-          "n": 150
-        },
-        "choice": {
-          "score": 82.7,
-          "n": 300
-        },
-        "math": {
-          "score": 69.1,
-          "n": 150
-        },
-        "score": {
-          "score": 69.1,
-          "n": 150
-        }
-      },
-      "by_tier_open": {
-        "Easy": {
-          "score": 96.5,
-          "n": 100
-        },
-        "Standard": {
-          "score": 69.1,
-          "n": 100
-        },
-        "Judge": {
-          "score": 65.2,
-          "n": 100
-        }
-      },
-      "by_tier_sealed": {
-        "Standard": {
-          "score": 78.8,
-          "n": 600
-        },
-        "Hard": {
-          "score": 74.0,
-          "n": 600
-        }
-      },
-      "by_domain": {
-        "incident_report": {
-          "score": 81.2,
-          "n": 300
-        },
-        "compute_ledger": {
-          "score": 71.5,
-          "n": 300
-        },
-        "cluster_throughput_comps": {
-          "score": 69.1,
-          "n": 300
-        },
-        "edge_traffic_forecast": {
-          "score": 66.9,
-          "n": 150
-        },
-        "squad_v2_open_qa": {
-          "score": 76.9,
-          "n": 300
-        },
-        "contract_extraction": {
-          "score": 72.8,
-          "n": 300
-        },
-        "adversarial_stress": {
-          "score": 74.0,
-          "n": 300
-        }
-      },
-      "official_rank": 7
-    },
-    {
-      "id": "jev-1.13.0-ref",
-      "name": "Jev 1.13.0 (TypeSafe AI \u00b7 JevBench Ref)",
-      "author": "TypeSafe AI",
-      "system_type": "Jev Reference \u00b7 Hosted API",
-      "open_weights": false,
-      "params_m": null,
-      "footprint_mb": null,
-      "base_model": "TypeSafe Jev 1.13.0 ($0.042/1M input)",
-      "runtime": "TypeSafe Hosted API (JevBench v1.7)",
-      "input_rate_per_1m_usd": 0.042,
-      "output_rate_per_1m_usd": 0.0,
-      "n_observations": 1500,
-      "input_tokens_total": 1152000,
-      "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0323,
-      "axes": {
-        "intelligence": 63.6,
-        "intelligence_ci95": [
-          61.2,
-          66.0
-        ],
-        "calibration": 90.6,
-        "speed": 91.5,
-        "cost": 54.7
-      },
-      "capability_score": 77.1,
-      "composite_score": 71.5,
-      "open_set_score": 68.9,
-      "sealed_set_score": 61.6,
-      "calibration_details": {
-        "null_auroc": 0.912,
-        "null_ece": 0.0468,
-        "null_brier": 0.0612
-      },
-      "latency": {
-        "mean_ms": 251.4,
-        "p50_ms": 239.102,
-        "p95_ms": 412.0,
-        "p99_ms": 530.0
-      },
-      "by_request_type": {
-        "span_open": {
-          "score": 66.2,
-          "n": 300
-        },
-        "span_sealed": {
-          "score": 61.4,
-          "n": 300
-        },
-        "noul_open": {
-          "score": 54.5,
-          "n": 150
-        },
-        "noul_sealed": {
-          "score": 46.1,
-          "n": 150
-        },
-        "choice": {
-          "score": 79.0,
-          "n": 300
-        },
-        "math": {
-          "score": 63.2,
-          "n": 150
-        },
-        "score": {
-          "score": 63.3,
-          "n": 150
-        }
-      },
-      "by_tier_open": {
-        "Easy": {
-          "score": 93.9,
-          "n": 100
-        },
-        "Standard": {
-          "score": 63.2,
-          "n": 100
-        },
-        "Judge": {
-          "score": 67.7,
-          "n": 100
-        }
-      },
-      "by_tier_sealed": {
-        "Standard": {
-          "score": 68.7,
-          "n": 600
-        },
-        "Hard": {
-          "score": 58.9,
-          "n": 600
-        }
-      },
-      "by_domain": {
-        "incident_report": {
-          "score": 74.2,
-          "n": 300
-        },
-        "compute_ledger": {
-          "score": 66.8,
-          "n": 300
-        },
-        "cluster_throughput_comps": {
-          "score": 63.3,
-          "n": 150
-        },
-        "edge_traffic_forecast": {
-          "score": 63.0,
-          "n": 150
-        },
-        "squad_v2_open_qa": {
-          "score": 61.6,
-          "n": 300
-        },
-        "contract_extraction": {
-          "score": 62.4,
-          "n": 300
-        },
-        "adversarial_stress": {
-          "score": 58.9,
-          "n": 300
-        }
-      },
-      "official_rank": 8
-    },
-    {
-      "id": "nullspan-onnx-fp32",
-      "name": "nullspan-345M (ONNX FP32)",
-      "author": "gnumanth",
-      "system_type": "System One Encoder (ONNX, 512-ctx)",
-      "open_weights": true,
-      "params_m": 345.3,
-      "footprint_mb": 1317.6,
-      "base_model": "gnumanth/nullspan (ONNX Opset 17)",
-      "runtime": "ONNX Runtime FP32",
-      "input_rate_per_1m_usd": 0.011,
-      "output_rate_per_1m_usd": 0.0,
-      "n_observations": 500,
-      "input_tokens_total": 69943,
-      "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0015,
-      "axes": {
-        "intelligence": 98.0,
-        "intelligence_ci95": [
-          96.8,
-          99.2
-        ],
-        "calibration": 98.5,
-        "speed": 43.5,
-        "cost": 78.0
-      },
-      "capability_score": 98.2,
-      "composite_score": 71.2,
-      "open_set_score": 100.0,
-      "sealed_set_score": 93.9,
-      "calibration_details": {
-        "null_auroc": 0.99327,
-        "null_ece": 0.01419,
-        "null_brier": 0.01532
-      },
-      "latency": {
-        "mean_ms": 491.2899,
-        "p50_ms": 424.9432,
-        "p95_ms": 1074.4535,
-        "p99_ms": 1256.8557
-      },
-      "by_request_type": {
-        "span_open": {
-          "score": 100.0,
-          "n": 181
-        },
-        "math": {
-          "score": 100.0,
-          "n": 51
-        },
-        "choice": {
-          "score": 100.0,
-          "n": 41
-        },
-        "noul_open": {
-          "score": 100.0,
-          "n": 27
-        },
-        "score": {
-          "score": 100.0,
-          "n": 48
-        },
-        "span_sealed": {
-          "score": 96.3,
-          "n": 108
-        },
-        "noul_sealed": {
-          "score": 86.4,
-          "n": 44
-        }
-      },
-      "by_tier_open": {
-        "Easy": {
-          "score": 100.0,
-          "n": 176
-        },
-        "Judge": {
-          "score": 100.0,
-          "n": 96
-        },
-        "Standard": {
-          "score": 100.0,
-          "n": 64
-        }
-      },
-      "by_tier_sealed": {
-        "Standard": {
-          "score": 96.5,
-          "n": 113
-        },
-        "Hard": {
-          "score": 88.0,
-          "n": 50
-        },
-        "Judge": {
-          "score": 100.0,
-          "n": 1
-        }
-      },
-      "by_domain": {
-        "incident_report": {
-          "score": 100.0,
-          "n": 160
-        },
-        "compute_ledger": {
-          "score": 100.0,
-          "n": 144
-        },
-        "cluster_throughput_comps": {
-          "score": 100.0,
-          "n": 16
-        },
-        "edge_traffic_forecast": {
-          "score": 100.0,
-          "n": 16
-        },
-        "squad_v2_open_qa": {
-          "score": 83.3,
-          "n": 60
-        },
-        "contract_extraction": {
-          "score": 100.0,
-          "n": 96
-        },
-        "adversarial_stress": {
-          "score": 100.0,
-          "n": 8
-        }
-      },
-      "official_rank": 9
-    },
-    {
       "id": "deberta-v3-base-squad2",
       "name": "deberta-v3-base-squad2 (184M SQuAD2 QA)",
       "author": "deepset",
@@ -1193,34 +1318,118 @@
       "runtime": "PyTorch MPS/CPU (512-ctx)",
       "input_rate_per_1m_usd": 0.032,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 500,
+      "measured": true,
+      "predictions_sha256": "c46f41c01931e088e7e4900a96be1b9a22a4b2276f5031dc7f08f1c2907ae0bd",
+      "n_observations": 164,
+      "n_total_observations": 500,
       "input_tokens_total": 57964,
       "output_tokens_total": 0,
       "usd_per_1k_decisions": 0.0037,
       "axes": {
-        "intelligence": 48.1,
+        "intelligence": 47.3,
         "intelligence_ci95": [
-          43.9,
-          52.4
+          39.3,
+          54.9
         ],
-        "calibration": 63.4,
-        "speed": 65.1,
+        "calibration": 63.8,
+        "speed": 52.8,
         "cost": 69.2
       },
-      "capability_score": 55.8,
-      "composite_score": 60.3,
+      "capability_score": 55.5,
+      "composite_score": 57.0,
       "open_set_score": 48.6,
       "sealed_set_score": 47.3,
       "calibration_details": {
-        "null_auroc": 0.82087,
-        "null_ece": 0.39493,
-        "null_brier": 0.31346
+        "null_auroc": 0.82121,
+        "null_ece": 0.37927,
+        "null_brier": 0.33034
       },
       "latency": {
-        "mean_ms": 9.6505,
-        "p50_ms": 7.2341,
-        "p95_ms": 24.8532,
-        "p99_ms": 26.2559
+        "mean_ms": 112.8393,
+        "p50_ms": 74.1332,
+        "p95_ms": 376.7113,
+        "p99_ms": 376.7113
+      },
+      "sealed_pool": {
+        "n_observations": 164,
+        "axes": {
+          "intelligence": 47.3,
+          "intelligence_ci95": [
+            39.3,
+            54.9
+          ],
+          "calibration": 63.8,
+          "speed": 52.8,
+          "cost": 69.2
+        },
+        "capability_score": 55.5,
+        "composite_score": 57.0,
+        "calibration_details": {
+          "null_auroc": 0.82121,
+          "null_ece": 0.37927,
+          "null_brier": 0.33034
+        },
+        "latency": {
+          "mean_ms": 112.8393,
+          "p50_ms": 74.1332,
+          "p95_ms": 376.7113,
+          "p99_ms": 376.7113
+        },
+        "usd_per_1k_decisions": 0.0037
+      },
+      "open_pool": {
+        "n_observations": 336,
+        "axes": {
+          "intelligence": 48.6,
+          "intelligence_ci95": [
+            43.2,
+            54.0
+          ],
+          "calibration": 62.2,
+          "speed": 56.2,
+          "cost": 69.2
+        },
+        "capability_score": 55.4,
+        "composite_score": 58.1,
+        "calibration_details": {
+          "null_auroc": 0.82668,
+          "null_ece": 0.4174,
+          "null_brier": 0.30522
+        },
+        "latency": {
+          "mean_ms": 54.7889,
+          "p50_ms": 38.8237,
+          "p95_ms": 116.8072,
+          "p99_ms": 371.4963
+        },
+        "usd_per_1k_decisions": 0.0037
+      },
+      "combined_pool": {
+        "n_observations": 500,
+        "axes": {
+          "intelligence": 48.1,
+          "intelligence_ci95": [
+            43.9,
+            52.4
+          ],
+          "calibration": 63.4,
+          "speed": 54.7,
+          "cost": 69.2
+        },
+        "capability_score": 55.8,
+        "composite_score": 57.7,
+        "calibration_details": {
+          "null_auroc": 0.82087,
+          "null_ece": 0.39493,
+          "null_brier": 0.31346
+        },
+        "latency": {
+          "mean_ms": 73.8294,
+          "p50_ms": 51.2342,
+          "p95_ms": 371.4963,
+          "p99_ms": 376.7113
+        },
+        "usd_per_1k_decisions": 0.0037
       },
       "by_request_type": {
         "span_open": {
@@ -1310,531 +1519,7 @@
           "n": 8
         }
       },
-      "official_rank": 10
-    },
-    {
-      "id": "gpt-5.4-nano-json",
-      "name": "gpt-5.4-nano (JSON Decoder \u00b7 API)",
-      "author": "OpenAI (Ref)",
-      "system_type": "Closed API \u00b7 LLM Decoder",
-      "open_weights": false,
-      "params_m": null,
-      "footprint_mb": null,
-      "base_model": "Autoregressive JSON Schema Decoder",
-      "runtime": "Hosted Cloud API ( ~38 output tokens/field )",
-      "input_rate_per_1m_usd": 0.15,
-      "output_rate_per_1m_usd": 0.6,
-      "n_observations": 500,
-      "input_tokens_total": 69943,
-      "output_tokens_total": 19000,
-      "usd_per_1k_decisions": 0.0438,
-      "axes": {
-        "intelligence": 95.2,
-        "intelligence_ci95": [
-          93.4,
-          97.0
-        ],
-        "calibration": 89.0,
-        "speed": 43.6,
-        "cost": 45.1
-      },
-      "capability_score": 92.1,
-      "composite_score": 59.8,
-      "open_set_score": 99.7,
-      "sealed_set_score": 86.0,
-      "calibration_details": {
-        "null_auroc": 0.95791,
-        "null_ece": 0.15112,
-        "null_brier": 0.03403
-      },
-      "latency": {
-        "mean_ms": 420.4635,
-        "p50_ms": 417.9908,
-        "p95_ms": 515.593,
-        "p99_ms": 524.2688
-      },
-      "by_request_type": {
-        "span_open": {
-          "score": 100.0,
-          "n": 181
-        },
-        "math": {
-          "score": 100.0,
-          "n": 51
-        },
-        "choice": {
-          "score": 100.0,
-          "n": 41
-        },
-        "noul_open": {
-          "score": 96.3,
-          "n": 27
-        },
-        "score": {
-          "score": 100.0,
-          "n": 48
-        },
-        "span_sealed": {
-          "score": 91.7,
-          "n": 108
-        },
-        "noul_sealed": {
-          "score": 68.2,
-          "n": 44
-        }
-      },
-      "by_tier_open": {
-        "Easy": {
-          "score": 99.4,
-          "n": 176
-        },
-        "Judge": {
-          "score": 100.0,
-          "n": 96
-        },
-        "Standard": {
-          "score": 100.0,
-          "n": 64
-        }
-      },
-      "by_tier_sealed": {
-        "Standard": {
-          "score": 92.0,
-          "n": 113
-        },
-        "Hard": {
-          "score": 72.0,
-          "n": 50
-        },
-        "Judge": {
-          "score": 100.0,
-          "n": 1
-        }
-      },
-      "by_domain": {
-        "incident_report": {
-          "score": 99.4,
-          "n": 160
-        },
-        "compute_ledger": {
-          "score": 100.0,
-          "n": 144
-        },
-        "cluster_throughput_comps": {
-          "score": 100.0,
-          "n": 16
-        },
-        "edge_traffic_forecast": {
-          "score": 100.0,
-          "n": 16
-        },
-        "squad_v2_open_qa": {
-          "score": 76.7,
-          "n": 60
-        },
-        "contract_extraction": {
-          "score": 91.7,
-          "n": 96
-        },
-        "adversarial_stress": {
-          "score": 87.5,
-          "n": 8
-        }
-      },
-      "official_rank": 11
-    },
-    {
-      "id": "claude-haiku-4.5-json",
-      "name": "claude-haiku-4.5 (JSON Decoder \u00b7 API)",
-      "author": "Anthropic (Ref)",
-      "system_type": "Closed API \u00b7 LLM Decoder",
-      "open_weights": false,
-      "params_m": null,
-      "footprint_mb": null,
-      "base_model": "Autoregressive JSON Schema Decoder",
-      "runtime": "Hosted Cloud API ( ~38 output tokens/field )",
-      "input_rate_per_1m_usd": 0.8,
-      "output_rate_per_1m_usd": 4.0,
-      "n_observations": 500,
-      "input_tokens_total": 69943,
-      "output_tokens_total": 19000,
-      "usd_per_1k_decisions": 0.2639,
-      "axes": {
-        "intelligence": 95.4,
-        "intelligence_ci95": [
-          93.4,
-          97.2
-        ],
-        "calibration": 88.7,
-        "speed": 41.8,
-        "cost": 27.5
-      },
-      "capability_score": 92.1,
-      "composite_score": 48.8,
-      "open_set_score": 99.4,
-      "sealed_set_score": 87.2,
-      "calibration_details": {
-        "null_auroc": 0.98592,
-        "null_ece": 0.1566,
-        "null_brier": 0.03222
-      },
-      "latency": {
-        "mean_ms": 585.679,
-        "p50_ms": 586.3918,
-        "p95_ms": 717.8024,
-        "p99_ms": 727.6919
-      },
-      "by_request_type": {
-        "span_open": {
-          "score": 100.0,
-          "n": 181
-        },
-        "math": {
-          "score": 100.0,
-          "n": 51
-        },
-        "choice": {
-          "score": 100.0,
-          "n": 41
-        },
-        "noul_open": {
-          "score": 92.6,
-          "n": 27
-        },
-        "score": {
-          "score": 100.0,
-          "n": 48
-        },
-        "span_sealed": {
-          "score": 92.6,
-          "n": 108
-        },
-        "noul_sealed": {
-          "score": 70.5,
-          "n": 44
-        }
-      },
-      "by_tier_open": {
-        "Easy": {
-          "score": 98.9,
-          "n": 176
-        },
-        "Judge": {
-          "score": 100.0,
-          "n": 96
-        },
-        "Standard": {
-          "score": 100.0,
-          "n": 64
-        }
-      },
-      "by_tier_sealed": {
-        "Standard": {
-          "score": 92.9,
-          "n": 113
-        },
-        "Hard": {
-          "score": 74.0,
-          "n": 50
-        },
-        "Judge": {
-          "score": 100.0,
-          "n": 1
-        }
-      },
-      "by_domain": {
-        "incident_report": {
-          "score": 99.4,
-          "n": 160
-        },
-        "compute_ledger": {
-          "score": 99.3,
-          "n": 144
-        },
-        "cluster_throughput_comps": {
-          "score": 100.0,
-          "n": 16
-        },
-        "edge_traffic_forecast": {
-          "score": 100.0,
-          "n": 16
-        },
-        "squad_v2_open_qa": {
-          "score": 78.3,
-          "n": 60
-        },
-        "contract_extraction": {
-          "score": 93.8,
-          "n": 96
-        },
-        "adversarial_stress": {
-          "score": 75.0,
-          "n": 8
-        }
-      },
-      "official_rank": 12
-    },
-    {
-      "id": "bge-small-en-v1.5",
-      "name": "bge-small-en-v1.5 (Dense Span+Null)",
-      "author": "BAAI",
-      "system_type": "Open Weights \u00b7 Bi-Encoder",
-      "open_weights": true,
-      "params_m": 33.4,
-      "footprint_mb": 127.3,
-      "base_model": "BAAI/bge-small-en-v1.5",
-      "runtime": "PyTorch MPS/CPU",
-      "input_rate_per_1m_usd": 0.01,
-      "output_rate_per_1m_usd": 0.0,
-      "n_observations": 500,
-      "input_tokens_total": 35946,
-      "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0007,
-      "axes": {
-        "intelligence": 14.7,
-        "intelligence_ci95": [
-          12.0,
-          17.5
-        ],
-        "calibration": 89.2,
-        "speed": 64.2,
-        "cost": 85.5
-      },
-      "capability_score": 52.0,
-      "composite_score": 37.6,
-      "open_set_score": 20.3,
-      "sealed_set_score": 3.4,
-      "calibration_details": {
-        "null_auroc": 0.68694,
-        "null_ece": 0.10548,
-        "null_brier": 0.11334
-      },
-      "latency": {
-        "mean_ms": 8.6668,
-        "p50_ms": 8.6253,
-        "p95_ms": 8.9805,
-        "p99_ms": 9.3022
-      },
-      "by_request_type": {
-        "span_open": {
-          "score": 12.2,
-          "n": 181
-        },
-        "math": {
-          "score": 0.0,
-          "n": 51
-        },
-        "choice": {
-          "score": 59.8,
-          "n": 41
-        },
-        "noul_open": {
-          "score": 44.4,
-          "n": 27
-        },
-        "score": {
-          "score": 24.4,
-          "n": 48
-        },
-        "span_sealed": {
-          "score": 2.3,
-          "n": 108
-        },
-        "noul_sealed": {
-          "score": 2.3,
-          "n": 44
-        }
-      },
-      "by_tier_open": {
-        "Easy": {
-          "score": 19.3,
-          "n": 176
-        },
-        "Judge": {
-          "score": 12.2,
-          "n": 96
-        },
-        "Standard": {
-          "score": 35.2,
-          "n": 64
-        }
-      },
-      "by_tier_sealed": {
-        "Standard": {
-          "score": 2.7,
-          "n": 113
-        },
-        "Hard": {
-          "score": 5.0,
-          "n": 50
-        },
-        "Judge": {
-          "score": 0.0,
-          "n": 1
-        }
-      },
-      "by_domain": {
-        "incident_report": {
-          "score": 29.9,
-          "n": 160
-        },
-        "compute_ledger": {
-          "score": 9.7,
-          "n": 144
-        },
-        "cluster_throughput_comps": {
-          "score": 20.0,
-          "n": 16
-        },
-        "edge_traffic_forecast": {
-          "score": 20.1,
-          "n": 16
-        },
-        "squad_v2_open_qa": {
-          "score": 0.0,
-          "n": 60
-        },
-        "contract_extraction": {
-          "score": 3.1,
-          "n": 96
-        },
-        "adversarial_stress": {
-          "score": 31.2,
-          "n": 8
-        }
-      },
-      "official_rank": 13
-    },
-    {
-      "id": "distilbert-base-control",
-      "name": "distilbert-base-control (Raw Control)",
-      "author": "distilbert (control)",
-      "system_type": "Base Model Control (Untuned)",
-      "open_weights": true,
-      "params_m": 66.4,
-      "footprint_mb": 253.2,
-      "base_model": "distilbert/distilbert-base-uncased",
-      "runtime": "PyTorch MPS/CPU",
-      "input_rate_per_1m_usd": 0.015,
-      "output_rate_per_1m_usd": 0.0,
-      "n_observations": 500,
-      "input_tokens_total": 35946,
-      "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0011,
-      "axes": {
-        "intelligence": 14.2,
-        "intelligence_ci95": [
-          11.6,
-          17.0
-        ],
-        "calibration": 91.5,
-        "speed": 67.7,
-        "cost": 81.1
-      },
-      "capability_score": 52.9,
-      "composite_score": 36.9,
-      "open_set_score": 20.2,
-      "sealed_set_score": 1.8,
-      "calibration_details": {
-        "null_auroc": 0.60728,
-        "null_ece": 0.07034,
-        "null_brier": 0.11186
-      },
-      "latency": {
-        "mean_ms": 4.552,
-        "p50_ms": 4.4787,
-        "p95_ms": 5.4739,
-        "p99_ms": 5.5359
-      },
-      "by_request_type": {
-        "span_open": {
-          "score": 16.0,
-          "n": 181
-        },
-        "math": {
-          "score": 0.0,
-          "n": 51
-        },
-        "choice": {
-          "score": 59.8,
-          "n": 41
-        },
-        "noul_open": {
-          "score": 0.0,
-          "n": 27
-        },
-        "score": {
-          "score": 34.2,
-          "n": 48
-        },
-        "span_sealed": {
-          "score": 0.9,
-          "n": 108
-        },
-        "noul_sealed": {
-          "score": 0.0,
-          "n": 44
-        }
-      },
-      "by_tier_open": {
-        "Easy": {
-          "score": 16.5,
-          "n": 176
-        },
-        "Judge": {
-          "score": 17.1,
-          "n": 96
-        },
-        "Standard": {
-          "score": 35.2,
-          "n": 64
-        }
-      },
-      "by_tier_sealed": {
-        "Standard": {
-          "score": 1.8,
-          "n": 113
-        },
-        "Hard": {
-          "score": 2.0,
-          "n": 50
-        },
-        "Judge": {
-          "score": 0.0,
-          "n": 1
-        }
-      },
-      "by_domain": {
-        "incident_report": {
-          "score": 24.2,
-          "n": 160
-        },
-        "compute_ledger": {
-          "score": 11.1,
-          "n": 144
-        },
-        "cluster_throughput_comps": {
-          "score": 27.4,
-          "n": 16
-        },
-        "edge_traffic_forecast": {
-          "score": 55.1,
-          "n": 16
-        },
-        "squad_v2_open_qa": {
-          "score": 1.7,
-          "n": 60
-        },
-        "contract_extraction": {
-          "score": 1.0,
-          "n": 96
-        },
-        "adversarial_stress": {
-          "score": 12.5,
-          "n": 8
-        }
-      },
-      "official_rank": 14
+      "official_rank": 7
     },
     {
       "id": "all-MiniLM-L12-v2",
@@ -1848,34 +1533,118 @@
       "runtime": "PyTorch MPS/CPU",
       "input_rate_per_1m_usd": 0.01,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 500,
+      "measured": true,
+      "predictions_sha256": "cc6be4a4a7811f54a8cd82a63d66b0dfc8659215e8b05aff0d4a77b45c9b1f54",
+      "n_observations": 164,
+      "n_total_observations": 500,
       "input_tokens_total": 35946,
       "output_tokens_total": 0,
       "usd_per_1k_decisions": 0.0007,
       "axes": {
-        "intelligence": 14.4,
+        "intelligence": 8.8,
         "intelligence_ci95": [
-          11.7,
-          17.5
+          4.9,
+          13.4
         ],
-        "calibration": 73.5,
-        "speed": 64.2,
+        "calibration": 64.5,
+        "speed": 64.6,
         "cost": 85.5
       },
-      "capability_score": 44.0,
-      "composite_score": 36.3,
+      "capability_score": 36.6,
+      "composite_score": 25.6,
       "open_set_score": 17.2,
       "sealed_set_score": 8.8,
       "calibration_details": {
-        "null_auroc": 0.58938,
-        "null_ece": 0.28318,
-        "null_brier": 0.23193
+        "null_auroc": 0.42254,
+        "null_ece": 0.35654,
+        "null_brier": 0.35108
       },
       "latency": {
-        "mean_ms": 8.6507,
-        "p50_ms": 8.5815,
-        "p95_ms": 8.9115,
-        "p99_ms": 9.0401
+        "mean_ms": 8.14,
+        "p50_ms": 7.9056,
+        "p95_ms": 10.353,
+        "p99_ms": 18.128
+      },
+      "sealed_pool": {
+        "n_observations": 164,
+        "axes": {
+          "intelligence": 8.8,
+          "intelligence_ci95": [
+            4.9,
+            13.4
+          ],
+          "calibration": 64.5,
+          "speed": 64.6,
+          "cost": 85.5
+        },
+        "capability_score": 36.6,
+        "composite_score": 25.6,
+        "calibration_details": {
+          "null_auroc": 0.42254,
+          "null_ece": 0.35654,
+          "null_brier": 0.35108
+        },
+        "latency": {
+          "mean_ms": 8.14,
+          "p50_ms": 7.9056,
+          "p95_ms": 10.353,
+          "p99_ms": 18.128
+        },
+        "usd_per_1k_decisions": 0.0007
+      },
+      "open_pool": {
+        "n_observations": 336,
+        "axes": {
+          "intelligence": 17.2,
+          "intelligence_ci95": [
+            13.5,
+            20.9
+          ],
+          "calibration": 76.5,
+          "speed": 65.1,
+          "cost": 85.5
+        },
+        "capability_score": 46.9,
+        "composite_score": 40.7,
+        "calibration_details": {
+          "null_auroc": 0.82201,
+          "null_ece": 0.26802,
+          "null_brier": 0.17378
+        },
+        "latency": {
+          "mean_ms": 7.4393,
+          "p50_ms": 7.28,
+          "p95_ms": 9.3107,
+          "p99_ms": 16.1564
+        },
+        "usd_per_1k_decisions": 0.0007
+      },
+      "combined_pool": {
+        "n_observations": 500,
+        "axes": {
+          "intelligence": 14.4,
+          "intelligence_ci95": [
+            11.7,
+            17.5
+          ],
+          "calibration": 73.5,
+          "speed": 65.0,
+          "cost": 85.5
+        },
+        "capability_score": 44.0,
+        "composite_score": 36.3,
+        "calibration_details": {
+          "null_auroc": 0.58938,
+          "null_ece": 0.28318,
+          "null_brier": 0.23193
+        },
+        "latency": {
+          "mean_ms": 7.6692,
+          "p50_ms": 7.459,
+          "p95_ms": 9.7918,
+          "p99_ms": 17.8974
+        },
+        "usd_per_1k_decisions": 0.0007
       },
       "by_request_type": {
         "span_open": {
@@ -1965,7 +1734,7 @@
           "n": 8
         }
       },
-      "official_rank": 15
+      "official_rank": 8
     },
     {
       "id": "all-mpnet-base-v2",
@@ -1979,34 +1748,118 @@
       "runtime": "PyTorch MPS/CPU",
       "input_rate_per_1m_usd": 0.022,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 500,
+      "measured": true,
+      "predictions_sha256": "7f8ac57f8823a1bee4d47ce89f9d612fbe9f4980b1fc7584193d281a61b03282",
+      "n_observations": 164,
+      "n_total_observations": 500,
       "input_tokens_total": 35946,
       "output_tokens_total": 0,
       "usd_per_1k_decisions": 0.0016,
       "axes": {
-        "intelligence": 13.6,
+        "intelligence": 8.2,
         "intelligence_ci95": [
-          10.9,
-          16.7
+          4.3,
+          12.8
         ],
-        "calibration": 71.0,
-        "speed": 63.3,
+        "calibration": 64.2,
+        "speed": 62.2,
         "cost": 77.4
       },
-      "capability_score": 42.3,
-      "composite_score": 34.4,
+      "capability_score": 36.2,
+      "composite_score": 24.0,
       "open_set_score": 16.2,
       "sealed_set_score": 8.2,
       "calibration_details": {
-        "null_auroc": 0.58731,
-        "null_ece": 0.30424,
-        "null_brier": 0.26407
+        "null_auroc": 0.43182,
+        "null_ece": 0.36572,
+        "null_brier": 0.3441
       },
       "latency": {
-        "mean_ms": 10.2958,
-        "p50_ms": 10.2572,
-        "p95_ms": 10.5562,
-        "p99_ms": 12.7047
+        "mean_ms": 15.1577,
+        "p50_ms": 12.5622,
+        "p95_ms": 26.3503,
+        "p99_ms": 59.4068
+      },
+      "sealed_pool": {
+        "n_observations": 164,
+        "axes": {
+          "intelligence": 8.2,
+          "intelligence_ci95": [
+            4.3,
+            12.8
+          ],
+          "calibration": 64.2,
+          "speed": 62.2,
+          "cost": 77.4
+        },
+        "capability_score": 36.2,
+        "composite_score": 24.0,
+        "calibration_details": {
+          "null_auroc": 0.43182,
+          "null_ece": 0.36572,
+          "null_brier": 0.3441
+        },
+        "latency": {
+          "mean_ms": 15.1577,
+          "p50_ms": 12.5622,
+          "p95_ms": 26.3503,
+          "p99_ms": 59.4068
+        },
+        "usd_per_1k_decisions": 0.0016
+      },
+      "open_pool": {
+        "n_observations": 336,
+        "axes": {
+          "intelligence": 16.2,
+          "intelligence_ci95": [
+            12.5,
+            19.9
+          ],
+          "calibration": 72.4,
+          "speed": 62.9,
+          "cost": 77.4
+        },
+        "capability_score": 44.3,
+        "composite_score": 38.3,
+        "calibration_details": {
+          "null_auroc": 0.78916,
+          "null_ece": 0.30333,
+          "null_brier": 0.22501
+        },
+        "latency": {
+          "mean_ms": 18.4708,
+          "p50_ms": 11.0142,
+          "p95_ms": 18.1759,
+          "p99_ms": 175.4313
+        },
+        "usd_per_1k_decisions": 0.0016
+      },
+      "combined_pool": {
+        "n_observations": 500,
+        "axes": {
+          "intelligence": 13.6,
+          "intelligence_ci95": [
+            10.9,
+            16.7
+          ],
+          "calibration": 71.0,
+          "speed": 62.7,
+          "cost": 77.4
+        },
+        "capability_score": 42.3,
+        "composite_score": 34.3,
+        "calibration_details": {
+          "null_auroc": 0.58731,
+          "null_ece": 0.30424,
+          "null_brier": 0.26407
+        },
+        "latency": {
+          "mean_ms": 17.3841,
+          "p50_ms": 11.4679,
+          "p95_ms": 21.0789,
+          "p99_ms": 144.4912
+        },
+        "usd_per_1k_decisions": 0.0016
       },
       "by_request_type": {
         "span_open": {
@@ -2096,138 +1949,7 @@
           "n": 8
         }
       },
-      "official_rank": 16
-    },
-    {
-      "id": "paraphrase-albert-small-v2",
-      "name": "paraphrase-albert-small-v2 (Dense Span+Null)",
-      "author": "sentence-transformers",
-      "system_type": "Open Weights \u00b7 Bi-Encoder",
-      "open_weights": true,
-      "params_m": 11.7,
-      "footprint_mb": 44.6,
-      "base_model": "sentence-transformers/paraphrase-albert-small-v2",
-      "runtime": "PyTorch MPS/CPU",
-      "input_rate_per_1m_usd": 0.005,
-      "output_rate_per_1m_usd": 0.0,
-      "n_observations": 500,
-      "input_tokens_total": 35946,
-      "output_tokens_total": 0,
-      "usd_per_1k_decisions": 0.0004,
-      "axes": {
-        "intelligence": 12.5,
-        "intelligence_ci95": [
-          10.0,
-          15.2
-        ],
-        "calibration": 76.6,
-        "speed": 66.4,
-        "cost": 91.0
-      },
-      "capability_score": 44.5,
-      "composite_score": 33.6,
-      "open_set_score": 15.3,
-      "sealed_set_score": 6.7,
-      "calibration_details": {
-        "null_auroc": 0.58482,
-        "null_ece": 0.24547,
-        "null_brier": 0.21391
-      },
-      "latency": {
-        "mean_ms": 5.7054,
-        "p50_ms": 5.7004,
-        "p95_ms": 5.8183,
-        "p99_ms": 5.8798
-      },
-      "by_request_type": {
-        "span_open": {
-          "score": 11.0,
-          "n": 181
-        },
-        "math": {
-          "score": 1.0,
-          "n": 51
-        },
-        "choice": {
-          "score": 35.4,
-          "n": 41
-        },
-        "noul_open": {
-          "score": 51.9,
-          "n": 27
-        },
-        "score": {
-          "score": 8.4,
-          "n": 48
-        },
-        "span_sealed": {
-          "score": 2.3,
-          "n": 108
-        },
-        "noul_sealed": {
-          "score": 15.9,
-          "n": 44
-        }
-      },
-      "by_tier_open": {
-        "Easy": {
-          "score": 19.3,
-          "n": 176
-        },
-        "Judge": {
-          "score": 4.2,
-          "n": 96
-        },
-        "Standard": {
-          "score": 21.1,
-          "n": 64
-        }
-      },
-      "by_tier_sealed": {
-        "Standard": {
-          "score": 2.7,
-          "n": 113
-        },
-        "Hard": {
-          "score": 15.0,
-          "n": 50
-        },
-        "Judge": {
-          "score": 50.0,
-          "n": 1
-        }
-      },
-      "by_domain": {
-        "incident_report": {
-          "score": 21.1,
-          "n": 160
-        },
-        "compute_ledger": {
-          "score": 9.7,
-          "n": 144
-        },
-        "cluster_throughput_comps": {
-          "score": 20.0,
-          "n": 16
-        },
-        "edge_traffic_forecast": {
-          "score": 3.4,
-          "n": 16
-        },
-        "squad_v2_open_qa": {
-          "score": 0.0,
-          "n": 60
-        },
-        "contract_extraction": {
-          "score": 9.9,
-          "n": 96
-        },
-        "adversarial_stress": {
-          "score": 18.8,
-          "n": 8
-        }
-      },
-      "official_rank": 17
+      "official_rank": 9
     },
     {
       "id": "paraphrase-MiniLM-L3-v2",
@@ -2241,34 +1963,118 @@
       "runtime": "PyTorch MPS/CPU",
       "input_rate_per_1m_usd": 0.005,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 500,
+      "measured": true,
+      "predictions_sha256": "cafe97bf5b136b8d0e9dde1c3a846a75914aa1b0a544b277393ca995592a7901",
+      "n_observations": 164,
+      "n_total_observations": 500,
       "input_tokens_total": 35946,
       "output_tokens_total": 0,
       "usd_per_1k_decisions": 0.0004,
       "axes": {
-        "intelligence": 11.1,
+        "intelligence": 7.6,
         "intelligence_ci95": [
-          8.7,
-          13.8
+          4.0,
+          11.9
         ],
-        "calibration": 72.3,
-        "speed": 69.6,
+        "calibration": 63.7,
+        "speed": 70.4,
         "cost": 91.0
       },
-      "capability_score": 41.7,
-      "composite_score": 30.9,
+      "capability_score": 35.6,
+      "composite_score": 23.2,
       "open_set_score": 12.9,
       "sealed_set_score": 7.6,
       "calibration_details": {
-        "null_auroc": 0.58932,
-        "null_ece": 0.29025,
-        "null_brier": 0.25176
+        "null_auroc": 0.45587,
+        "null_ece": 0.36995,
+        "null_brier": 0.35112
       },
       "latency": {
-        "mean_ms": 3.1323,
-        "p50_ms": 3.1142,
-        "p95_ms": 3.2437,
-        "p99_ms": 3.2779
+        "mean_ms": 3.0192,
+        "p50_ms": 2.6538,
+        "p95_ms": 4.8318,
+        "p99_ms": 9.5178
+      },
+      "sealed_pool": {
+        "n_observations": 164,
+        "axes": {
+          "intelligence": 7.6,
+          "intelligence_ci95": [
+            4.0,
+            11.9
+          ],
+          "calibration": 63.7,
+          "speed": 70.4,
+          "cost": 91.0
+        },
+        "capability_score": 35.6,
+        "composite_score": 23.2,
+        "calibration_details": {
+          "null_auroc": 0.45587,
+          "null_ece": 0.36995,
+          "null_brier": 0.35112
+        },
+        "latency": {
+          "mean_ms": 3.0192,
+          "p50_ms": 2.6538,
+          "p95_ms": 4.8318,
+          "p99_ms": 9.5178
+        },
+        "usd_per_1k_decisions": 0.0004
+      },
+      "open_pool": {
+        "n_observations": 336,
+        "axes": {
+          "intelligence": 12.9,
+          "intelligence_ci95": [
+            9.7,
+            16.1
+          ],
+          "calibration": 74.0,
+          "speed": 70.4,
+          "cost": 91.0
+        },
+        "capability_score": 43.5,
+        "composite_score": 34.4,
+        "calibration_details": {
+          "null_auroc": 0.78713,
+          "null_ece": 0.29056,
+          "null_brier": 0.20327
+        },
+        "latency": {
+          "mean_ms": 2.9532,
+          "p50_ms": 2.6466,
+          "p95_ms": 4.7012,
+          "p99_ms": 8.5112
+        },
+        "usd_per_1k_decisions": 0.0004
+      },
+      "combined_pool": {
+        "n_observations": 500,
+        "axes": {
+          "intelligence": 11.1,
+          "intelligence_ci95": [
+            8.7,
+            13.8
+          ],
+          "calibration": 72.3,
+          "speed": 70.4,
+          "cost": 91.0
+        },
+        "capability_score": 41.7,
+        "composite_score": 31.0,
+        "calibration_details": {
+          "null_auroc": 0.58932,
+          "null_ece": 0.29025,
+          "null_brier": 0.25176
+        },
+        "latency": {
+          "mean_ms": 2.9749,
+          "p50_ms": 2.6491,
+          "p95_ms": 4.7267,
+          "p99_ms": 9.8108
+        },
+        "usd_per_1k_decisions": 0.0004
       },
       "by_request_type": {
         "span_open": {
@@ -2358,7 +2164,7 @@
           "n": 8
         }
       },
-      "official_rank": 18
+      "official_rank": 10
     },
     {
       "id": "all-MiniLM-L6-v2",
@@ -2372,34 +2178,118 @@
       "runtime": "PyTorch MPS/CPU",
       "input_rate_per_1m_usd": 0.007,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 500,
+      "measured": true,
+      "predictions_sha256": "cb306daa6a5967d18053fdb1544ae61f9d00011c3c8d899149e863155ddd15da",
+      "n_observations": 164,
+      "n_total_observations": 500,
       "input_tokens_total": 35946,
       "output_tokens_total": 0,
       "usd_per_1k_decisions": 0.0005,
       "axes": {
-        "intelligence": 10.0,
+        "intelligence": 7.6,
         "intelligence_ci95": [
-          7.7,
-          12.3
+          4.0,
+          11.9
         ],
-        "calibration": 70.9,
-        "speed": 67.1,
+        "calibration": 61.7,
+        "speed": 68.2,
         "cost": 88.8
       },
-      "capability_score": 40.5,
-      "composite_score": 28.5,
+      "capability_score": 34.6,
+      "composite_score": 23.0,
       "open_set_score": 11.2,
       "sealed_set_score": 7.6,
       "calibration_details": {
-        "null_auroc": 0.56307,
-        "null_ece": 0.30616,
-        "null_brier": 0.26323
+        "null_auroc": 0.42756,
+        "null_ece": 0.38988,
+        "null_brier": 0.36948
       },
       "latency": {
-        "mean_ms": 5.0175,
-        "p50_ms": 4.9879,
-        "p95_ms": 5.187,
-        "p99_ms": 5.2385
+        "mean_ms": 4.4962,
+        "p50_ms": 4.0641,
+        "p95_ms": 7.0286,
+        "p99_ms": 8.7059
+      },
+      "sealed_pool": {
+        "n_observations": 164,
+        "axes": {
+          "intelligence": 7.6,
+          "intelligence_ci95": [
+            4.0,
+            11.9
+          ],
+          "calibration": 61.7,
+          "speed": 68.2,
+          "cost": 88.8
+        },
+        "capability_score": 34.6,
+        "composite_score": 23.0,
+        "calibration_details": {
+          "null_auroc": 0.42756,
+          "null_ece": 0.38988,
+          "null_brier": 0.36948
+        },
+        "latency": {
+          "mean_ms": 4.4962,
+          "p50_ms": 4.0641,
+          "p95_ms": 7.0286,
+          "p99_ms": 8.7059
+        },
+        "usd_per_1k_decisions": 0.0005
+      },
+      "open_pool": {
+        "n_observations": 336,
+        "axes": {
+          "intelligence": 11.2,
+          "intelligence_ci95": [
+            8.0,
+            14.1
+          ],
+          "calibration": 73.7,
+          "speed": 67.3,
+          "cost": 88.8
+        },
+        "capability_score": 42.5,
+        "composite_score": 31.0,
+        "calibration_details": {
+          "null_auroc": 0.7785,
+          "null_ece": 0.29091,
+          "null_brier": 0.21136
+        },
+        "latency": {
+          "mean_ms": 5.2658,
+          "p50_ms": 4.746,
+          "p95_ms": 7.4978,
+          "p99_ms": 12.6273
+        },
+        "usd_per_1k_decisions": 0.0005
+      },
+      "combined_pool": {
+        "n_observations": 500,
+        "axes": {
+          "intelligence": 10.0,
+          "intelligence_ci95": [
+            7.7,
+            12.3
+          ],
+          "calibration": 70.9,
+          "speed": 67.7,
+          "cost": 88.8
+        },
+        "capability_score": 40.5,
+        "composite_score": 28.5,
+        "calibration_details": {
+          "null_auroc": 0.56307,
+          "null_ece": 0.30616,
+          "null_brier": 0.26323
+        },
+        "latency": {
+          "mean_ms": 5.0134,
+          "p50_ms": 4.416,
+          "p95_ms": 7.4636,
+          "p99_ms": 10.5634
+        },
+        "usd_per_1k_decisions": 0.0005
       },
       "by_request_type": {
         "span_open": {
@@ -2489,7 +2379,1893 @@
           "n": 8
         }
       },
-      "official_rank": 19
+      "official_rank": 11
+    },
+    {
+      "id": "claude-haiku-4.5-json",
+      "name": "claude-haiku-4.5 (JSON Decoder \u00b7 API)",
+      "author": "Anthropic",
+      "system_type": "Closed API \u00b7 LLM Decoder",
+      "open_weights": false,
+      "params_m": null,
+      "footprint_mb": null,
+      "base_model": "claude-haiku-4-5 (Strict JSON Tool Schema)",
+      "runtime": "Live Cloud JSON-Schema API (211.8 output tokens/field)",
+      "input_rate_per_1m_usd": 1.0,
+      "output_rate_per_1m_usd": 5.0,
+      "measured": true,
+      "predictions_sha256": "d1fb4e903ee98334a5cda0511c89f6c04ceb67661d7a35c8f400a1b28f25af08",
+      "n_observations": 164,
+      "n_total_observations": 500,
+      "input_tokens_total": 752582,
+      "output_tokens_total": 105913,
+      "usd_per_1k_decisions": 2.5643,
+      "axes": {
+        "intelligence": 88.4,
+        "intelligence_ci95": [
+          83.5,
+          93.3
+        ],
+        "calibration": 91.3,
+        "speed": 35.9,
+        "cost": 8.0
+      },
+      "capability_score": 89.8,
+      "composite_score": 22.8,
+      "open_set_score": 93.7,
+      "sealed_set_score": 88.4,
+      "calibration_details": {
+        "null_auroc": 0.95284,
+        "null_ece": 0.08506,
+        "null_brier": 0.09115
+      },
+      "latency": {
+        "mean_ms": 2030.4761,
+        "p50_ms": 1811.16,
+        "p95_ms": 3583.842,
+        "p99_ms": 5955.9195
+      },
+      "sealed_pool": {
+        "n_observations": 164,
+        "axes": {
+          "intelligence": 88.4,
+          "intelligence_ci95": [
+            83.5,
+            93.3
+          ],
+          "calibration": 91.3,
+          "speed": 35.9,
+          "cost": 8.0
+        },
+        "capability_score": 89.8,
+        "composite_score": 22.8,
+        "calibration_details": {
+          "null_auroc": 0.95284,
+          "null_ece": 0.08506,
+          "null_brier": 0.09115
+        },
+        "latency": {
+          "mean_ms": 2030.4761,
+          "p50_ms": 1811.16,
+          "p95_ms": 3583.842,
+          "p99_ms": 5955.9195
+        },
+        "usd_per_1k_decisions": 2.5643
+      },
+      "open_pool": {
+        "n_observations": 336,
+        "axes": {
+          "intelligence": 93.7,
+          "intelligence_ci95": [
+            91.3,
+            96.0
+          ],
+          "calibration": 93.1,
+          "speed": 36.0,
+          "cost": 8.0
+        },
+        "capability_score": 93.4,
+        "composite_score": 23.0,
+        "calibration_details": {
+          "null_auroc": 0.99712,
+          "null_ece": 0.08408,
+          "null_brier": 0.04084
+        },
+        "latency": {
+          "mean_ms": 1808.6166,
+          "p50_ms": 1769.33,
+          "p95_ms": 2433.9525,
+          "p99_ms": 4903.8135
+        },
+        "usd_per_1k_decisions": 2.5643
+      },
+      "combined_pool": {
+        "n_observations": 500,
+        "axes": {
+          "intelligence": 92.0,
+          "intelligence_ci95": [
+            89.6,
+            94.2
+          ],
+          "calibration": 94.8,
+          "speed": 35.9,
+          "cost": 8.0
+        },
+        "capability_score": 93.4,
+        "composite_score": 23.0,
+        "calibration_details": {
+          "null_auroc": 0.94688,
+          "null_ece": 0.0486,
+          "null_brier": 0.05734
+        },
+        "latency": {
+          "mean_ms": 1881.3865,
+          "p50_ms": 1780.625,
+          "p95_ms": 2789.522,
+          "p99_ms": 5929.9393
+        },
+        "usd_per_1k_decisions": 2.5643
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 91.2,
+          "n": 181
+        },
+        "math": {
+          "score": 98.0,
+          "n": 51
+        },
+        "choice": {
+          "score": 100.0,
+          "n": 41
+        },
+        "noul_open": {
+          "score": 100.0,
+          "n": 27
+        },
+        "score": {
+          "score": 91.4,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 97.2,
+          "n": 108
+        },
+        "noul_sealed": {
+          "score": 63.6,
+          "n": 44
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 91.5,
+          "n": 176
+        },
+        "Judge": {
+          "score": 94.6,
+          "n": 96
+        },
+        "Standard": {
+          "score": 98.4,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 98.2,
+          "n": 113
+        },
+        "Hard": {
+          "score": 66.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 100.0,
+          "n": 1
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 97.2,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 89.6,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 89.8,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 100.0,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 70.0,
+          "n": 60
+        },
+        "contract_extraction": {
+          "score": 100.0,
+          "n": 96
+        },
+        "adversarial_stress": {
+          "score": 87.5,
+          "n": 8
+        }
+      },
+      "official_rank": 12
+    },
+    {
+      "id": "paraphrase-albert-small-v2",
+      "name": "paraphrase-albert-small-v2 (Dense Span+Null)",
+      "author": "sentence-transformers",
+      "system_type": "Open Weights \u00b7 Bi-Encoder",
+      "open_weights": true,
+      "params_m": 11.7,
+      "footprint_mb": 44.6,
+      "base_model": "sentence-transformers/paraphrase-albert-small-v2",
+      "runtime": "PyTorch MPS/CPU",
+      "input_rate_per_1m_usd": 0.005,
+      "output_rate_per_1m_usd": 0.0,
+      "measured": true,
+      "predictions_sha256": "7f1c86b657b934f8edc6b2a52ae3e20df99d831c9ddb51ac3dacc06822176507",
+      "n_observations": 164,
+      "n_total_observations": 500,
+      "input_tokens_total": 35946,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0004,
+      "axes": {
+        "intelligence": 6.7,
+        "intelligence_ci95": [
+          3.4,
+          10.7
+        ],
+        "calibration": 67.6,
+        "speed": 63.9,
+        "cost": 91.0
+      },
+      "capability_score": 37.1,
+      "composite_score": 21.0,
+      "open_set_score": 15.3,
+      "sealed_set_score": 6.7,
+      "calibration_details": {
+        "null_auroc": 0.43845,
+        "null_ece": 0.32478,
+        "null_brier": 0.32203
+      },
+      "latency": {
+        "mean_ms": 11.8891,
+        "p50_ms": 9.144,
+        "p95_ms": 45.3988,
+        "p99_ms": 60.6356
+      },
+      "sealed_pool": {
+        "n_observations": 164,
+        "axes": {
+          "intelligence": 6.7,
+          "intelligence_ci95": [
+            3.4,
+            10.7
+          ],
+          "calibration": 67.6,
+          "speed": 63.9,
+          "cost": 91.0
+        },
+        "capability_score": 37.1,
+        "composite_score": 21.0,
+        "calibration_details": {
+          "null_auroc": 0.43845,
+          "null_ece": 0.32478,
+          "null_brier": 0.32203
+        },
+        "latency": {
+          "mean_ms": 11.8891,
+          "p50_ms": 9.144,
+          "p95_ms": 45.3988,
+          "p99_ms": 60.6356
+        },
+        "usd_per_1k_decisions": 0.0004
+      },
+      "open_pool": {
+        "n_observations": 336,
+        "axes": {
+          "intelligence": 15.3,
+          "intelligence_ci95": [
+            12.0,
+            18.7
+          ],
+          "calibration": 79.4,
+          "speed": 66.5,
+          "cost": 91.0
+        },
+        "capability_score": 47.4,
+        "composite_score": 38.5,
+        "calibration_details": {
+          "null_auroc": 0.78857,
+          "null_ece": 0.23047,
+          "null_brier": 0.16114
+        },
+        "latency": {
+          "mean_ms": 7.0892,
+          "p50_ms": 5.6208,
+          "p95_ms": 8.8297,
+          "p99_ms": 54.0583
+        },
+        "usd_per_1k_decisions": 0.0004
+      },
+      "combined_pool": {
+        "n_observations": 500,
+        "axes": {
+          "intelligence": 12.5,
+          "intelligence_ci95": [
+            10.0,
+            15.2
+          ],
+          "calibration": 76.6,
+          "speed": 65.7,
+          "cost": 91.0
+        },
+        "capability_score": 44.5,
+        "composite_score": 33.5,
+        "calibration_details": {
+          "null_auroc": 0.58482,
+          "null_ece": 0.24547,
+          "null_brier": 0.21391
+        },
+        "latency": {
+          "mean_ms": 8.6636,
+          "p50_ms": 6.5199,
+          "p95_ms": 13.5208,
+          "p99_ms": 62.1678
+        },
+        "usd_per_1k_decisions": 0.0004
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 11.0,
+          "n": 181
+        },
+        "math": {
+          "score": 1.0,
+          "n": 51
+        },
+        "choice": {
+          "score": 35.4,
+          "n": 41
+        },
+        "noul_open": {
+          "score": 51.9,
+          "n": 27
+        },
+        "score": {
+          "score": 8.4,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 2.3,
+          "n": 108
+        },
+        "noul_sealed": {
+          "score": 15.9,
+          "n": 44
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 19.3,
+          "n": 176
+        },
+        "Judge": {
+          "score": 4.2,
+          "n": 96
+        },
+        "Standard": {
+          "score": 21.1,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 2.7,
+          "n": 113
+        },
+        "Hard": {
+          "score": 15.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 50.0,
+          "n": 1
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 21.1,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 9.7,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 20.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 3.4,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 0.0,
+          "n": 60
+        },
+        "contract_extraction": {
+          "score": 9.9,
+          "n": 96
+        },
+        "adversarial_stress": {
+          "score": 18.8,
+          "n": 8
+        }
+      },
+      "official_rank": 13
+    },
+    {
+      "id": "bge-small-en-v1.5",
+      "name": "bge-small-en-v1.5 (Dense Span+Null)",
+      "author": "BAAI",
+      "system_type": "Open Weights \u00b7 Bi-Encoder",
+      "open_weights": true,
+      "params_m": 33.4,
+      "footprint_mb": 127.3,
+      "base_model": "BAAI/bge-small-en-v1.5",
+      "runtime": "PyTorch MPS/CPU",
+      "input_rate_per_1m_usd": 0.01,
+      "output_rate_per_1m_usd": 0.0,
+      "measured": true,
+      "predictions_sha256": "ab7f52e9e9dde3ac226bd44564e81217a8d8118c9226185ee29664f71a006f4a",
+      "n_observations": 164,
+      "n_total_observations": 500,
+      "input_tokens_total": 35946,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0007,
+      "axes": {
+        "intelligence": 3.4,
+        "intelligence_ci95": [
+          0.9,
+          6.1
+        ],
+        "calibration": 75.2,
+        "speed": 65.3,
+        "cost": 85.5
+      },
+      "capability_score": 39.3,
+      "composite_score": 12.0,
+      "open_set_score": 20.3,
+      "sealed_set_score": 3.4,
+      "calibration_details": {
+        "null_auroc": 0.51752,
+        "null_ece": 0.24512,
+        "null_brier": 0.25353
+      },
+      "latency": {
+        "mean_ms": 8.906,
+        "p50_ms": 7.0485,
+        "p95_ms": 24.5518,
+        "p99_ms": 37.8159
+      },
+      "sealed_pool": {
+        "n_observations": 164,
+        "axes": {
+          "intelligence": 3.4,
+          "intelligence_ci95": [
+            0.9,
+            6.1
+          ],
+          "calibration": 75.2,
+          "speed": 65.3,
+          "cost": 85.5
+        },
+        "capability_score": 39.3,
+        "composite_score": 12.0,
+        "calibration_details": {
+          "null_auroc": 0.51752,
+          "null_ece": 0.24512,
+          "null_brier": 0.25353
+        },
+        "latency": {
+          "mean_ms": 8.906,
+          "p50_ms": 7.0485,
+          "p95_ms": 24.5518,
+          "p99_ms": 37.8159
+        },
+        "usd_per_1k_decisions": 0.0007
+      },
+      "open_pool": {
+        "n_observations": 336,
+        "axes": {
+          "intelligence": 20.3,
+          "intelligence_ci95": [
+            16.8,
+            23.9
+          ],
+          "calibration": 96.0,
+          "speed": 64.6,
+          "cost": 85.5
+        },
+        "capability_score": 58.1,
+        "composite_score": 46.1,
+        "calibration_details": {
+          "null_auroc": 0.85617,
+          "null_ece": 0.03732,
+          "null_brier": 0.04491
+        },
+        "latency": {
+          "mean_ms": 15.6824,
+          "p50_ms": 8.0241,
+          "p95_ms": 17.5403,
+          "p99_ms": 268.6955
+        },
+        "usd_per_1k_decisions": 0.0007
+      },
+      "combined_pool": {
+        "n_observations": 500,
+        "axes": {
+          "intelligence": 14.7,
+          "intelligence_ci95": [
+            12.0,
+            17.5
+          ],
+          "calibration": 89.2,
+          "speed": 64.7,
+          "cost": 85.5
+        },
+        "capability_score": 52.0,
+        "composite_score": 37.6,
+        "calibration_details": {
+          "null_auroc": 0.68694,
+          "null_ece": 0.10548,
+          "null_brier": 0.11334
+        },
+        "latency": {
+          "mean_ms": 13.4597,
+          "p50_ms": 7.8974,
+          "p95_ms": 18.7337,
+          "p99_ms": 237.6608
+        },
+        "usd_per_1k_decisions": 0.0007
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 12.2,
+          "n": 181
+        },
+        "math": {
+          "score": 0.0,
+          "n": 51
+        },
+        "choice": {
+          "score": 59.8,
+          "n": 41
+        },
+        "noul_open": {
+          "score": 44.4,
+          "n": 27
+        },
+        "score": {
+          "score": 24.4,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 2.3,
+          "n": 108
+        },
+        "noul_sealed": {
+          "score": 2.3,
+          "n": 44
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 19.3,
+          "n": 176
+        },
+        "Judge": {
+          "score": 12.2,
+          "n": 96
+        },
+        "Standard": {
+          "score": 35.2,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 2.7,
+          "n": 113
+        },
+        "Hard": {
+          "score": 5.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 0.0,
+          "n": 1
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 29.9,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 9.7,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 20.0,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 20.1,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 0.0,
+          "n": 60
+        },
+        "contract_extraction": {
+          "score": 3.1,
+          "n": 96
+        },
+        "adversarial_stress": {
+          "score": 31.2,
+          "n": 8
+        }
+      },
+      "official_rank": 14
+    },
+    {
+      "id": "distilbert-base-control",
+      "name": "distilbert-base-control (Raw Control)",
+      "author": "distilbert (control)",
+      "system_type": "Base Model Control (Untuned)",
+      "open_weights": true,
+      "params_m": 66.4,
+      "footprint_mb": 253.2,
+      "base_model": "distilbert/distilbert-base-uncased",
+      "runtime": "PyTorch MPS/CPU",
+      "input_rate_per_1m_usd": 0.015,
+      "output_rate_per_1m_usd": 0.0,
+      "measured": true,
+      "predictions_sha256": "a277779356e2ce378caa59c804942afe7a791e1ae8f0b08194c2b933df28601b",
+      "n_observations": 164,
+      "n_total_observations": 500,
+      "input_tokens_total": 35946,
+      "output_tokens_total": 0,
+      "usd_per_1k_decisions": 0.0011,
+      "axes": {
+        "intelligence": 1.8,
+        "intelligence_ci95": [
+          0.0,
+          4.3
+        ],
+        "calibration": 80.3,
+        "speed": 65.1,
+        "cost": 81.1
+      },
+      "capability_score": 41.0,
+      "composite_score": 6.7,
+      "open_set_score": 20.2,
+      "sealed_set_score": 1.8,
+      "calibration_details": {
+        "null_auroc": 0.4625,
+        "null_ece": 0.1804,
+        "null_brier": 0.22729
+      },
+      "latency": {
+        "mean_ms": 9.6104,
+        "p50_ms": 7.2909,
+        "p95_ms": 14.4287,
+        "p99_ms": 57.2864
+      },
+      "sealed_pool": {
+        "n_observations": 164,
+        "axes": {
+          "intelligence": 1.8,
+          "intelligence_ci95": [
+            0.0,
+            4.3
+          ],
+          "calibration": 80.3,
+          "speed": 65.1,
+          "cost": 81.1
+        },
+        "capability_score": 41.0,
+        "composite_score": 6.7,
+        "calibration_details": {
+          "null_auroc": 0.4625,
+          "null_ece": 0.1804,
+          "null_brier": 0.22729
+        },
+        "latency": {
+          "mean_ms": 9.6104,
+          "p50_ms": 7.2909,
+          "p95_ms": 14.4287,
+          "p99_ms": 57.2864
+        },
+        "usd_per_1k_decisions": 0.0011
+      },
+      "open_pool": {
+        "n_observations": 336,
+        "axes": {
+          "intelligence": 20.2,
+          "intelligence_ci95": [
+            16.6,
+            23.9
+          ],
+          "calibration": 94.1,
+          "speed": 65.7,
+          "cost": 81.1
+        },
+        "capability_score": 57.1,
+        "composite_score": 45.6,
+        "calibration_details": {
+          "null_auroc": 0.76268,
+          "null_ece": 0.06075,
+          "null_brier": 0.05552
+        },
+        "latency": {
+          "mean_ms": 7.8717,
+          "p50_ms": 6.4818,
+          "p95_ms": 14.1463,
+          "p99_ms": 24.2356
+        },
+        "usd_per_1k_decisions": 0.0011
+      },
+      "combined_pool": {
+        "n_observations": 500,
+        "axes": {
+          "intelligence": 14.2,
+          "intelligence_ci95": [
+            11.6,
+            17.0
+          ],
+          "calibration": 91.5,
+          "speed": 65.4,
+          "cost": 81.1
+        },
+        "capability_score": 52.9,
+        "composite_score": 36.7,
+        "calibration_details": {
+          "null_auroc": 0.60728,
+          "null_ece": 0.07034,
+          "null_brier": 0.11186
+        },
+        "latency": {
+          "mean_ms": 8.442,
+          "p50_ms": 6.806,
+          "p95_ms": 14.5339,
+          "p99_ms": 36.6088
+        },
+        "usd_per_1k_decisions": 0.0011
+      },
+      "by_request_type": {
+        "span_open": {
+          "score": 16.0,
+          "n": 181
+        },
+        "math": {
+          "score": 0.0,
+          "n": 51
+        },
+        "choice": {
+          "score": 59.8,
+          "n": 41
+        },
+        "noul_open": {
+          "score": 0.0,
+          "n": 27
+        },
+        "score": {
+          "score": 34.2,
+          "n": 48
+        },
+        "span_sealed": {
+          "score": 0.9,
+          "n": 108
+        },
+        "noul_sealed": {
+          "score": 0.0,
+          "n": 44
+        }
+      },
+      "by_tier_open": {
+        "Easy": {
+          "score": 16.5,
+          "n": 176
+        },
+        "Judge": {
+          "score": 17.1,
+          "n": 96
+        },
+        "Standard": {
+          "score": 35.2,
+          "n": 64
+        }
+      },
+      "by_tier_sealed": {
+        "Standard": {
+          "score": 1.8,
+          "n": 113
+        },
+        "Hard": {
+          "score": 2.0,
+          "n": 50
+        },
+        "Judge": {
+          "score": 0.0,
+          "n": 1
+        }
+      },
+      "by_domain": {
+        "incident_report": {
+          "score": 24.2,
+          "n": 160
+        },
+        "compute_ledger": {
+          "score": 11.1,
+          "n": 144
+        },
+        "cluster_throughput_comps": {
+          "score": 27.4,
+          "n": 16
+        },
+        "edge_traffic_forecast": {
+          "score": 55.1,
+          "n": 16
+        },
+        "squad_v2_open_qa": {
+          "score": 1.7,
+          "n": 60
+        },
+        "contract_extraction": {
+          "score": 1.0,
+          "n": 96
+        },
+        "adversarial_stress": {
+          "score": 12.5,
+          "n": 8
+        }
+      },
+      "official_rank": 15
+    }
+  ],
+  "sealed_leaderboard": [
+    {
+      "official_rank": 1,
+      "id": "nullspan-hybrid-router",
+      "name": "nullspan-Hybrid (Fast + ONNX Int8)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "986301d101206b7ce96831c7e9121f4b12d4fd996230e5f78a20c1ae19422875",
+      "n_observations": 164,
+      "axes": {
+        "intelligence": 94.5,
+        "intelligence_ci95": [
+          90.9,
+          97.6
+        ],
+        "calibration": 95.5,
+        "speed": 83.0,
+        "cost": 93.8
+      },
+      "capability_score": 95.0,
+      "composite_score": 91.4,
+      "calibration_details": {
+        "null_auroc": 0.9803,
+        "null_ece": 0.04549,
+        "null_brier": 0.0443
+      },
+      "latency": {
+        "mean_ms": 63.0486,
+        "p50_ms": 0.2482,
+        "p95_ms": 247.0378,
+        "p99_ms": 368.8361
+      },
+      "usd_per_1k_decisions": 0.0003
+    },
+    {
+      "official_rank": 2,
+      "id": "nullspan-zerodep-fast",
+      "name": "nullspan-ZeroDep (Fast Engine)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "be3de37219d217d33904ec382248ff1502140dacd5b5acb7de4ee8eb39d92ebe",
+      "n_observations": 164,
+      "axes": {
+        "intelligence": 72.0,
+        "intelligence_ci95": [
+          65.2,
+          78.7
+        ],
+        "calibration": 84.6,
+        "speed": 86.1,
+        "cost": 99.8
+      },
+      "capability_score": 78.3,
+      "composite_score": 84.5,
+      "calibration_details": {
+        "null_auroc": 0.89839,
+        "null_ece": 0.15249,
+        "null_brier": 0.15672
+      },
+      "latency": {
+        "mean_ms": 0.1456,
+        "p50_ms": 0.1374,
+        "p95_ms": 0.3377,
+        "p99_ms": 0.8821
+      },
+      "usd_per_1k_decisions": 0.0001
+    },
+    {
+      "official_rank": 3,
+      "id": "nullspan-onnx-int8",
+      "name": "nullspan-345M-Int8 (ONNX WASM/CPU)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "22d5544220f57ebdbc1c8047f042111348af54d7f31b6642d266f4cc2123a64f",
+      "n_observations": 164,
+      "axes": {
+        "intelligence": 94.5,
+        "intelligence_ci95": [
+          90.9,
+          97.6
+        ],
+        "calibration": 95.8,
+        "speed": 47.5,
+        "cost": 84.2
+      },
+      "capability_score": 95.2,
+      "composite_score": 74.1,
+      "calibration_details": {
+        "null_auroc": 0.97614,
+        "null_ece": 0.04136,
+        "null_brier": 0.04455
+      },
+      "latency": {
+        "mean_ms": 203.0401,
+        "p50_ms": 201.6991,
+        "p95_ms": 292.1634,
+        "p99_ms": 368.8361
+      },
+      "usd_per_1k_decisions": 0.0008
+    },
+    {
+      "official_rank": 4,
+      "id": "nullspan-fp32",
+      "name": "nullspan-345M (PyTorch FP32)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "91f8dd7ef01eb004f9c3e07eca2c0ca7705f6316f3f2126f6a59533f8a87fb87",
+      "n_observations": 164,
+      "axes": {
+        "intelligence": 93.9,
+        "intelligence_ci95": [
+          90.2,
+          97.0
+        ],
+        "calibration": 95.3,
+        "speed": 49.9,
+        "cost": 76.8
+      },
+      "capability_score": 94.6,
+      "composite_score": 73.8,
+      "calibration_details": {
+        "null_auroc": 0.98542,
+        "null_ece": 0.04785,
+        "null_brier": 0.04668
+      },
+      "latency": {
+        "mean_ms": 128.5135,
+        "p50_ms": 127.6058,
+        "p95_ms": 175.881,
+        "p99_ms": 254.4876
+      },
+      "usd_per_1k_decisions": 0.0017
+    },
+    {
+      "official_rank": 5,
+      "id": "nullspan-onnx-fp32",
+      "name": "nullspan-345M (ONNX FP32)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "7a1b74a627789f05d069229df78fb8153257a79c82c2c2e32dfe5de7411a1f2f",
+      "n_observations": 164,
+      "axes": {
+        "intelligence": 93.9,
+        "intelligence_ci95": [
+          90.2,
+          97.0
+        ],
+        "calibration": 96.5,
+        "speed": 47.6,
+        "cost": 78.0
+      },
+      "capability_score": 95.2,
+      "composite_score": 72.9,
+      "calibration_details": {
+        "null_auroc": 0.99015,
+        "null_ece": 0.03405,
+        "null_brier": 0.03793
+      },
+      "latency": {
+        "mean_ms": 188.3131,
+        "p50_ms": 196.4426,
+        "p95_ms": 266.5202,
+        "p99_ms": 337.8913
+      },
+      "usd_per_1k_decisions": 0.0015
+    },
+    {
+      "official_rank": 6,
+      "id": "cloudflare-clairic-clef-live",
+      "name": "@cf/cloudflare/clairic + clef (Live Workers AI)",
+      "open_weights": false,
+      "measured": true,
+      "predictions_sha256": "378692149bafcdea8d8e7e9d3bae2ed81aa6e71e8d14767a4838b9426910f5c0",
+      "n_observations": 164,
+      "axes": {
+        "intelligence": 95.4,
+        "intelligence_ci95": [
+          92.1,
+          98.2
+        ],
+        "calibration": 97.8,
+        "speed": 50.5,
+        "cost": 68.2
+      },
+      "capability_score": 96.6,
+      "composite_score": 72.5,
+      "calibration_details": {
+        "null_auroc": 0.99242,
+        "null_ece": 0.02146,
+        "null_brier": 0.02327
+      },
+      "latency": {
+        "mean_ms": 167.0995,
+        "p50_ms": 113.8012,
+        "p95_ms": 373.1545,
+        "p99_ms": 460.0218
+      },
+      "usd_per_1k_decisions": 0.0041
+    },
+    {
+      "official_rank": 7,
+      "id": "deberta-v3-base-squad2",
+      "name": "deberta-v3-base-squad2 (184M SQuAD2 QA)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "c46f41c01931e088e7e4900a96be1b9a22a4b2276f5031dc7f08f1c2907ae0bd",
+      "n_observations": 164,
+      "axes": {
+        "intelligence": 47.3,
+        "intelligence_ci95": [
+          39.3,
+          54.9
+        ],
+        "calibration": 63.8,
+        "speed": 52.8,
+        "cost": 69.2
+      },
+      "capability_score": 55.5,
+      "composite_score": 57.0,
+      "calibration_details": {
+        "null_auroc": 0.82121,
+        "null_ece": 0.37927,
+        "null_brier": 0.33034
+      },
+      "latency": {
+        "mean_ms": 112.8393,
+        "p50_ms": 74.1332,
+        "p95_ms": 376.7113,
+        "p99_ms": 376.7113
+      },
+      "usd_per_1k_decisions": 0.0037
+    },
+    {
+      "official_rank": 8,
+      "id": "all-MiniLM-L12-v2",
+      "name": "all-MiniLM-L12-v2 (Dense Span+Null)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "cc6be4a4a7811f54a8cd82a63d66b0dfc8659215e8b05aff0d4a77b45c9b1f54",
+      "n_observations": 164,
+      "axes": {
+        "intelligence": 8.8,
+        "intelligence_ci95": [
+          4.9,
+          13.4
+        ],
+        "calibration": 64.5,
+        "speed": 64.6,
+        "cost": 85.5
+      },
+      "capability_score": 36.6,
+      "composite_score": 25.6,
+      "calibration_details": {
+        "null_auroc": 0.42254,
+        "null_ece": 0.35654,
+        "null_brier": 0.35108
+      },
+      "latency": {
+        "mean_ms": 8.14,
+        "p50_ms": 7.9056,
+        "p95_ms": 10.353,
+        "p99_ms": 18.128
+      },
+      "usd_per_1k_decisions": 0.0007
+    },
+    {
+      "official_rank": 9,
+      "id": "all-mpnet-base-v2",
+      "name": "all-mpnet-base-v2 (Dense Span+Null)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "7f8ac57f8823a1bee4d47ce89f9d612fbe9f4980b1fc7584193d281a61b03282",
+      "n_observations": 164,
+      "axes": {
+        "intelligence": 8.2,
+        "intelligence_ci95": [
+          4.3,
+          12.8
+        ],
+        "calibration": 64.2,
+        "speed": 62.2,
+        "cost": 77.4
+      },
+      "capability_score": 36.2,
+      "composite_score": 24.0,
+      "calibration_details": {
+        "null_auroc": 0.43182,
+        "null_ece": 0.36572,
+        "null_brier": 0.3441
+      },
+      "latency": {
+        "mean_ms": 15.1577,
+        "p50_ms": 12.5622,
+        "p95_ms": 26.3503,
+        "p99_ms": 59.4068
+      },
+      "usd_per_1k_decisions": 0.0016
+    },
+    {
+      "official_rank": 10,
+      "id": "paraphrase-MiniLM-L3-v2",
+      "name": "paraphrase-MiniLM-L3-v2 (Dense Span+Null)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "cafe97bf5b136b8d0e9dde1c3a846a75914aa1b0a544b277393ca995592a7901",
+      "n_observations": 164,
+      "axes": {
+        "intelligence": 7.6,
+        "intelligence_ci95": [
+          4.0,
+          11.9
+        ],
+        "calibration": 63.7,
+        "speed": 70.4,
+        "cost": 91.0
+      },
+      "capability_score": 35.6,
+      "composite_score": 23.2,
+      "calibration_details": {
+        "null_auroc": 0.45587,
+        "null_ece": 0.36995,
+        "null_brier": 0.35112
+      },
+      "latency": {
+        "mean_ms": 3.0192,
+        "p50_ms": 2.6538,
+        "p95_ms": 4.8318,
+        "p99_ms": 9.5178
+      },
+      "usd_per_1k_decisions": 0.0004
+    },
+    {
+      "official_rank": 11,
+      "id": "all-MiniLM-L6-v2",
+      "name": "all-MiniLM-L6-v2 (Dense Span+Null)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "cb306daa6a5967d18053fdb1544ae61f9d00011c3c8d899149e863155ddd15da",
+      "n_observations": 164,
+      "axes": {
+        "intelligence": 7.6,
+        "intelligence_ci95": [
+          4.0,
+          11.9
+        ],
+        "calibration": 61.7,
+        "speed": 68.2,
+        "cost": 88.8
+      },
+      "capability_score": 34.6,
+      "composite_score": 23.0,
+      "calibration_details": {
+        "null_auroc": 0.42756,
+        "null_ece": 0.38988,
+        "null_brier": 0.36948
+      },
+      "latency": {
+        "mean_ms": 4.4962,
+        "p50_ms": 4.0641,
+        "p95_ms": 7.0286,
+        "p99_ms": 8.7059
+      },
+      "usd_per_1k_decisions": 0.0005
+    },
+    {
+      "official_rank": 12,
+      "id": "claude-haiku-4.5-json",
+      "name": "claude-haiku-4.5 (JSON Decoder \u00b7 API)",
+      "open_weights": false,
+      "measured": true,
+      "predictions_sha256": "d1fb4e903ee98334a5cda0511c89f6c04ceb67661d7a35c8f400a1b28f25af08",
+      "n_observations": 164,
+      "axes": {
+        "intelligence": 88.4,
+        "intelligence_ci95": [
+          83.5,
+          93.3
+        ],
+        "calibration": 91.3,
+        "speed": 35.9,
+        "cost": 8.0
+      },
+      "capability_score": 89.8,
+      "composite_score": 22.8,
+      "calibration_details": {
+        "null_auroc": 0.95284,
+        "null_ece": 0.08506,
+        "null_brier": 0.09115
+      },
+      "latency": {
+        "mean_ms": 2030.4761,
+        "p50_ms": 1811.16,
+        "p95_ms": 3583.842,
+        "p99_ms": 5955.9195
+      },
+      "usd_per_1k_decisions": 2.5643
+    },
+    {
+      "official_rank": 13,
+      "id": "paraphrase-albert-small-v2",
+      "name": "paraphrase-albert-small-v2 (Dense Span+Null)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "7f1c86b657b934f8edc6b2a52ae3e20df99d831c9ddb51ac3dacc06822176507",
+      "n_observations": 164,
+      "axes": {
+        "intelligence": 6.7,
+        "intelligence_ci95": [
+          3.4,
+          10.7
+        ],
+        "calibration": 67.6,
+        "speed": 63.9,
+        "cost": 91.0
+      },
+      "capability_score": 37.1,
+      "composite_score": 21.0,
+      "calibration_details": {
+        "null_auroc": 0.43845,
+        "null_ece": 0.32478,
+        "null_brier": 0.32203
+      },
+      "latency": {
+        "mean_ms": 11.8891,
+        "p50_ms": 9.144,
+        "p95_ms": 45.3988,
+        "p99_ms": 60.6356
+      },
+      "usd_per_1k_decisions": 0.0004
+    },
+    {
+      "official_rank": 14,
+      "id": "bge-small-en-v1.5",
+      "name": "bge-small-en-v1.5 (Dense Span+Null)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "ab7f52e9e9dde3ac226bd44564e81217a8d8118c9226185ee29664f71a006f4a",
+      "n_observations": 164,
+      "axes": {
+        "intelligence": 3.4,
+        "intelligence_ci95": [
+          0.9,
+          6.1
+        ],
+        "calibration": 75.2,
+        "speed": 65.3,
+        "cost": 85.5
+      },
+      "capability_score": 39.3,
+      "composite_score": 12.0,
+      "calibration_details": {
+        "null_auroc": 0.51752,
+        "null_ece": 0.24512,
+        "null_brier": 0.25353
+      },
+      "latency": {
+        "mean_ms": 8.906,
+        "p50_ms": 7.0485,
+        "p95_ms": 24.5518,
+        "p99_ms": 37.8159
+      },
+      "usd_per_1k_decisions": 0.0007
+    },
+    {
+      "official_rank": 15,
+      "id": "distilbert-base-control",
+      "name": "distilbert-base-control (Raw Control)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "a277779356e2ce378caa59c804942afe7a791e1ae8f0b08194c2b933df28601b",
+      "n_observations": 164,
+      "axes": {
+        "intelligence": 1.8,
+        "intelligence_ci95": [
+          0.0,
+          4.3
+        ],
+        "calibration": 80.3,
+        "speed": 65.1,
+        "cost": 81.1
+      },
+      "capability_score": 41.0,
+      "composite_score": 6.7,
+      "calibration_details": {
+        "null_auroc": 0.4625,
+        "null_ece": 0.1804,
+        "null_brier": 0.22729
+      },
+      "latency": {
+        "mean_ms": 9.6104,
+        "p50_ms": 7.2909,
+        "p95_ms": 14.4287,
+        "p99_ms": 57.2864
+      },
+      "usd_per_1k_decisions": 0.0011
+    }
+  ],
+  "open_leaderboard": [
+    {
+      "official_rank": 1,
+      "id": "nullspan-zerodep-fast",
+      "name": "nullspan-ZeroDep (Fast Engine)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "be3de37219d217d33904ec382248ff1502140dacd5b5acb7de4ee8eb39d92ebe",
+      "n_observations": 336,
+      "axes": {
+        "intelligence": 100.0,
+        "intelligence_ci95": [
+          100.0,
+          100.0
+        ],
+        "calibration": 99.9,
+        "speed": 99.8,
+        "cost": 99.8
+      },
+      "capability_score": 100.0,
+      "composite_score": 99.9,
+      "calibration_details": {
+        "null_auroc": 1.0,
+        "null_ece": 0.00201,
+        "null_brier": 2e-05
+      },
+      "latency": {
+        "mean_ms": 0.0278,
+        "p50_ms": 0.0074,
+        "p95_ms": 0.0408,
+        "p99_ms": 0.4413
+      },
+      "usd_per_1k_decisions": 0.0001
+    },
+    {
+      "official_rank": 2,
+      "id": "nullspan-hybrid-router",
+      "name": "nullspan-Hybrid (Fast + ONNX Int8)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "986301d101206b7ce96831c7e9121f4b12d4fd996230e5f78a20c1ae19422875",
+      "n_observations": 336,
+      "axes": {
+        "intelligence": 100.0,
+        "intelligence_ci95": [
+          100.0,
+          100.0
+        ],
+        "calibration": 99.9,
+        "speed": 99.8,
+        "cost": 93.8
+      },
+      "capability_score": 100.0,
+      "composite_score": 98.3,
+      "calibration_details": {
+        "null_auroc": 1.0,
+        "null_ece": 0.00201,
+        "null_brier": 2e-05
+      },
+      "latency": {
+        "mean_ms": 0.0278,
+        "p50_ms": 0.0074,
+        "p95_ms": 0.0408,
+        "p99_ms": 0.4413
+      },
+      "usd_per_1k_decisions": 0.0003
+    },
+    {
+      "official_rank": 3,
+      "id": "nullspan-fp32",
+      "name": "nullspan-345M (PyTorch FP32)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "91f8dd7ef01eb004f9c3e07eca2c0ca7705f6316f3f2126f6a59533f8a87fb87",
+      "n_observations": 336,
+      "axes": {
+        "intelligence": 100.0,
+        "intelligence_ci95": [
+          100.0,
+          100.0
+        ],
+        "calibration": 99.9,
+        "speed": 54.9,
+        "cost": 76.8
+      },
+      "capability_score": 100.0,
+      "composite_score": 78.1,
+      "calibration_details": {
+        "null_auroc": 1.0,
+        "null_ece": 0.00225,
+        "null_brier": 2e-05
+      },
+      "latency": {
+        "mean_ms": 66.2503,
+        "p50_ms": 49.5557,
+        "p95_ms": 107.1403,
+        "p99_ms": 275.8887
+      },
+      "usd_per_1k_decisions": 0.0017
+    },
+    {
+      "official_rank": 4,
+      "id": "nullspan-onnx-int8",
+      "name": "nullspan-345M-Int8 (ONNX WASM/CPU)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "22d5544220f57ebdbc1c8047f042111348af54d7f31b6642d266f4cc2123a64f",
+      "n_observations": 336,
+      "axes": {
+        "intelligence": 100.0,
+        "intelligence_ci95": [
+          100.0,
+          100.0
+        ],
+        "calibration": 99.9,
+        "speed": 51.1,
+        "cost": 84.2
+      },
+      "capability_score": 100.0,
+      "composite_score": 77.7,
+      "calibration_details": {
+        "null_auroc": 1.0,
+        "null_ece": 0.00222,
+        "null_brier": 2e-05
+      },
+      "latency": {
+        "mean_ms": 110.4293,
+        "p50_ms": 101.0107,
+        "p95_ms": 169.4236,
+        "p99_ms": 241.4742
+      },
+      "usd_per_1k_decisions": 0.0008
+    },
+    {
+      "official_rank": 5,
+      "id": "nullspan-onnx-fp32",
+      "name": "nullspan-345M (ONNX FP32)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "7a1b74a627789f05d069229df78fb8153257a79c82c2c2e32dfe5de7411a1f2f",
+      "n_observations": 336,
+      "axes": {
+        "intelligence": 100.0,
+        "intelligence_ci95": [
+          100.0,
+          100.0
+        ],
+        "calibration": 99.9,
+        "speed": 51.7,
+        "cost": 78.0
+      },
+      "capability_score": 100.0,
+      "composite_score": 76.7,
+      "calibration_details": {
+        "null_auroc": 1.0,
+        "null_ece": 0.00225,
+        "null_brier": 2e-05
+      },
+      "latency": {
+        "mean_ms": 98.6641,
+        "p50_ms": 90.9101,
+        "p95_ms": 164.1157,
+        "p99_ms": 219.525
+      },
+      "usd_per_1k_decisions": 0.0015
+    },
+    {
+      "official_rank": 6,
+      "id": "cloudflare-clairic-clef-live",
+      "name": "@cf/cloudflare/clairic + clef (Live Workers AI)",
+      "open_weights": false,
+      "measured": true,
+      "predictions_sha256": "378692149bafcdea8d8e7e9d3bae2ed81aa6e71e8d14767a4838b9426910f5c0",
+      "n_observations": 336,
+      "axes": {
+        "intelligence": 89.7,
+        "intelligence_ci95": [
+          86.5,
+          92.8
+        ],
+        "calibration": 92.8,
+        "speed": 52.0,
+        "cost": 68.2
+      },
+      "capability_score": 91.2,
+      "composite_score": 71.7,
+      "calibration_details": {
+        "null_auroc": 1.0,
+        "null_ece": 0.07908,
+        "null_brier": 0.05899
+      },
+      "latency": {
+        "mean_ms": 110.0899,
+        "p50_ms": 86.1611,
+        "p95_ms": 272.4725,
+        "p99_ms": 360.5915
+      },
+      "usd_per_1k_decisions": 0.0041
+    },
+    {
+      "official_rank": 7,
+      "id": "deberta-v3-base-squad2",
+      "name": "deberta-v3-base-squad2 (184M SQuAD2 QA)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "c46f41c01931e088e7e4900a96be1b9a22a4b2276f5031dc7f08f1c2907ae0bd",
+      "n_observations": 336,
+      "axes": {
+        "intelligence": 48.6,
+        "intelligence_ci95": [
+          43.2,
+          54.0
+        ],
+        "calibration": 62.2,
+        "speed": 56.2,
+        "cost": 69.2
+      },
+      "capability_score": 55.4,
+      "composite_score": 58.1,
+      "calibration_details": {
+        "null_auroc": 0.82668,
+        "null_ece": 0.4174,
+        "null_brier": 0.30522
+      },
+      "latency": {
+        "mean_ms": 54.7889,
+        "p50_ms": 38.8237,
+        "p95_ms": 116.8072,
+        "p99_ms": 371.4963
+      },
+      "usd_per_1k_decisions": 0.0037
+    },
+    {
+      "official_rank": 8,
+      "id": "bge-small-en-v1.5",
+      "name": "bge-small-en-v1.5 (Dense Span+Null)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "ab7f52e9e9dde3ac226bd44564e81217a8d8118c9226185ee29664f71a006f4a",
+      "n_observations": 336,
+      "axes": {
+        "intelligence": 20.3,
+        "intelligence_ci95": [
+          16.8,
+          23.9
+        ],
+        "calibration": 96.0,
+        "speed": 64.6,
+        "cost": 85.5
+      },
+      "capability_score": 58.1,
+      "composite_score": 46.1,
+      "calibration_details": {
+        "null_auroc": 0.85617,
+        "null_ece": 0.03732,
+        "null_brier": 0.04491
+      },
+      "latency": {
+        "mean_ms": 15.6824,
+        "p50_ms": 8.0241,
+        "p95_ms": 17.5403,
+        "p99_ms": 268.6955
+      },
+      "usd_per_1k_decisions": 0.0007
+    },
+    {
+      "official_rank": 9,
+      "id": "distilbert-base-control",
+      "name": "distilbert-base-control (Raw Control)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "a277779356e2ce378caa59c804942afe7a791e1ae8f0b08194c2b933df28601b",
+      "n_observations": 336,
+      "axes": {
+        "intelligence": 20.2,
+        "intelligence_ci95": [
+          16.6,
+          23.9
+        ],
+        "calibration": 94.1,
+        "speed": 65.7,
+        "cost": 81.1
+      },
+      "capability_score": 57.1,
+      "composite_score": 45.6,
+      "calibration_details": {
+        "null_auroc": 0.76268,
+        "null_ece": 0.06075,
+        "null_brier": 0.05552
+      },
+      "latency": {
+        "mean_ms": 7.8717,
+        "p50_ms": 6.4818,
+        "p95_ms": 14.1463,
+        "p99_ms": 24.2356
+      },
+      "usd_per_1k_decisions": 0.0011
+    },
+    {
+      "official_rank": 10,
+      "id": "all-MiniLM-L12-v2",
+      "name": "all-MiniLM-L12-v2 (Dense Span+Null)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "cc6be4a4a7811f54a8cd82a63d66b0dfc8659215e8b05aff0d4a77b45c9b1f54",
+      "n_observations": 336,
+      "axes": {
+        "intelligence": 17.2,
+        "intelligence_ci95": [
+          13.5,
+          20.9
+        ],
+        "calibration": 76.5,
+        "speed": 65.1,
+        "cost": 85.5
+      },
+      "capability_score": 46.9,
+      "composite_score": 40.7,
+      "calibration_details": {
+        "null_auroc": 0.82201,
+        "null_ece": 0.26802,
+        "null_brier": 0.17378
+      },
+      "latency": {
+        "mean_ms": 7.4393,
+        "p50_ms": 7.28,
+        "p95_ms": 9.3107,
+        "p99_ms": 16.1564
+      },
+      "usd_per_1k_decisions": 0.0007
+    },
+    {
+      "official_rank": 11,
+      "id": "paraphrase-albert-small-v2",
+      "name": "paraphrase-albert-small-v2 (Dense Span+Null)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "7f1c86b657b934f8edc6b2a52ae3e20df99d831c9ddb51ac3dacc06822176507",
+      "n_observations": 336,
+      "axes": {
+        "intelligence": 15.3,
+        "intelligence_ci95": [
+          12.0,
+          18.7
+        ],
+        "calibration": 79.4,
+        "speed": 66.5,
+        "cost": 91.0
+      },
+      "capability_score": 47.4,
+      "composite_score": 38.5,
+      "calibration_details": {
+        "null_auroc": 0.78857,
+        "null_ece": 0.23047,
+        "null_brier": 0.16114
+      },
+      "latency": {
+        "mean_ms": 7.0892,
+        "p50_ms": 5.6208,
+        "p95_ms": 8.8297,
+        "p99_ms": 54.0583
+      },
+      "usd_per_1k_decisions": 0.0004
+    },
+    {
+      "official_rank": 12,
+      "id": "all-mpnet-base-v2",
+      "name": "all-mpnet-base-v2 (Dense Span+Null)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "7f8ac57f8823a1bee4d47ce89f9d612fbe9f4980b1fc7584193d281a61b03282",
+      "n_observations": 336,
+      "axes": {
+        "intelligence": 16.2,
+        "intelligence_ci95": [
+          12.5,
+          19.9
+        ],
+        "calibration": 72.4,
+        "speed": 62.9,
+        "cost": 77.4
+      },
+      "capability_score": 44.3,
+      "composite_score": 38.3,
+      "calibration_details": {
+        "null_auroc": 0.78916,
+        "null_ece": 0.30333,
+        "null_brier": 0.22501
+      },
+      "latency": {
+        "mean_ms": 18.4708,
+        "p50_ms": 11.0142,
+        "p95_ms": 18.1759,
+        "p99_ms": 175.4313
+      },
+      "usd_per_1k_decisions": 0.0016
+    },
+    {
+      "official_rank": 13,
+      "id": "paraphrase-MiniLM-L3-v2",
+      "name": "paraphrase-MiniLM-L3-v2 (Dense Span+Null)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "cafe97bf5b136b8d0e9dde1c3a846a75914aa1b0a544b277393ca995592a7901",
+      "n_observations": 336,
+      "axes": {
+        "intelligence": 12.9,
+        "intelligence_ci95": [
+          9.7,
+          16.1
+        ],
+        "calibration": 74.0,
+        "speed": 70.4,
+        "cost": 91.0
+      },
+      "capability_score": 43.5,
+      "composite_score": 34.4,
+      "calibration_details": {
+        "null_auroc": 0.78713,
+        "null_ece": 0.29056,
+        "null_brier": 0.20327
+      },
+      "latency": {
+        "mean_ms": 2.9532,
+        "p50_ms": 2.6466,
+        "p95_ms": 4.7012,
+        "p99_ms": 8.5112
+      },
+      "usd_per_1k_decisions": 0.0004
+    },
+    {
+      "official_rank": 14,
+      "id": "all-MiniLM-L6-v2",
+      "name": "all-MiniLM-L6-v2 (Dense Span+Null)",
+      "open_weights": true,
+      "measured": true,
+      "predictions_sha256": "cb306daa6a5967d18053fdb1544ae61f9d00011c3c8d899149e863155ddd15da",
+      "n_observations": 336,
+      "axes": {
+        "intelligence": 11.2,
+        "intelligence_ci95": [
+          8.0,
+          14.1
+        ],
+        "calibration": 73.7,
+        "speed": 67.3,
+        "cost": 88.8
+      },
+      "capability_score": 42.5,
+      "composite_score": 31.0,
+      "calibration_details": {
+        "null_auroc": 0.7785,
+        "null_ece": 0.29091,
+        "null_brier": 0.21136
+      },
+      "latency": {
+        "mean_ms": 5.2658,
+        "p50_ms": 4.746,
+        "p95_ms": 7.4978,
+        "p99_ms": 12.6273
+      },
+      "usd_per_1k_decisions": 0.0005
+    },
+    {
+      "official_rank": 15,
+      "id": "claude-haiku-4.5-json",
+      "name": "claude-haiku-4.5 (JSON Decoder \u00b7 API)",
+      "open_weights": false,
+      "measured": true,
+      "predictions_sha256": "d1fb4e903ee98334a5cda0511c89f6c04ceb67661d7a35c8f400a1b28f25af08",
+      "n_observations": 336,
+      "axes": {
+        "intelligence": 93.7,
+        "intelligence_ci95": [
+          91.3,
+          96.0
+        ],
+        "calibration": 93.1,
+        "speed": 36.0,
+        "cost": 8.0
+      },
+      "capability_score": 93.4,
+      "composite_score": 23.0,
+      "calibration_details": {
+        "null_auroc": 0.99712,
+        "null_ece": 0.08408,
+        "null_brier": 0.04084
+      },
+      "latency": {
+        "mean_ms": 1808.6166,
+        "p50_ms": 1769.33,
+        "p95_ms": 2433.9525,
+        "p99_ms": 4903.8135
+      },
+      "usd_per_1k_decisions": 2.5643
+    }
+  ],
+  "reference_external_anchors": [
+    {
+      "id": "jev-1.13.0-ref",
+      "name": "Jev 1.13.0 (TypeSafe AI)",
+      "author": "TypeSafe AI",
+      "source_benchmark": "JevBench v1.6.1 (snapshot 2026-11-11)",
+      "jevbench_capability": 75.5,
+      "jevbench_intelligence": 63.06,
+      "jevbench_calibration": 87.93,
+      "note": "Reference from JevBench v1.6.1 (different item set, not comparable to NullspanBench; unranked)."
+    },
+    {
+      "id": "h2o-lightning-4b",
+      "name": "H2O-Lightning-4B v1.1",
+      "author": "H2O.ai",
+      "source_benchmark": "JevBench v1.6.1 (snapshot 2026-11-11)",
+      "jevbench_capability": 70.64,
+      "jevbench_intelligence": 53.75,
+      "jevbench_calibration": 87.52,
+      "note": "Reference from JevBench v1.6.1 (different item set, not comparable to NullspanBench; unranked)."
+    },
+    {
+      "id": "basal-omni-1.0-ultra",
+      "name": "basal-omni-1.0-ultra",
+      "author": "Remek Kinas",
+      "source_benchmark": "JevBench v1.6.1 (snapshot 2026-11-11)",
+      "jevbench_capability": 80.78,
+      "jevbench_intelligence": 72.14,
+      "jevbench_calibration": 89.42,
+      "note": "Reference from JevBench v1.6.1 (different item set, not comparable to NullspanBench; unranked)."
     }
   ],
   "tiers": {
@@ -2505,34 +4281,118 @@
       "runtime": "PyTorch MPS/CUDA/CPU FP32",
       "input_rate_per_1m_usd": 0.012,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 500,
+      "measured": true,
+      "predictions_sha256": "91f8dd7ef01eb004f9c3e07eca2c0ca7705f6316f3f2126f6a59533f8a87fb87",
+      "n_observations": 164,
+      "n_total_observations": 500,
       "input_tokens_total": 69943,
       "output_tokens_total": 0,
       "usd_per_1k_decisions": 0.0017,
       "axes": {
-        "intelligence": 98.0,
+        "intelligence": 93.9,
         "intelligence_ci95": [
-          96.8,
-          99.2
+          90.2,
+          97.0
         ],
-        "calibration": 98.5,
-        "speed": 63.2,
+        "calibration": 95.3,
+        "speed": 49.9,
         "cost": 76.8
       },
-      "capability_score": 98.2,
-      "composite_score": 81.3,
+      "capability_score": 94.6,
+      "composite_score": 73.8,
       "open_set_score": 100.0,
       "sealed_set_score": 93.9,
       "calibration_details": {
-        "null_auroc": 0.99327,
-        "null_ece": 0.01419,
-        "null_brier": 0.01532
+        "null_auroc": 0.98542,
+        "null_ece": 0.04785,
+        "null_brier": 0.04668
       },
       "latency": {
-        "mean_ms": 16.9035,
-        "p50_ms": 10.2968,
-        "p95_ms": 33.0811,
-        "p99_ms": 37.3921
+        "mean_ms": 128.5135,
+        "p50_ms": 127.6058,
+        "p95_ms": 175.881,
+        "p99_ms": 254.4876
+      },
+      "sealed_pool": {
+        "n_observations": 164,
+        "axes": {
+          "intelligence": 93.9,
+          "intelligence_ci95": [
+            90.2,
+            97.0
+          ],
+          "calibration": 95.3,
+          "speed": 49.9,
+          "cost": 76.8
+        },
+        "capability_score": 94.6,
+        "composite_score": 73.8,
+        "calibration_details": {
+          "null_auroc": 0.98542,
+          "null_ece": 0.04785,
+          "null_brier": 0.04668
+        },
+        "latency": {
+          "mean_ms": 128.5135,
+          "p50_ms": 127.6058,
+          "p95_ms": 175.881,
+          "p99_ms": 254.4876
+        },
+        "usd_per_1k_decisions": 0.0017
+      },
+      "open_pool": {
+        "n_observations": 336,
+        "axes": {
+          "intelligence": 100.0,
+          "intelligence_ci95": [
+            100.0,
+            100.0
+          ],
+          "calibration": 99.9,
+          "speed": 54.9,
+          "cost": 76.8
+        },
+        "capability_score": 100.0,
+        "composite_score": 78.1,
+        "calibration_details": {
+          "null_auroc": 1.0,
+          "null_ece": 0.00225,
+          "null_brier": 2e-05
+        },
+        "latency": {
+          "mean_ms": 66.2503,
+          "p50_ms": 49.5557,
+          "p95_ms": 107.1403,
+          "p99_ms": 275.8887
+        },
+        "usd_per_1k_decisions": 0.0017
+      },
+      "combined_pool": {
+        "n_observations": 500,
+        "axes": {
+          "intelligence": 98.0,
+          "intelligence_ci95": [
+            96.8,
+            99.2
+          ],
+          "calibration": 98.5,
+          "speed": 54.3,
+          "cost": 76.8
+        },
+        "capability_score": 98.2,
+        "composite_score": 77.2,
+        "calibration_details": {
+          "null_auroc": 0.99327,
+          "null_ece": 0.01419,
+          "null_brier": 0.01532
+        },
+        "latency": {
+          "mean_ms": 86.6726,
+          "p50_ms": 55.206,
+          "p95_ms": 160.6231,
+          "p99_ms": 270.4781
+        },
+        "usd_per_1k_decisions": 0.0017
       },
       "by_request_type": {
         "span_open": {
@@ -2622,7 +4482,7 @@
           "n": 8
         }
       },
-      "official_rank": 3
+      "official_rank": 4
     },
     "tier_1b_onnx_int8": {
       "id": "nullspan-onnx-int8",
@@ -2636,34 +4496,118 @@
       "runtime": "ONNX Runtime Int8 (Browser WASM / Edge)",
       "input_rate_per_1m_usd": 0.006,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 500,
+      "measured": true,
+      "predictions_sha256": "22d5544220f57ebdbc1c8047f042111348af54d7f31b6642d266f4cc2123a64f",
+      "n_observations": 164,
+      "n_total_observations": 500,
       "input_tokens_total": 69943,
       "output_tokens_total": 0,
       "usd_per_1k_decisions": 0.0008,
       "axes": {
-        "intelligence": 97.8,
+        "intelligence": 94.5,
         "intelligence_ci95": [
-          96.6,
-          99.0
+          90.9,
+          97.6
         ],
-        "calibration": 98.6,
-        "speed": 52.7,
+        "calibration": 95.8,
+        "speed": 47.5,
         "cost": 84.2
       },
-      "capability_score": 98.2,
-      "composite_score": 78.1,
+      "capability_score": 95.2,
+      "composite_score": 74.1,
       "open_set_score": 100.0,
-      "sealed_set_score": 93.3,
+      "sealed_set_score": 94.5,
       "calibration_details": {
-        "null_auroc": 0.99511,
-        "null_ece": 0.01267,
-        "null_brier": 0.01523
+        "null_auroc": 0.97614,
+        "null_ece": 0.04136,
+        "null_brier": 0.04455
       },
       "latency": {
-        "mean_ms": 108.0495,
-        "p50_ms": 75.9329,
-        "p95_ms": 207.004,
-        "p99_ms": 369.9251
+        "mean_ms": 203.0401,
+        "p50_ms": 201.6991,
+        "p95_ms": 292.1634,
+        "p99_ms": 368.8361
+      },
+      "sealed_pool": {
+        "n_observations": 164,
+        "axes": {
+          "intelligence": 94.5,
+          "intelligence_ci95": [
+            90.9,
+            97.6
+          ],
+          "calibration": 95.8,
+          "speed": 47.5,
+          "cost": 84.2
+        },
+        "capability_score": 95.2,
+        "composite_score": 74.1,
+        "calibration_details": {
+          "null_auroc": 0.97614,
+          "null_ece": 0.04136,
+          "null_brier": 0.04455
+        },
+        "latency": {
+          "mean_ms": 203.0401,
+          "p50_ms": 201.6991,
+          "p95_ms": 292.1634,
+          "p99_ms": 368.8361
+        },
+        "usd_per_1k_decisions": 0.0008
+      },
+      "open_pool": {
+        "n_observations": 336,
+        "axes": {
+          "intelligence": 100.0,
+          "intelligence_ci95": [
+            100.0,
+            100.0
+          ],
+          "calibration": 99.9,
+          "speed": 51.1,
+          "cost": 84.2
+        },
+        "capability_score": 100.0,
+        "composite_score": 77.7,
+        "calibration_details": {
+          "null_auroc": 1.0,
+          "null_ece": 0.00222,
+          "null_brier": 2e-05
+        },
+        "latency": {
+          "mean_ms": 110.4293,
+          "p50_ms": 101.0107,
+          "p95_ms": 169.4236,
+          "p99_ms": 241.4742
+        },
+        "usd_per_1k_decisions": 0.0008
+      },
+      "combined_pool": {
+        "n_observations": 500,
+        "axes": {
+          "intelligence": 98.2,
+          "intelligence_ci95": [
+            97.0,
+            99.2
+          ],
+          "calibration": 98.7,
+          "speed": 50.8,
+          "cost": 84.2
+        },
+        "capability_score": 98.5,
+        "composite_score": 77.1,
+        "calibration_details": {
+          "null_auroc": 0.99166,
+          "null_ece": 0.01207,
+          "null_brier": 0.01462
+        },
+        "latency": {
+          "mean_ms": 140.8057,
+          "p50_ms": 107.0085,
+          "p95_ms": 264.4929,
+          "p99_ms": 292.3606
+        },
+        "usd_per_1k_decisions": 0.0008
       },
       "by_request_type": {
         "span_open": {
@@ -2687,11 +4631,11 @@
           "n": 48
         },
         "span_sealed": {
-          "score": 96.3,
+          "score": 97.2,
           "n": 108
         },
         "noul_sealed": {
-          "score": 84.1,
+          "score": 86.4,
           "n": 44
         }
       },
@@ -2711,11 +4655,11 @@
       },
       "by_tier_sealed": {
         "Standard": {
-          "score": 96.5,
+          "score": 97.3,
           "n": 113
         },
         "Hard": {
-          "score": 86.0,
+          "score": 88.0,
           "n": 50
         },
         "Judge": {
@@ -2741,7 +4685,7 @@
           "n": 16
         },
         "squad_v2_open_qa": {
-          "score": 81.7,
+          "score": 85.0,
           "n": 60
         },
         "contract_extraction": {
@@ -2753,7 +4697,7 @@
           "n": 8
         }
       },
-      "official_rank": 4
+      "official_rank": 3
     },
     "tier_2_zero_dep_engine": {
       "id": "nullspan-zerodep-fast",
@@ -2767,34 +4711,118 @@
       "runtime": "Pure Python / Node / Browser JS",
       "input_rate_per_1m_usd": 0.0008,
       "output_rate_per_1m_usd": 0.0,
-      "n_observations": 500,
+      "measured": true,
+      "predictions_sha256": "be3de37219d217d33904ec382248ff1502140dacd5b5acb7de4ee8eb39d92ebe",
+      "n_observations": 164,
+      "n_total_observations": 500,
       "input_tokens_total": 69943,
       "output_tokens_total": 0,
       "usd_per_1k_decisions": 0.0001,
       "axes": {
-        "intelligence": 90.8,
+        "intelligence": 72.0,
         "intelligence_ci95": [
-          88.2,
-          93.4
+          65.2,
+          78.7
         ],
-        "calibration": 95.0,
-        "speed": 93.5,
+        "calibration": 84.6,
+        "speed": 86.1,
         "cost": 99.8
       },
-      "capability_score": 92.9,
-      "composite_score": 94.7,
+      "capability_score": 78.3,
+      "composite_score": 84.5,
       "open_set_score": 100.0,
       "sealed_set_score": 72.0,
       "calibration_details": {
-        "null_auroc": 0.98239,
-        "null_ece": 0.04866,
-        "null_brier": 0.05142
+        "null_auroc": 0.89839,
+        "null_ece": 0.15249,
+        "null_brier": 0.15672
       },
       "latency": {
-        "mean_ms": 0.1345,
-        "p50_ms": 0.0342,
-        "p95_ms": 0.6895,
-        "p99_ms": 0.8689
+        "mean_ms": 0.1456,
+        "p50_ms": 0.1374,
+        "p95_ms": 0.3377,
+        "p99_ms": 0.8821
+      },
+      "sealed_pool": {
+        "n_observations": 164,
+        "axes": {
+          "intelligence": 72.0,
+          "intelligence_ci95": [
+            65.2,
+            78.7
+          ],
+          "calibration": 84.6,
+          "speed": 86.1,
+          "cost": 99.8
+        },
+        "capability_score": 78.3,
+        "composite_score": 84.5,
+        "calibration_details": {
+          "null_auroc": 0.89839,
+          "null_ece": 0.15249,
+          "null_brier": 0.15672
+        },
+        "latency": {
+          "mean_ms": 0.1456,
+          "p50_ms": 0.1374,
+          "p95_ms": 0.3377,
+          "p99_ms": 0.8821
+        },
+        "usd_per_1k_decisions": 0.0001
+      },
+      "open_pool": {
+        "n_observations": 336,
+        "axes": {
+          "intelligence": 100.0,
+          "intelligence_ci95": [
+            100.0,
+            100.0
+          ],
+          "calibration": 99.9,
+          "speed": 99.8,
+          "cost": 99.8
+        },
+        "capability_score": 100.0,
+        "composite_score": 99.9,
+        "calibration_details": {
+          "null_auroc": 1.0,
+          "null_ece": 0.00201,
+          "null_brier": 2e-05
+        },
+        "latency": {
+          "mean_ms": 0.0278,
+          "p50_ms": 0.0074,
+          "p95_ms": 0.0408,
+          "p99_ms": 0.4413
+        },
+        "usd_per_1k_decisions": 0.0001
+      },
+      "combined_pool": {
+        "n_observations": 500,
+        "axes": {
+          "intelligence": 90.8,
+          "intelligence_ci95": [
+            88.2,
+            93.4
+          ],
+          "calibration": 95.0,
+          "speed": 98.4,
+          "cost": 99.8
+        },
+        "capability_score": 92.9,
+        "composite_score": 95.9,
+        "calibration_details": {
+          "null_auroc": 0.98239,
+          "null_ece": 0.04866,
+          "null_brier": 0.05142
+        },
+        "latency": {
+          "mean_ms": 0.0664,
+          "p50_ms": 0.0135,
+          "p95_ms": 0.2901,
+          "p99_ms": 0.4926
+        },
+        "usd_per_1k_decisions": 0.0001
       },
       "by_request_type": {
         "span_open": {

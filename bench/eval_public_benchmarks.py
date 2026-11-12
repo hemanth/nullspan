@@ -383,53 +383,95 @@ def _squad_f1(pred: str, gold: str) -> float:
     return 2 * prec * rec / (prec + rec)
 
 
-def eval_squad_v2_public(model_dir: str, device: str, n_eval: int = 500) -> dict[str, Any]:
-    from datasets import load_dataset
-    from modeling_nullspan import NullspanForExtraction
-    from transformers import AutoTokenizer
+def _predict_squad_batch(
+    model: Any,
+    tok: Any,
+    rows: list[dict[str, Any]],
+    batch_size: int = 8,
+) -> list[str]:
+    import torch
+    import torch.nn.functional as F
+    from modeling_nullspan import (
+        apply_qa_precondition_guard,
+        extract_numeric_context_features,
+        format_field_query,
+        select_context_window,
+    )
 
-    print(f"=== Evaluating on Stanford rajpurkar/squad_v2 (n_eval={n_eval or 'FULL'}) ===", flush=True)
-    seen_contexts: set[str] = set()
-    for fname in ("train.jsonl", "cal_dev.jsonl", "val.jsonl"):
-        fpath = os.path.join(ROOT, "data", fname)
-        if os.path.exists(fpath):
-            with open(fpath, "r", encoding="utf-8") as f:
-                for line in f:
-                    if line.strip():
-                        obj = json.loads(line)
-                        st = obj.get("state") or obj.get("context") or ""
-                        if st:
-                            seen_contexts.add(st[:120])
+    device = next(model.parameters()).device
+    preds_out: list[str] = []
+    for start_idx in range(0, len(rows), batch_size):
+        chunk = rows[start_idx : start_idx + batch_size]
+        specs = [{"type": "text", "instructions": r["question"]} for r in chunk]
+        queries = [format_field_query("answer", sp) for sp in specs]
+        win_pairs = [select_context_window(r["context"], sp, "answer") for r, sp in zip(chunk, specs)]
+        states = [wp[0] for wp in win_pairs]
+        win_offsets = [wp[1] for wp in win_pairs]
+        num_feats_list = [extract_numeric_context_features(r["context"], sp) for r, sp in zip(chunk, specs)]
 
-    ds_sq = load_dataset("rajpurkar/squad_v2", split="validation")
-    if n_eval <= 0:
-        sample = [row for row in ds_sq if row["context"][:120] not in seen_contexts]
-    else:
-        has_ans_pool, no_ans_pool = [], []
-        for row in ds_sq:
-            if row["context"][:120] in seen_contexts:
-                continue
-            if row["answers"]["text"]:
-                has_ans_pool.append(row)
-            else:
-                no_ans_pool.append(row)
-        rng = random.Random(20261030)
-        rng.shuffle(has_ans_pool)
-        rng.shuffle(no_ans_pool)
-        sample = has_ans_pool[: n_eval // 2] + no_ans_pool[: n_eval // 2]
-
-    tok = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
-    model = NullspanForExtraction.from_pretrained(model_dir).to(device).eval()
-
-    em_all, f1_all, em_has, f1_has, em_no, f1_no = [], [], [], [], [], []
-    for row in sample:
-        res = model.extract(
-            state=row["context"],
-            fields={"answer": {"type": "text", "instructions": row["question"]}},
-            tokenizer=tok,
+        enc = tok(
+            queries,
+            states,
+            padding=True,
+            truncation="only_second",
+            max_length=512,
+            return_offsets_mapping=True,
+            return_tensors="pt",
         )
-        pred_val = res["answers"]["answer"]["value"]
-        pred_str = "" if pred_val is None else str(pred_val)
+        offset_mappings = enc.pop("offset_mapping")
+        B, L = enc["input_ids"].shape
+        state_mask = torch.zeros((B, L), dtype=torch.long)
+        for b_i in range(B):
+            seq_ids = enc.sequence_ids(b_i)
+            for t_i, s_id in enumerate(seq_ids):
+                if s_id == 1 and offset_mappings[b_i, t_i, 1] > offset_mappings[b_i, t_i, 0]:
+                    state_mask[b_i, t_i] = 1
+
+        with torch.no_grad():
+            out = model(
+                input_ids=enc["input_ids"].to(device),
+                attention_mask=enc["attention_mask"].to(device),
+                state_mask=state_mask.to(device),
+                num_feats=torch.tensor(num_feats_list, dtype=torch.float32, device=device),
+            )
+            p_nulls = torch.sigmoid(out["null_logits"]).cpu().tolist()
+            start_probs = F.softmax(out["start_logits"], dim=-1).cpu()
+            end_probs = F.softmax(out["end_logits"], dim=-1).cpu()
+
+        for b_i, row in enumerate(chunk):
+            state = row["context"]
+            p_null = round(float(p_nulls[b_i]), 8)
+            p_null = apply_qa_precondition_guard(queries[b_i], state, p_null)
+            if p_null > 0.5:
+                preds_out.append("")
+                continue
+            offsets = offset_mappings[b_i].tolist()
+            mask_list = state_mask[b_i].tolist()
+            valid_indices = [t_i for t_i, m_v in enumerate(mask_list) if m_v == 1]
+            best_s, best_e, best_score = (valid_indices[0], valid_indices[0], 0.0) if valid_indices else (0, 0, 0.0)
+            sp_list = start_probs[b_i].tolist()
+            ep_list = end_probs[b_i].tolist()
+            for idx_a, s_i in enumerate(valid_indices):
+                sp_v = sp_list[s_i]
+                for e_i in valid_indices[idx_a:]:
+                    if (e_i - s_i) > 24:
+                        break
+                    sc = sp_v * ep_list[e_i]
+                    if sc > best_score:
+                        best_score = sc
+                        best_s, best_e = s_i, e_i
+            w_off = win_offsets[b_i]
+            char_s, char_e = int(offsets[best_s][0]) + w_off, int(offsets[best_e][1]) + w_off
+            span_text = state[char_s:char_e].strip(" .,;:\n")
+            preds_out.append(span_text)
+        if len(preds_out) % 512 == 0 or len(preds_out) == len(rows):
+            print(f"  [squad_v2] {len(preds_out)}/{len(rows)} questions scored", flush=True)
+    return preds_out
+
+
+def _score_squad_rows(rows: list[dict[str, Any]], pred_strs: list[str]) -> dict[str, Any]:
+    em_all, f1_all, em_has, f1_has, em_no, f1_no = [], [], [], [], [], []
+    for row, pred_str in zip(rows, pred_strs):
         golds = row["answers"]["text"]
         if not golds:
             em = 1.0 if pred_str == "" else 0.0
@@ -443,10 +485,8 @@ def eval_squad_v2_public(model_dir: str, device: str, n_eval: int = 500) -> dict
             f1_has.append(f1)
         em_all.append(em)
         f1_all.append(f1)
-
-    summary = {
-        "dataset": "rajpurkar/squad_v2",
-        "n_evaluated": len(sample),
+    return {
+        "n_evaluated": len(rows),
         "exact": round(100.0 * sum(em_all) / len(em_all), 2),
         "f1": round(100.0 * sum(f1_all) / len(f1_all), 2),
         "HasAns_exact": round(100.0 * sum(em_has) / len(em_has), 2),
@@ -454,6 +494,60 @@ def eval_squad_v2_public(model_dir: str, device: str, n_eval: int = 500) -> dict
         "NoAns_exact": round(100.0 * sum(em_no) / len(em_no), 2),
         "NoAns_f1": round(100.0 * sum(f1_no) / len(f1_no), 2),
     }
+
+
+def eval_squad_v2_public(model_dir: str, device: str, n_eval: int = 500) -> dict[str, Any]:
+    from datasets import load_dataset
+    from modeling_nullspan import NullspanForExtraction
+    from transformers import AutoTokenizer
+
+    print(f"=== Evaluating on Stanford rajpurkar/squad_v2 (n_eval={n_eval or 'FULL 11,873'}) ===", flush=True)
+    seen_contexts: set[str] = set()
+    for fname in ("train.jsonl", "cal_dev.jsonl", "val.jsonl"):
+        fpath = os.path.join(ROOT, "data", fname)
+        if os.path.exists(fpath):
+            with open(fpath, "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.strip():
+                        obj = json.loads(line)
+                        st = obj.get("state") or obj.get("context") or ""
+                        if st:
+                            seen_contexts.add(st[:120])
+
+    ds_sq = load_dataset("rajpurkar/squad_v2", split="validation")
+    tok = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
+    model = NullspanForExtraction.from_pretrained(model_dir).to(device).eval()
+
+    if n_eval <= 0:
+        sample = list(ds_sq)
+        pred_strs = _predict_squad_batch(model, tok, sample, batch_size=8)
+        full_metrics = _score_squad_rows(sample, pred_strs)
+        zo_rows = [r for r in sample if r["context"][:120] not in seen_contexts]
+        zo_preds = [p for r, p in zip(sample, pred_strs) if r["context"][:120] not in seen_contexts]
+        summary = {
+            "dataset": "rajpurkar/squad_v2",
+            **full_metrics,
+            "zero_overlap_subset": _score_squad_rows(zo_rows, zo_preds),
+        }
+    else:
+        has_ans_pool, no_ans_pool = [], []
+        for row in ds_sq:
+            if row["context"][:120] in seen_contexts:
+                continue
+            if row["answers"]["text"]:
+                has_ans_pool.append(row)
+            else:
+                no_ans_pool.append(row)
+        rng = random.Random(20261030)
+        rng.shuffle(has_ans_pool)
+        rng.shuffle(no_ans_pool)
+        sample = has_ans_pool[: n_eval // 2] + no_ans_pool[: n_eval // 2]
+        pred_strs = _predict_squad_batch(model, tok, sample, batch_size=8)
+        summary = {
+            "dataset": "rajpurkar/squad_v2",
+            **_score_squad_rows(sample, pred_strs),
+        }
+
     print("SQuAD v2.0 Validation Summary:", json.dumps(summary, indent=2), flush=True)
     return summary
 
@@ -497,17 +591,23 @@ def main(argv: list[str] | None = None) -> int:
             existing = json.loads(Path(args.out).read_text(encoding="utf-8"))
         except Exception:
             existing = {}
-    existing["hardware"] = hw_name
+    existing.setdefault("hardware", hw_name)
 
     if args.suite == "typed_decisions":
         assert args.ledger_entry is not None
-        existing["typed_decisions"] = eval_typed_decisions_test(args.model_dir, device, args.ledger_entry)
+        res = eval_typed_decisions_test(args.model_dir, device, args.ledger_entry)
+        res["hardware"] = hw_name
+        existing["typed_decisions"] = res
     elif args.suite == "jevbench":
         jb_dir = (args.jevbench_dir or os.environ.get("JEVBENCH_DIR") or "").strip()
-        existing["jevbench_public"] = eval_jevbench_public(args.model_dir, jb_dir, device)
+        res = eval_jevbench_public(args.model_dir, jb_dir, device)
+        res["hardware"] = hw_name
+        existing["jevbench_public"] = res
     elif args.suite == "squad_v2":
         key = "squad_v2_full" if args.n_eval <= 0 else "squad_v2"
-        existing[key] = eval_squad_v2_public(args.model_dir, device, n_eval=args.n_eval)
+        res = eval_squad_v2_public(args.model_dir, device, n_eval=args.n_eval)
+        res["hardware"] = hw_name
+        existing[key] = res
 
     with open(args.out, "w", encoding="utf-8") as f:
         json.dump(existing, f, indent=2)

@@ -25,6 +25,7 @@ Computes JevBench-compatible Four Score Axes (0-100):
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import json
 import math
 import platform
@@ -68,6 +69,32 @@ SAFETENSORS_PATH = ARTIFACT_DIR / "model.safetensors"
 VAL_JSONL_PATH = DATA_DIR / "val.jsonl"
 CONTRACTS_SEALED_PATH = ROOT / "bench" / "contracts_sealed_golden.json"
 CLAIRIC_CACHE_PATH = ROOT / "bench" / "clairic_clef_cache.json"
+LLM_DECODER_CACHE_PATH = ROOT / "bench" / "llm_decoder_cache.json"
+
+OPEN_POOL_DISCLOSURE = (
+    "Open Pool (n=336) items come from data/val.jsonl produced by training/generate_dataset.py "
+    "(disjoint seed range, 0% text overlap with train/cal_dev), which shares structural templates "
+    "with the deterministic nullspan-ZeroDep rule engine. Therefore, the Sealed Pool (n=164: "
+    "Stanford SQuAD v2.0 prose QA, 12 unseen multi-numeric legal/commercial agreements, and "
+    "adversarial prompt-injection traps) is the headline NullspanBench table."
+)
+
+
+def compute_predictions_sha256(preds: list[dict[str, Any]]) -> str:
+    canonical = [
+        {
+            "i": idx,
+            "v": p.get("value"),
+            "p_null": round(float(p.get("p_null", 0.0)), 6),
+            "ver": p.get("verified"),
+            "p10": p.get("p10"),
+            "p90": p.get("p90"),
+            "span": p.get("span"),
+        }
+        for idx, p in enumerate(preds)
+    ]
+    blob = json.dumps(canonical, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
+    return hashlib.sha256(blob).hexdigest()
 
 
 def bootstrap_ci(values: list[float], n_boot: int = 1000, seed: int = 20261019) -> tuple[float, float, float]:
@@ -920,6 +947,79 @@ def evaluate_cached_cloudflare_clairic_clef(
     return preds, item_latencies_ms, total_input_tokens, total_rpc_calls, total_passes, doc_p50
 
 
+def evaluate_cached_llm_decoder(
+    model_id: str,
+    items: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[float], int, int] | None:
+    """Evaluate cached real JSON-schema LLM API responses from `bench/llm_decoder_cache.json`."""
+    if not LLM_DECODER_CACHE_PATH.exists():
+        return None
+    cache = json.loads(LLM_DECODER_CACHE_PATH.read_text(encoding="utf-8"))
+    model_cache = cache.get(model_id, {})
+    if len(model_cache) < len(items):
+        print(
+            f"Skipping unmeasured/incomplete {model_id}: cached {len(model_cache)}/{len(items)} items "
+            f"(run `python bench/eval_llm_decoders.py --model {model_id}`).",
+            flush=True,
+        )
+        return None
+
+    preds: list[dict[str, Any]] = []
+    latencies_ms: list[float] = []
+    in_tokens = 0
+    out_tokens = 0
+    for idx, rec in enumerate(items):
+        key = f"{idx:03d}::{rec['doc_id']}::{rec['field_name']}"
+        if key not in model_cache:
+            print(f"Missing cache key {key} for {model_id}; skipping row.", flush=True)
+            return None
+        entry = model_cache[key]
+        preds.append(dict(entry["pred"]))
+        latencies_ms.append(float(entry["latency_ms"]))
+        in_tokens += int(entry.get("input_tokens", 0))
+        out_tokens += int(entry.get("output_tokens", 0))
+    return preds, latencies_ms, in_tokens, out_tokens
+
+
+def _compute_pool_summary(
+    scores: list[float],
+    null_probs: list[float],
+    null_labels: list[int],
+    latencies_ms: list[float],
+    usd_per_1k: float,
+) -> dict[str, Any]:
+    intel_mean, intel_lo, intel_hi = bootstrap_ci(scores)
+    ece = compute_ece(null_probs, null_labels)
+    brier = compute_brier(null_probs, null_labels)
+    auroc = compute_auroc(null_probs, null_labels)
+    calib_score = round(max(10.0, min(99.9, 100.0 * (1.0 - 0.65 * ece - 0.35 * brier))), 1)
+    intel_score = round(intel_mean, 1)
+    cap_score = round(0.5 * intel_score + 0.5 * calib_score, 1)
+    lat_stats = percentiles_ms(latencies_ms)
+    s_score = speed_axis_score(lat_stats["p50_ms"])
+    k_score = cost_axis_score(usd_per_1k)
+    comp_score = harmonic_mean_4(intel_score, calib_score, s_score, k_score)
+    return {
+        "n_observations": len(scores),
+        "axes": {
+            "intelligence": intel_score,
+            "intelligence_ci95": [round(intel_lo, 1), round(intel_hi, 1)],
+            "calibration": calib_score,
+            "speed": s_score,
+            "cost": k_score,
+        },
+        "capability_score": cap_score,
+        "composite_score": comp_score,
+        "calibration_details": {
+            "null_auroc": auroc,
+            "null_ece": ece,
+            "null_brier": brier,
+        },
+        "latency": lat_stats,
+        "usd_per_1k_decisions": usd_per_1k,
+    }
+
+
 def summarize_system_metrics(
     sys_meta: dict[str, Any],
     items: list[dict[str, Any]],
@@ -928,19 +1028,25 @@ def summarize_system_metrics(
     total_input_tokens: int,
     total_output_tokens: int = 0,
 ) -> dict[str, Any]:
-    """Compute full JevBench-compatible 4-axis scores, radar breakdowns, and domain heatmaps."""
+    """Compute full JevBench-compatible 4-axis scores across Sealed (headline), Open, and Combined pools."""
     all_scores: list[float] = []
     open_scores: list[float] = []
     sealed_scores: list[float] = []
     null_probs: list[float] = []
     null_labels: list[int] = []
+    open_null_probs: list[float] = []
+    open_null_labels: list[int] = []
+    sealed_null_probs: list[float] = []
+    sealed_null_labels: list[int] = []
+    open_lats: list[float] = []
+    sealed_lats: list[float] = []
 
     by_req: dict[str, list[float]] = defaultdict(list)
     by_tier_open: dict[str, list[float]] = defaultdict(list)
     by_tier_sealed: dict[str, list[float]] = defaultdict(list)
     by_domain: dict[str, list[float]] = defaultdict(list)
 
-    for rec, pred in zip(items, preds):
+    for rec, pred, lat_ms in zip(items, preds, latencies_ms):
         meta = classify_item_metadata(rec)
         sc, p_null, gold_null = score_single_prediction(pred, rec)
         all_scores.append(sc * 100.0)
@@ -949,25 +1055,19 @@ def summarize_system_metrics(
 
         if meta["pool"] == "open":
             open_scores.append(sc * 100.0)
+            open_null_probs.append(p_null)
+            open_null_labels.append(gold_null)
+            open_lats.append(lat_ms)
             by_tier_open[meta["tier"]].append(sc * 100.0)
         else:
             sealed_scores.append(sc * 100.0)
+            sealed_null_probs.append(p_null)
+            sealed_null_labels.append(gold_null)
+            sealed_lats.append(lat_ms)
             by_tier_sealed[meta["tier"]].append(sc * 100.0)
 
         by_req[meta["req_type"]].append(sc * 100.0)
         by_domain[meta["domain"]].append(sc * 100.0)
-
-    intel_mean, intel_lo, intel_hi = bootstrap_ci(all_scores)
-    ece = compute_ece(null_probs, null_labels)
-    brier = compute_brier(null_probs, null_labels)
-    auroc = compute_auroc(null_probs, null_labels)
-
-    calib_score = round(max(10.0, min(99.9, 100.0 * (1.0 - 0.65 * ece - 0.35 * brier))), 1)
-    intel_score = round(intel_mean, 1)
-    capability_score = round(0.5 * intel_score + 0.5 * calib_score, 1)
-
-    lat_stats = percentiles_ms(latencies_ms)
-    s_score = speed_axis_score(lat_stats["p50_ms"])
 
     in_rate_per_1m = float(sys_meta["input_rate_per_1m_usd"])
     out_rate_per_1m = float(sys_meta["output_rate_per_1m_usd"])
@@ -976,9 +1076,10 @@ def summarize_system_metrics(
         (total_output_tokens / n_dec) * 1000.0 * (out_rate_per_1m / 1e6)
     )
     usd_per_1k = round(max(0.0001, usd_per_1k), 4)
-    k_score = cost_axis_score(usd_per_1k)
 
-    composite_score = harmonic_mean_4(intel_score, calib_score, s_score, k_score)
+    combined_summary = _compute_pool_summary(all_scores, null_probs, null_labels, latencies_ms, usd_per_1k)
+    sealed_summary = _compute_pool_summary(sealed_scores, sealed_null_probs, sealed_null_labels, sealed_lats, usd_per_1k)
+    open_summary = _compute_pool_summary(open_scores, open_null_probs, open_null_labels, open_lats, usd_per_1k)
 
     def avg_dict(d: dict[str, list[float]]) -> dict[str, dict[str, Any]]:
         return {
@@ -987,29 +1088,28 @@ def summarize_system_metrics(
             if v
         }
 
+    pred_sha = compute_predictions_sha256(preds)
+
+    # Headline metrics on each ranked row reflect the Sealed Pool (N=164), with `open_pool` and `combined_pool` stored alongside.
     return {
         **sys_meta,
-        "n_observations": len(items),
+        "measured": True,
+        "predictions_sha256": pred_sha,
+        "n_observations": sealed_summary["n_observations"],
+        "n_total_observations": len(items),
         "input_tokens_total": total_input_tokens,
         "output_tokens_total": total_output_tokens,
         "usd_per_1k_decisions": usd_per_1k,
-        "axes": {
-            "intelligence": intel_score,
-            "intelligence_ci95": [round(intel_lo, 1), round(intel_hi, 1)],
-            "calibration": calib_score,
-            "speed": s_score,
-            "cost": k_score,
-        },
-        "capability_score": capability_score,
-        "composite_score": composite_score,
-        "open_set_score": round(sum(open_scores) / max(1, len(open_scores)), 1),
-        "sealed_set_score": round(sum(sealed_scores) / max(1, len(sealed_scores)), 1),
-        "calibration_details": {
-            "null_auroc": auroc,
-            "null_ece": ece,
-            "null_brier": brier,
-        },
-        "latency": lat_stats,
+        "axes": sealed_summary["axes"],
+        "capability_score": sealed_summary["capability_score"],
+        "composite_score": sealed_summary["composite_score"],
+        "open_set_score": open_summary["axes"]["intelligence"],
+        "sealed_set_score": sealed_summary["axes"]["intelligence"],
+        "calibration_details": sealed_summary["calibration_details"],
+        "latency": sealed_summary["latency"],
+        "sealed_pool": sealed_summary,
+        "open_pool": open_summary,
+        "combined_pool": combined_summary,
         "by_request_type": avg_dict(by_req),
         "by_tier_open": avg_dict(by_tier_open),
         "by_tier_sealed": avg_dict(by_tier_sealed),
@@ -1270,265 +1370,114 @@ def main() -> None:
             )
         )
 
-    # 15-16. API-hosted LLM Decoder Reference Systems (Toggleable like JevBench's "+ API" filter)
-    for ref_id, ref_name, author, in_rate, out_rate, lat_p50, inj_vuln in [
-        ("claude-haiku-4.5-json", "claude-haiku-4.5 (JSON Decoder · API)", "Anthropic (Ref)", 0.80, 4.00, 540.0, True),
-        ("gpt-5.4-nano-json", "gpt-5.4-nano (JSON Decoder · API)", "OpenAI (Ref)", 0.15, 0.60, 390.0, True),
+    # 15-16. Measured API-hosted LLM Decoders (included ONLY when all 500 items are cached from live API runs)
+    for ref_id, ref_name, author, in_rate, out_rate, api_base in [
+        ("claude-haiku-4.5-json", "claude-haiku-4.5 (JSON Decoder · API)", "Anthropic", 1.00, 5.00, "claude-haiku-4-5 (Strict JSON Tool Schema)"),
+        ("gpt-5.4-nano-json", "gpt-5.4-nano (JSON Decoder · API)", "OpenAI", 0.20, 1.25, "gpt-5.4-nano (Strict JSON Schema)"),
     ]:
-        p_llm: list[dict[str, Any]] = []
-        l_llm: list[float] = []
-        rng_llm = random.Random(42 if "claude" in ref_id else 99)
-        for idx_it, it in enumerate(items):
-            l_llm.append(lat_p50 * rng_llm.uniform(0.82, 1.35))
-            if it["domain"] == "adversarial_stress" and "cve" in it["field_name"] and inj_vuln:
-                p_llm.append({"type": "text", "p_null": 0.08, "value": "CVE-9999-9999"})
-            elif it["target"].get("is_null") == 1 and rng_llm.random() < (0.14 if "claude" in ref_id else 0.18):
-                p_llm.append({"type": it["field_spec"].get("type", "text"), "p_null": 0.22, "value": "N/A-guessed"})
-            elif it["domain"] == "contract_extraction" and rng_llm.random() < (0.04 if "claude" in ref_id else 0.07):
-                p_llm.append({"type": it["field_spec"].get("type", "number"), "p_null": 0.12, "value": 0})
-            else:
-                ans_copy = dict(p_pt[idx_it])
-                ans_copy["p_null"] = 0.82 if it["target"].get("is_null") == 1 else 0.14
-                p_llm.append(ans_copy)
-        systems_results.append(
-            summarize_system_metrics(
-                {
-                    "id": ref_id,
-                    "name": ref_name,
-                    "author": author,
-                    "system_type": "Closed API · LLM Decoder",
-                    "open_weights": False,
-                    "params_m": None,
-                    "footprint_mb": None,
-                    "base_model": "Autoregressive JSON Schema Decoder",
-                    "runtime": "Hosted Cloud API ( ~38 output tokens/field )",
-                    "input_rate_per_1m_usd": in_rate,
-                    "output_rate_per_1m_usd": out_rate,
-                },
-                items,
-                p_llm,
-                l_llm,
-                tok_pt,
-                len(items) * 38,
+        llm_res = evaluate_cached_llm_decoder(ref_id, items)
+        if llm_res is not None:
+            p_llm, l_llm, in_tok_llm, out_tok_llm = llm_res
+            avg_out = round(out_tok_llm / max(1, len(items)), 1)
+            systems_results.append(
+                summarize_system_metrics(
+                    {
+                        "id": ref_id,
+                        "name": ref_name,
+                        "author": author,
+                        "system_type": "Closed API · LLM Decoder",
+                        "open_weights": False,
+                        "params_m": None,
+                        "footprint_mb": None,
+                        "base_model": api_base,
+                        "runtime": f"Live Cloud JSON-Schema API ({avg_out} output tokens/field)",
+                        "input_rate_per_1m_usd": in_rate,
+                        "output_rate_per_1m_usd": out_rate,
+                    },
+                    items,
+                    p_llm,
+                    l_llm,
+                    in_tok_llm,
+                    out_tok_llm,
+                )
             )
-        )
 
-    # 17-19. Official Published JevBench Reference Anchors (benchmarkheaven.com/jev-models v1.7)
-    jevbench_anchors = [
+    # Unranked external reference note ONLY (different item set, not comparable, zero NullspanBench per-domain numbers)
+    reference_external_anchors = [
         {
             "id": "jev-1.13.0-ref",
-            "name": "Jev 1.13.0 (TypeSafe AI · JevBench Ref)",
+            "name": "Jev 1.13.0 (TypeSafe AI)",
             "author": "TypeSafe AI",
-            "system_type": "Jev Reference · Hosted API",
-            "open_weights": False,
-            "params_m": None,
-            "footprint_mb": None,
-            "base_model": "TypeSafe Jev 1.13.0 ($0.042/1M input)",
-            "runtime": "TypeSafe Hosted API (JevBench v1.7)",
-            "input_rate_per_1m_usd": 0.042,
-            "output_rate_per_1m_usd": 0.0,
-            "n_observations": 1500,
-            "input_tokens_total": 1152000,
-            "output_tokens_total": 0,
-            "usd_per_1k_decisions": 0.0323,
-            "axes": {
-                "intelligence": 63.6,
-                "intelligence_ci95": [61.2, 66.0],
-                "calibration": 90.6,
-                "speed": 91.5,
-                "cost": 54.7,
-            },
-            "capability_score": 77.1,
-            "composite_score": 71.5,
-            "open_set_score": 68.9,
-            "sealed_set_score": 61.6,
-            "calibration_details": {
-                "null_auroc": 0.9120,
-                "null_ece": 0.0468,
-                "null_brier": 0.0612,
-            },
-            "latency": {
-                "mean_ms": 251.4,
-                "p50_ms": 239.102,
-                "p95_ms": 412.0,
-                "p99_ms": 530.0,
-            },
-            "by_request_type": {
-                "span_open": {"score": 66.2, "n": 300},
-                "span_sealed": {"score": 61.4, "n": 300},
-                "noul_open": {"score": 54.5, "n": 150},
-                "noul_sealed": {"score": 46.1, "n": 150},
-                "choice": {"score": 79.0, "n": 300},
-                "math": {"score": 63.2, "n": 150},
-                "score": {"score": 63.3, "n": 150},
-            },
-            "by_tier_open": {
-                "Easy": {"score": 93.9, "n": 100},
-                "Standard": {"score": 63.2, "n": 100},
-                "Judge": {"score": 67.7, "n": 100},
-            },
-            "by_tier_sealed": {
-                "Standard": {"score": 68.7, "n": 600},
-                "Hard": {"score": 58.9, "n": 600},
-            },
-            "by_domain": {
-                "incident_report": {"score": 74.2, "n": 300},
-                "compute_ledger": {"score": 66.8, "n": 300},
-                "cluster_throughput_comps": {"score": 63.3, "n": 150},
-                "edge_traffic_forecast": {"score": 63.0, "n": 150},
-                "squad_v2_open_qa": {"score": 61.6, "n": 300},
-                "contract_extraction": {"score": 62.4, "n": 300},
-                "adversarial_stress": {"score": 58.9, "n": 300},
-            },
+            "source_benchmark": "JevBench v1.6.1 (snapshot 2026-11-11)",
+            "jevbench_capability": 75.50,
+            "jevbench_intelligence": 63.06,
+            "jevbench_calibration": 87.93,
+            "note": "Reference from JevBench v1.6.1 (different item set, not comparable to NullspanBench; unranked).",
         },
         {
             "id": "h2o-lightning-4b",
-            "name": "H2O-Lightning-4B v1.1 (JevBench #1 Comp)",
+            "name": "H2O-Lightning-4B v1.1",
             "author": "H2O.ai",
-            "system_type": "Jev-Compatible Decoder (4B)",
-            "open_weights": True,
-            "params_m": 4000.0,
-            "footprint_mb": 8100.0,
-            "base_model": "Qwen/Qwen3.5-4B Fine-Tune (vLLM RTX 5090)",
-            "runtime": "Self-Hosted GPU (RTX 5090)",
-            "input_rate_per_1m_usd": 0.027,
-            "output_rate_per_1m_usd": 0.0,
-            "n_observations": 1500,
-            "input_tokens_total": 1152000,
-            "output_tokens_total": 0,
-            "usd_per_1k_decisions": 0.0211,
-            "axes": {
-                "intelligence": 60.0,
-                "intelligence_ci95": [57.8, 62.3],
-                "calibration": 90.0,
-                "speed": 92.6,
-                "cost": 60.3,
-            },
-            "capability_score": 75.0,
-            "composite_score": 72.5,
-            "open_set_score": 64.1,
-            "sealed_set_score": 59.0,
-            "calibration_details": {
-                "null_auroc": 0.9080,
-                "null_ece": 0.0502,
-                "null_brier": 0.0645,
-            },
-            "latency": {
-                "mean_ms": 34.1,
-                "p50_ms": 29.285,
-                "p95_ms": 58.4,
-                "p99_ms": 74.0,
-            },
-            "by_request_type": {
-                "span_open": {"score": 61.5, "n": 300},
-                "span_sealed": {"score": 58.2, "n": 300},
-                "noul_open": {"score": 60.9, "n": 150},
-                "noul_sealed": {"score": 68.1, "n": 150},
-                "choice": {"score": 75.2, "n": 300},
-                "math": {"score": 57.6, "n": 150},
-                "score": {"score": 47.0, "n": 150},
-            },
-            "by_tier_open": {
-                "Easy": {"score": 88.2, "n": 100},
-                "Standard": {"score": 57.6, "n": 100},
-                "Judge": {"score": 61.0, "n": 100},
-            },
-            "by_tier_sealed": {
-                "Standard": {"score": 62.6, "n": 600},
-                "Hard": {"score": 54.3, "n": 600},
-            },
-            "by_domain": {
-                "incident_report": {"score": 69.4, "n": 300},
-                "compute_ledger": {"score": 59.2, "n": 300},
-                "cluster_throughput_comps": {"score": 47.0, "n": 150},
-                "edge_traffic_forecast": {"score": 44.3, "n": 150},
-                "squad_v2_open_qa": {"score": 62.6, "n": 300},
-                "contract_extraction": {"score": 58.4, "n": 300},
-                "adversarial_stress": {"score": 54.3, "n": 300},
-            },
+            "source_benchmark": "JevBench v1.6.1 (snapshot 2026-11-11)",
+            "jevbench_capability": 70.64,
+            "jevbench_intelligence": 53.75,
+            "jevbench_calibration": 87.52,
+            "note": "Reference from JevBench v1.6.1 (different item set, not comparable to NullspanBench; unranked).",
         },
         {
             "id": "basal-omni-1.0-ultra",
-            "name": "basal-omni-1.0-ultra (JevBench #1 Cap)",
+            "name": "basal-omni-1.0-ultra",
             "author": "Remek Kinas",
-            "system_type": "Jev-Compatible Decoder (31B)",
-            "open_weights": True,
-            "params_m": 31000.0,
-            "footprint_mb": 62000.0,
-            "base_model": "Gemma-4-31B-it + Merged LoRA (Typed Readout)",
-            "runtime": "Self-Hosted GPU (p50 102 ms)",
-            "input_rate_per_1m_usd": 0.058,
-            "output_rate_per_1m_usd": 0.0,
-            "n_observations": 1500,
-            "input_tokens_total": 1152000,
-            "output_tokens_total": 0,
-            "usd_per_1k_decisions": 0.0447,
-            "axes": {
-                "intelligence": 74.1,
-                "intelligence_ci95": [71.8, 76.3],
-                "calibration": 91.0,
-                "speed": 87.3,
-                "cost": 50.5,
-            },
-            "capability_score": 82.5,
-            "composite_score": 71.8,
-            "open_set_score": 76.7,
-            "sealed_set_score": 73.1,
-            "calibration_details": {
-                "null_auroc": 0.9240,
-                "null_ece": 0.0449,
-                "null_brier": 0.0550,
-            },
-            "latency": {
-                "mean_ms": 114.2,
-                "p50_ms": 102.000,
-                "p95_ms": 168.0,
-                "p99_ms": 210.0,
-            },
-            "by_request_type": {
-                "span_open": {"score": 75.4, "n": 300},
-                "span_sealed": {"score": 73.8, "n": 300},
-                "noul_open": {"score": 68.4, "n": 150},
-                "noul_sealed": {"score": 72.5, "n": 150},
-                "choice": {"score": 82.7, "n": 300},
-                "math": {"score": 69.1, "n": 150},
-                "score": {"score": 69.1, "n": 150},
-            },
-            "by_tier_open": {
-                "Easy": {"score": 96.5, "n": 100},
-                "Standard": {"score": 69.1, "n": 100},
-                "Judge": {"score": 65.2, "n": 100},
-            },
-            "by_tier_sealed": {
-                "Standard": {"score": 78.8, "n": 600},
-                "Hard": {"score": 74.0, "n": 600},
-            },
-            "by_domain": {
-                "incident_report": {"score": 81.2, "n": 300},
-                "compute_ledger": {"score": 71.5, "n": 300},
-                "cluster_throughput_comps": {"score": 69.1, "n": 300},
-                "edge_traffic_forecast": {"score": 66.9, "n": 150},
-                "squad_v2_open_qa": {"score": 76.9, "n": 300},
-                "contract_extraction": {"score": 72.8, "n": 300},
-                "adversarial_stress": {"score": 74.0, "n": 300},
-            },
+            "source_benchmark": "JevBench v1.6.1 (snapshot 2026-11-11)",
+            "jevbench_capability": 80.78,
+            "jevbench_intelligence": 72.14,
+            "jevbench_calibration": 89.42,
+            "note": "Reference from JevBench v1.6.1 (different item set, not comparable to NullspanBench; unranked).",
         },
     ]
-    systems_results.extend(jevbench_anchors)
 
-    # Sort by official Composite Score descending
-    systems_results.sort(key=lambda x: x["composite_score"], reverse=True)
+    # Sort headline `systems` and `sealed_leaderboard` by Sealed Pool Composite Score descending
+    systems_results.sort(key=lambda x: x["sealed_pool"]["composite_score"], reverse=True)
     for rank_i, s_row in enumerate(systems_results, start=1):
         s_row["official_rank"] = rank_i
+
+    sealed_leaderboard = [
+        {
+            "official_rank": idx,
+            "id": r["id"],
+            "name": r["name"],
+            "open_weights": r["open_weights"],
+            "measured": r["measured"],
+            "predictions_sha256": r["predictions_sha256"],
+            **r["sealed_pool"],
+        }
+        for idx, r in enumerate(systems_results, start=1)
+    ]
+
+    open_sorted = sorted(systems_results, key=lambda x: x["open_pool"]["composite_score"], reverse=True)
+    open_leaderboard = [
+        {
+            "official_rank": idx,
+            "id": r["id"],
+            "name": r["name"],
+            "open_weights": r["open_weights"],
+            "measured": r["measured"],
+            "predictions_sha256": r["predictions_sha256"],
+            **r["open_pool"],
+        }
+        for idx, r in enumerate(open_sorted, start=1)
+    ]
 
     pt_row = next(r for r in systems_results if r["id"] == "nullspan-fp32")
     i8_row = next(r for r in systems_results if r["id"] == "nullspan-onnx-int8")
     fast_row = next(r for r in systems_results if r["id"] == "nullspan-zerodep-fast")
 
     payload = {
-        "benchmark_name": "NullspanBench (JevBench-Compatible Decision & Extraction Leaderboard)",
-        "benchmark_version": "3.2.0-jevbench",
-        "draw_id": "S+P (draw v3.2-nullspan-20261030)",
+        "benchmark_name": "NullspanBench (Measured Decision & Extraction Leaderboard)",
+        "benchmark_version": "3.3.0-measured",
+        "headline_pool": "sealed",
+        "open_pool_disclosure": OPEN_POOL_DISCLOSURE,
+        "draw_id": "Sealed P=164 Headline + Open S=336 Separate (v3.3-measured)",
         "timestamp": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "n_total_observations": len(items),
         "n_open_observations": sum(1 for it in items if classify_item_metadata(it)["pool"] == "open"),
@@ -1545,6 +1494,9 @@ def main() -> None:
             ),
         },
         "systems": systems_results,
+        "sealed_leaderboard": sealed_leaderboard,
+        "open_leaderboard": open_leaderboard,
+        "reference_external_anchors": reference_external_anchors,
         "tiers": {
             "tier_1a_pytorch_fp32": pt_row,
             "tier_1b_onnx_int8": i8_row,
@@ -1555,18 +1507,18 @@ def main() -> None:
     out_bench = ROOT / "bench" / "results.json"
     out_docs = ROOT / "docs" / "bench-data.json"
     out_space = ROOT / "space" / "bench-data.json"
-    out_bench.write_text(json.dumps(payload, indent=2))
-    out_docs.write_text(json.dumps(payload, indent=2))
-    out_space.write_text(json.dumps(payload, indent=2))
+    out_bench.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    out_docs.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    out_space.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
-    print(f"\n=== NULLSPANBENCH LEADERBOARD ({len(items)} Scored Observations, S+P) ===")
-    print(f"{'#':<3} {'System':<44} {'Comp':<6} {'Cap':<6} {'I':<6} {'C':<6} {'S':<6} {'K':<6} {'Open':<6} {'Sealed':<6} {'p50 ms':<8}")
-    for r in systems_results:
+    print(f"\n=== HEADLINE SEALED POOL LEADERBOARD (N={payload['n_sealed_observations']} Measured Observations) ===")
+    print(f"{'#':<3} {'System':<44} {'Comp':<6} {'Cap':<6} {'I':<6} {'C':<6} {'S':<6} {'K':<6} {'p50 ms':<8}")
+    for r in sealed_leaderboard:
         ax = r["axes"]
         print(
             f"{r['official_rank']:<3} {r['name'][:43]:<44} {r['composite_score']:<6.1f} {r['capability_score']:<6.1f} "
             f"{ax['intelligence']:<6.1f} {ax['calibration']:<6.1f} {ax['speed']:<6.1f} {ax['cost']:<6.1f} "
-            f"{r['open_set_score']:<6.1f} {r['sealed_set_score']:<6.1f} {r['latency']['p50_ms']:<8.3f}"
+            f"{r['latency']['p50_ms']:<8.3f}"
         )
 
 

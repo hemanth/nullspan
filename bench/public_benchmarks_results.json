@@ -100,11 +100,32 @@
   "squad_v2": {
     "dataset": "rajpurkar/squad_v2",
     "n_evaluated": 500,
-    "exact": 87.8,
-    "f1": 90.9,
-    "HasAns_exact": 84.4,
-    "HasAns_f1": 90.61,
-    "NoAns_exact": 91.2,
-    "NoAns_f1": 91.2
+    "exact": 87.0,
+    "f1": 89.36,
+    "HasAns_exact": 86.8,
+    "HasAns_f1": 91.52,
+    "NoAns_exact": 87.2,
+    "NoAns_f1": 87.2,
+    "hardware": "mps"
+  },
+  "squad_v2_full": {
+    "dataset": "rajpurkar/squad_v2",
+    "n_evaluated": 11873,
+    "exact": 87.09,
+    "f1": 90.0,
+    "HasAns_exact": 84.53,
+    "HasAns_f1": 90.36,
+    "NoAns_exact": 89.64,
+    "NoAns_f1": 89.64,
+    "zero_overlap_subset": {
+      "n_evaluated": 9198,
+      "exact": 87.01,
+      "f1": 89.88,
+      "HasAns_exact": 84.44,
+      "HasAns_f1": 90.17,
+      "NoAns_exact": 89.58,
+      "NoAns_f1": 89.58
+    },
+    "hardware": "mps"
   }
 }

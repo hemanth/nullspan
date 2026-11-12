@@ -14,7 +14,7 @@ Single-pass System One structured extraction, multi-numeric contract disambiguat
 Standard LLMs extract data and make typed workflow judgments by generating JSON token-by-token, which is slow, bills per output token, can get hijacked by *"ignore previous instructions"* prompt injections, and often hallucinates values when a field is missing. **`nullspan` acts like a grounded highlighter + calibrated System One judge instead of a chatbot:**
 
 1. **Points to Exact Text (`[start, end]` Span)**: Highlights exact character positions in your input text (`0` generated output tokens), making fabricated strings and prompt-injection payloads impossible.
-2. **Knows When to Say "Not There" (`p_null`)**: Computes a calibrated probability that a field is missing (`p_null`) and returns `null` with `abstention_reason` when evidence is absent (`87.80%` EM / `90.90%` F1 on Stanford `SQuAD v2.0`).
+2. **Knows When to Say "Not There" (`p_null`)**: Computes a calibrated probability that a field is missing (`p_null`) and returns `null` with `abstention_reason` when evidence is absent (`87.09%` EM / `90.00%` F1 on the full `N = 11,873` Stanford `SQuAD v2.0` official validation split; `87.01%` EM / `89.88%` F1 on the `N = 9,198` zero-overlap subset).
 3. **Disambiguates Multi-Numeric Contracts & Checks Math (`constraint` & `verified`)**: Separates competing dollar caps, percentages, day windows, and numeric tranches across multi-section agreements (`96/96` on unseen contracts) and verifies equations like `subtotal == nodes * hourly_rate`.
 4. **Calibrated `/v1/systemone` Typed Decisions (`decide()`)**: Evaluates `noul` (`true`/`false`), `choice` (`options`), and ordinal `score` (`min..max`) rubrics in a single 8K forward pass (`0.0` cross-option RoPE bleed, `100%` option-order permutation invariant)—scoring **`79.00%` accuracy** (`#5/27` sub-1B, `#19/51` overall; **`KL 0.0760`** `#1/23` sub-1B, `#2/45` overall; **`Brier 0.0420`** `#1/24` sub-1B, `#2/45` tied overall; `47.8 ms/case` on L4, fitted-table snapshot `2026-11-11`) on [`LocalLLaMA/typed-decisions`](https://huggingface.co/datasets/LocalLLaMA/typed-decisions) and hitting **`100.0%` (`48/48`)** on `JevBench Easy` + **`68.06%`** on `JevBench Original` (`100.0%` strict schema validity, `38.8 ms p50`, public readout; unlisted on JevBench v1.6.1 snapshot `2026-11-11`).
 
@@ -107,47 +107,48 @@ Reproducible via [`bench/eval_public_benchmarks.py`](./bench/eval_public_benchma
 | :--- | :--- | :---: | :---: | :---: | :--- |
 | **[`LocalLLaMA/typed-decisions`](https://huggingface.co/datasets/LocalLLaMA/typed-decisions)** | Official `test` (`400` cases · **`2,000` decisions**) | **`79.00%` Accuracy** (`noul` `84.17%`, `choice` `76.83%`, `score` `76.75%`) | **`KL 0.0760`** (`#1/23` `<=1B`, `#2/45` overall) · **`Brier 0.0420`** (`#1/24` `<=1B`, `#2/45` tied overall) · `ECE 0.1665` | **`9.56 ms/dec` (`47.8 ms/case`)** · `0` output tokens | Fitted table (snapshot `2026-11-11`): Accuracy `#5/27` `<=1B` (leader `sysone-typed-decisions-0.4B` `80.25%`), `#19/51` overall (leader `ZhiPan-Z3-Pro` `82.65%`); KL & Brier `#1` `<=1B`, `#2` overall (leader `pramana-2b` `0.0755` / `0.0415`) |
 | **[Benchmark Heaven / `jevbench`](https://github.com/fstandhartinger/jevbench)** | Official Public Suite (`231` items via `/v1/systemone`) | **`100.0%` Easy (`48/48`)** · **`68.06%` Original (`49/72`)** · `36.04%` Hard (`40/111`) (`59.31%` all) | **`100.0%` Strict Schema Validity** (`ECE 0.0755`, `v1.3 Geo 46.27`) | **`38.82 ms` `p50`** (`37.76 ms` Easy) · **`$0.00604 / 1k`** | `100.0%` on `fact` & `tool_selection`; `91.7%` `intent` & `ordinal` |
-| **[Stanford `rajpurkar/squad_v2`](https://huggingface.co/datasets/rajpurkar/squad_v2)** | Zero-overlap `validation` (`N = 500`: `250` HasAns + `250` NoAns) | **`87.80%` Exact Match** · **`90.90%` F1** | `HasAns F1 90.61%` · `NoAns EM 91.20%` | `10.3 ms` `p50` (L4 CUDA) · `$0.0017 / 1k` | Dedicated `qa_null_head` temperature-calibrated on disjoint `train` |
+| **[Stanford `rajpurkar/squad_v2`](https://huggingface.co/datasets/rajpurkar/squad_v2)** | Full official `validation` (`N = 11,873`; zero-overlap `N = 9,198`; balanced `N = 500`) | **`87.09%` Exact Match** · **`90.00%` F1** (`87.01%` / `89.88%` zero-overlap; `87.00%` / `89.36%` `N=500`) | `HasAns F1 90.36%` · `NoAns EM 89.64%` | `10.3 ms` `p50` (L4 CUDA) · `$0.0017 / 1k` | Dedicated `qa_null_head` temperature-calibrated on disjoint `train` |
 
 ## Architecture (`NullspanForExtraction` 345.3M + `NullspanSystemOneEngine` 395M 8K)
 
 ![Architecture Flow](./docs/flow-diagram.svg)
 
-1. **`null_head` + `qa_null_head` (Span-Attended Calibrated Abstention)**: Bilinear span-summary + `[CLS]` margin residual with held-out temperature scaling (`p_null` AUROC `0.9933`, ECE `0.0142`; `0.9951` / `0.0127` in `331.1 MB` Int8 ONNX) and `abstention_reason` (`unassigned_placeholder` vs `missing_field`).
+1. **`null_head` + `qa_null_head` (Span-Attended Calibrated Abstention)**: Bilinear span-summary + `[CLS]` margin residual with held-out temperature scaling (`p_null` Sealed AUROC `0.9854`, ECE `0.0478`; `0.9761` / `0.0414` in `331.1 MB` Int8 ONNX) and `abstention_reason` (`unassigned_placeholder` vs `missing_field`).
 2. **`span_head` (Grounded Pointer + Shannon Entropy)**: Projects `512`-token encoder states (plus query-conditioned sliding windows on ultra-long contracts) to `[start, end]` character spans with calibrated `confidence` and Shannon `span_entropy_bits`.
 3. **`bio_head` (Multi-Span List Tagging)**: Extracts ordered text and numeric tranche arrays (`type: "list"`) in a single pass.
 4. **`op_head` + `quantile_head` + Invariant Verifier**: Routes 10 System One extraction/math operations, predicts monotone `(p10, median, p90)` quantiles, and verifies cross-field algebraic constraints (`verified: true/false`).
 5. **`NullspanSystemOneEngine` (`/v1/systemone` Tree-Isolated Parallel-Span 8K Judge)**: `ModernBERT-large` (`395M`, full bidirectional `8,192`-token context) packing the entire raw case plus all `Q` questions and candidate options into **a single forward pass** (`47.8 ms/case`), with **Exact Tree-Isolated Parallel-Option Masking** (`0.0` cross-option RoPE bleed, `100%` option-order & `A/B/C` label permutation invariant), 2-layer `ParallelSpanDecisionHead` cross-option + cross-question workflow competition, 24 latent workflow factor heads, and 10-model 5-fold Cross-Backbone OOF Self-Distillation + Trajectory-SWA.
 
-## NullspanBench Leaderboard (`bench/run_bench.py` · 19 Systems · $N=500$ Zero-Leakage Decisions · NVIDIA L4 GPU)
+## NullspanBench Leaderboard (`bench/run_bench.py` · 15 Measured Systems · Headline Sealed Pool $N=164$ + Open Pool $N=336$)
 
-Modeled after [BenchmarkHeaven's JevBench](https://benchmarkheaven.com/jev-models), **NullspanBench v3.2** evaluates `19` systems (`13` local open-weights/open-code models running live forward passes on Google Cloud NVIDIA L4 GPU, live Cloudflare Workers AI `@cf/cloudflare/clairic + @cf/cloudflare/clef`, `2` reference JSON-mode LLM decoders, and `3` published JevBench v1.7 reference anchors) across **`500` zero-leakage observations** (`336` Open structured items + `164` Sealed items: `60` Stanford SQuAD v2.0, `96` Multi-Numeric Legal/Commercial Contract fields across `12` unseen agreements, and `8` Adversarial prompt-injection traps) on four axes: **Intelligence (`I`)**, **Calibration (`C`)**, **Speed (`S`)**, and **Cost (`K`)**.
+**NullspanBench v3.3** ranks **only empirically measured systems** (`measured: true` with cryptographic `predictions_sha256` in [`bench/results.json`](./bench/results.json)), separating the **Headline Sealed Pool (`P = 164`)** (`60` Stanford SQuAD v2.0 prose QA items, `96` Multi-Numeric Legal/Commercial Contract fields across `12` unseen agreements, and `8` Adversarial prompt-injection traps) from the **Open Pool (`S = 336`)** (`data/val.jsonl` produced by `training/generate_dataset.py` on disjoint seeds, which shares structural templates with the `nullspan-ZeroDep` rule engine).
 
 Explore interactive weight sliders, Pareto frontier plots, and 2-system radar comparisons at [**https://hemanth.github.io/nullspan/bench.html**](https://hemanth.github.io/nullspan/bench.html):
 
-| Rank | System | Composite (`25:25:25:25`) | Capability (`50I:50C`) | Intelligence `I` (95% CI) | Calibration `C` | Speed `S` | Cost `K` | `$/1k` | `p50` Latency |
-| :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **1** | **`nullspan-Hybrid (Fast + ONNX Int8)`** (Open) | **95.7** | **98.2** | **97.8%** `[96.6, 99.0]` | **98.6** | **92.7** | **93.8** | `$0.0003` | `0.040 ms` |
-| **2** | **`nullspan-ZeroDep (Fast Engine)`** (Open) | **94.7** | `92.9` | `90.8%` `[88.2, 93.4]` | `95.0` | **93.5** | **99.8** | `$0.0001` | `0.034 ms` |
-| **3** | **`nullspan-345M (PyTorch FP32 · L4 CUDA)`** (Open) | **81.3** | **98.2** | **98.0%** `[96.8, 99.2]` | **98.5** | `63.2` | `76.8` | `$0.0017` | `10.297 ms` |
-| **4** | **`nullspan-345M-Int8 (ONNX WASM/CPU)`** (Open) | **78.1** | **98.2** | **97.8%** `[96.6, 99.0]` | **98.6** | `52.7` | `84.2` | `$0.0008` | `75.933 ms` |
-| **5** | `H2O-Lightning-4B v1.1 (JevBench #1 Comp)` (Open 4B) | `72.5` | `75.0` | `60.0%` `[57.8, 62.3]` | `90.0` | `92.6` | `60.3` | `$0.0211` | `29.285 ms` |
-| **6** | **`@cf/cloudflare/clairic + clef (Live Workers AI)`** (API) | `72.1` | `93.2` | `91.6%` `[89.2, 93.9]` | `94.9` | `51.7` | `68.2` | `$0.0041` | `91.323 ms` (`315.3 ms/doc`) |
-| **7** | `basal-omni-1.0-ultra (JevBench #1 Cap)` (Open 31B) | `71.8` | `82.5` | `74.1%` `[71.8, 76.3]` | `91.0` | `87.3` | `50.5` | `$0.0447` | `102.000 ms` |
-| **8** | `Jev 1.13.0 (TypeSafe AI · JevBench Ref)` (API) | `71.5` | `77.1` | `63.6%` `[61.2, 66.0]` | `90.6` | `91.5` | `54.7` | `$0.0323` | `239.102 ms` |
-| **9** | **`nullspan-345M (ONNX FP32)`** (Open) | `71.2` | **98.2** | **98.0%** `[96.8, 99.2]` | **98.5** | `43.5` | `78.0` | `$0.0015` | `424.943 ms` |
-| **10** | `deberta-v3-base-squad2 (184M SQuAD2 QA)` (Open) | `60.3` | `55.8` | `48.1%` `[43.9, 52.4]` | `63.4` | `65.1` | `69.2` | `$0.0037` | `7.234 ms` |
-| **11** | `gpt-5.4-nano (JSON Decoder · API)` (API) | `59.8` | `92.1` | `95.2%` `[93.4, 97.0]` | `89.0` | `43.6` | `45.1` | `$0.0438` | `417.991 ms` |
-| **12** | `claude-haiku-4.5 (JSON Decoder · API)` (API) | `48.8` | `92.1` | `95.4%` `[93.4, 97.2]` | `88.7` | `41.8` | `27.5` | `$0.2639` | `586.392 ms` |
-| **13** | `bge-small-en-v1.5 (Dense Span+Null)` (Open) | `37.6` | `52.0` | `14.7%` `[12.0, 17.5]` | `89.2` | `64.2` | `85.5` | `$0.0007` | `8.625 ms` |
-| **14** | `distilbert-base-control (Raw Control)` (Open) | `36.9` | `52.9` | `14.2%` `[11.6, 17.0]` | `91.5` | `67.7` | `81.1` | `$0.0011` | `4.479 ms` |
-| **15** | `all-MiniLM-L12-v2 (Dense Span+Null)` (Open) | `36.3` | `44.0` | `14.4%` `[11.7, 17.5]` | `73.5` | `64.2` | `85.5` | `$0.0007` | `8.582 ms` |
-| **16** | `all-mpnet-base-v2 (Dense Span+Null)` (Open) | `34.4` | `42.3` | `13.6%` `[10.9, 16.7]` | `71.0` | `63.3` | `77.4` | `$0.0016` | `10.257 ms` |
-| **17** | `paraphrase-albert-small-v2 (Dense Span+Null)` (Open) | `33.6` | `44.5` | `12.5%` `[10.0, 15.2]` | `76.6` | `66.4` | `91.0` | `$0.0004` | `5.700 ms` |
-| **18** | `paraphrase-MiniLM-L3-v2 (Dense Span+Null)` (Open) | `30.9` | `41.7` | `11.1%` `[8.7, 13.8]` | `72.3` | `69.6` | `91.0` | `$0.0004` | `3.114 ms` |
-| **19** | `all-MiniLM-L6-v2 (Dense Span+Null)` (Open) | `28.5` | `40.5` | `10.0%` `[7.7, 12.3]` | `70.9` | `67.1` | `88.8` | `$0.0005` | `4.988 ms` |
+### Headline Sealed Pool Leaderboard (`P = 164` Measured Observations)
 
-See full methodology, proper scoring definitions, request-type breakdowns (`100.0%` on Multi-Numeric Contracts `n=96`, `100.0%` Choice `n=41`, `100.0%` Math & Invariants `n=51`), and head-to-head analysis in [`bench/SCIENCE_REPORT.md`](./bench/SCIENCE_REPORT.md).
+| Rank | System | Sealed Composite (`25:25:25:25`) | Sealed Capability (`50I:50C`) | Sealed Intelligence `I` (95% CI) | Calibration `C` | Speed `S` | Cost `K` | `$/1k` | `p50` Latency |
+| :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **1** | **`nullspan-Hybrid (Fast + ONNX Int8)`** (Open) | **91.4** | **95.0** | **94.5%** `[90.9, 97.6]` | `95.5` | **83.0** | **93.8** | `$0.0003` | `0.248 ms` |
+| **2** | **`nullspan-ZeroDep (Fast Engine)`** (Open) | `84.5` | `78.3` | `72.0%` `[65.2, 78.7]` | `84.6` | **86.1** | **99.8** | `$0.0001` | `0.137 ms` |
+| **3** | **`nullspan-345M-Int8 (ONNX WASM/CPU)`** (Open) | `74.1` | **95.2** | **94.5%** `[90.9, 97.6]` | `95.8` | `47.5` | `84.2` | `$0.0008` | `201.699 ms` |
+| **4** | **`nullspan-345M (PyTorch FP32)`** (Open) | `73.8` | `94.6` | `93.9%` `[90.2, 97.0]` | `95.3` | `49.9` | `76.8` | `$0.0017` | `127.606 ms` |
+| **5** | **`nullspan-345M (ONNX FP32)`** (Open) | `72.9` | **95.2** | `93.9%` `[90.2, 97.0]` | `96.5` | `47.6` | `78.0` | `$0.0015` | `196.443 ms` |
+| **6** | **`@cf/cloudflare/clairic + clef (Live Workers AI)`** (API) | `72.5` | **96.6** | **95.4%** `[92.1, 98.2]` | **97.8** | `50.5` | `68.2` | `$0.0041` | `113.801 ms` |
+| **7** | `deberta-v3-base-squad2 (184M SQuAD2 QA)` (Open) | `57.0` | `55.5` | `47.3%` `[39.3, 54.9]` | `63.8` | `52.8` | `69.2` | `$0.0037` | `74.133 ms` |
+| **8** | `all-MiniLM-L12-v2 (Dense Span+Null)` (Open) | `25.6` | `36.6` | `8.8%` `[4.9, 13.4]` | `64.5` | `64.6` | `85.5` | `$0.0007` | `7.906 ms` |
+| **9** | `all-mpnet-base-v2 (Dense Span+Null)` (Open) | `24.0` | `36.2` | `8.2%` `[4.3, 12.8]` | `64.2` | `62.2` | `77.4` | `$0.0016` | `12.562 ms` |
+| **10** | `paraphrase-MiniLM-L3-v2 (Dense Span+Null)` (Open) | `23.2` | `35.6` | `7.6%` `[4.0, 11.9]` | `63.7` | `70.4` | `91.0` | `$0.0004` | `2.654 ms` |
+| **11** | `all-MiniLM-L6-v2 (Dense Span+Null)` (Open) | `23.0` | `34.6` | `7.6%` `[4.0, 11.9]` | `61.7` | `68.2` | `88.8` | `$0.0005` | `4.064 ms` |
+| **12** | `claude-haiku-4.5 (JSON Decoder · API)` (API) | `22.8` | `89.8` | `88.4%` `[83.5, 93.3]` | `91.3` | `35.9` | `8.0` | `$2.5643` | `1811.160 ms` |
+| **13** | `paraphrase-albert-small-v2 (Dense Span+Null)` (Open) | `21.0` | `37.1` | `6.7%` `[3.4, 10.7]` | `67.6` | `63.9` | `91.0` | `$0.0004` | `9.144 ms` |
+| **14** | `bge-small-en-v1.5 (Dense Span+Null)` (Open) | `12.0` | `39.3` | `3.4%` `[0.9, 6.1]` | `75.2` | `65.3` | `85.5` | `$0.0007` | `7.048 ms` |
+| **15** | `distilbert-base-control (Raw Control)` (Open) | `6.7` | `41.0` | `1.8%` `[0.0, 4.3]` | `80.3` | `65.1` | `81.1` | `$0.0011` | `7.291 ms` |
+
+- **Open Pool (`S = 336`, reported separately — shared `training/generate_dataset.py` templates)**: `nullspan-ZeroDep`, `nullspan-Hybrid`, and `nullspan-345M` score `100.0%` Open Intelligence (`@cf/cloudflare/clairic + clef` `89.7%`, `claude-haiku-4.5` `93.7%`, `deberta-v3-base-squad2` `48.6%`). Because `data/val.jsonl` comes from `training/generate_dataset.py` (whose templates overlap `nullspan-ZeroDep`), the **Sealed Pool (`P = 164`)** above is the headline benchmark.
+- **Unranked External JevBench Reference Note (different item set, not comparable)**: Published [JevBench v1.6.1](https://benchmarkheaven.com/jev-models) anchors (`basal-omni-1.0-ultra` `80.78` Capability, `Jev 1.13.0` `75.50`, `H2O-Lightning-4B v1.1` `70.64`; snapshot `2026-11-11`) evaluate JevBench's `1,500`-item sealed Noul/Choice/Score suite rather than NullspanBench's extraction/contract/SQuAD items and are therefore not ranked or compared per-domain here.
+
+See full methodology, proper scoring definitions, Open vs Sealed pool tables, and cryptographic `predictions_sha256` digests in [`bench/SCIENCE_REPORT.md`](./bench/SCIENCE_REPORT.md).
 
 ## License
 

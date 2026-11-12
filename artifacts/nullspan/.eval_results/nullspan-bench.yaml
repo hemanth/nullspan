@@ -1,27 +1,27 @@
 - dataset:
     id: gnumanth/nullspan-dataset
     task_id: intelligence
-  value: 0.98
-  date: "2026-10-30"
+  value: 0.945
+  date: "2026-11-11"
   source:
     url: https://hemanth.github.io/nullspan/bench.html
-    name: "NullspanBench v3.2 (N=500 Zero-Leakage, NVIDIA L4 GPU)"
-  notes: "NullspanForExtraction 345.3M PyTorch FP32 CUDA (98.0% Intelligence, 98.5 Calibration, 10.30 ms p50; 331.1 MB Int8 ONNX: 97.8% Intelligence, 98.6 Calibration)."
+    name: "NullspanBench v3.3 Headline Sealed Pool (N=164 Measured Observations)"
+  notes: "Headline Sealed Pool (N=164: 60 Stanford SQuAD v2.0, 96 Multi-Numeric Legal/Commercial Contract fields across 12 unseen agreements, 8 Adversarial traps): nullspan-Hybrid & nullspan-345M-Int8 94.5% Intelligence (95.0/95.2 Capability), nullspan-345M PyTorch FP32 93.9% Intelligence (94.6 Capability). Open Pool (N=336, shared training/generate_dataset.py templates) reported separately: 100.0%."
 - dataset:
     id: rajpurkar/squad_v2
     task_id: exact_match
-  value: 0.87
-  date: "2026-10-30"
+  value: 0.8709
+  date: "2026-11-11"
   source:
     url: https://github.com/hemanth/nullspan/blob/main/bench/eval_public_benchmarks.py
-    name: "Stanford SQuAD v2.0 Zero-Overlap Validation (N=500)"
-  notes: "Zero-overlap validation split (250 HasAns + 250 NoAns): 87.00% Exact Match, 89.36% F1 (HasAns F1 91.52%, NoAns EM 87.20%)."
+    name: "Stanford SQuAD v2.0 Full Official Validation (N=11,873)"
+  notes: "Full official validation split (N=11,873): 87.09% Exact Match, 90.00% F1 (HasAns F1 90.36%, NoAns EM 89.64%); zero-overlap subset (N=9,198): 87.01% EM, 89.88% F1; N=500 balanced subsample: 87.00% EM, 89.36% F1."
 - dataset:
     id: rajpurkar/squad_v2
     task_id: f1
-  value: 0.8936
-  date: "2026-10-30"
+  value: 0.90
+  date: "2026-11-11"
   source:
     url: https://github.com/hemanth/nullspan/blob/main/bench/eval_public_benchmarks.py
-    name: "Stanford SQuAD v2.0 Zero-Overlap Validation (N=500)"
-  notes: "Zero-overlap validation split (250 HasAns + 250 NoAns): 87.00% Exact Match, 89.36% F1."
+    name: "Stanford SQuAD v2.0 Full Official Validation (N=11,873)"
+  notes: "Full official validation split (N=11,873): 87.09% Exact Match, 90.00% F1 (HasAns F1 90.36%, NoAns EM 89.64%); zero-overlap subset (N=9,198): 87.01% EM, 89.88% F1."
