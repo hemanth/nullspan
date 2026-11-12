@@ -779,6 +779,44 @@ class TestSynthJevCases(unittest.TestCase):
         self.assertIn(middle_needle, prompt_txt[0])
         self.assertGreaterEqual(max_len, 12288)
 
+    def test_easy_tier_prompt_overrides_multi_step_family_guidance(self):
+        import json
+        from unittest import mock
+        from training.synth_jev_cases import _author_batch_anthropic
+
+        captured_prompts: list[str] = []
+
+        class _Resp:
+            def read(self) -> bytes:
+                return json.dumps({"content": []}).encode("utf-8")
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+        def _fake_urlopen(req, timeout=60):
+            body = json.loads(req.data.decode("utf-8"))
+            captured_prompts.append(body["messages"][0]["content"])
+            return _Resp()
+
+        with mock.patch("urllib.request.urlopen", side_effect=_fake_urlopen):
+            _author_batch_anthropic(
+                [
+                    {"index": 0, "cell_id": "e0", "family": "state_tracking", "tier": "easy", "qtype": "noul"},
+                    {"index": 1, "cell_id": "e1", "family": "policy", "tier": "easy", "qtype": "noul"},
+                ],
+                author_model="claude-haiku-5-5",
+                api_key="test-key",
+                seed=7,
+            )
+
+        self.assertEqual(len(captured_prompts), 1)
+        self.assertNotIn("3-6 chronological events", captured_prompts[0])
+        self.assertNotIn("2-3 explicit policy rules", captured_prompts[0])
+        self.assertIn("single explicit fact", captured_prompts[0].lower())
+
 
 if __name__ == "__main__":
     unittest.main()

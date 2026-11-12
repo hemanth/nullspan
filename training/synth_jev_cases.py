@@ -786,7 +786,14 @@ def _author_batch_anthropic(
         fam = sp["family"]
         tier = sp["tier"]
         qtype = sp["qtype"]
-        guide = _FAMILY_GUIDANCE.get(fam, "Realistic structured decision problem.")
+        if tier == "easy":
+            guide = {
+                "choice": "Direct single explicit fact or single-sentence user intent lookup onto clearly disjoint option rubrics (zero multi-step rules or conflicting cues).",
+                "noul": "Verify a single explicit fact directly stated in the 1-sentence `state` (`yes` if the text explicitly states that fact, `no` if the text explicitly states the opposite; zero arithmetic, zero exception clauses, zero multi-condition rules).",
+                "score": "Map a single explicit status/tier/count stated in `state` onto 4 clearly disjoint non-overlapping rubric bands `0..3` (zero multi-factor synthesis).",
+            }[qtype]
+        else:
+            guide = _FAMILY_GUIDANCE.get(fam, "Realistic structured decision problem.")
         tier_note = {
             "easy": (
                 "EASY tier: `state` MUST be a short 1-to-2 sentence plain-text string (40-180 chars total, never a large JSON object), "
