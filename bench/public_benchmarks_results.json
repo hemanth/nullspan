@@ -27,23 +27,23 @@
   },
   "jevbench_public": {
     "total_public_items": 231,
-    "total_correct": 137,
-    "overall_accuracy": 0.5931,
-    "macro_accuracy": 0.5658,
-    "brier_mean": 0.5248,
-    "ece": 0.0755,
+    "total_correct": 136,
+    "overall_accuracy": 0.5887,
+    "macro_accuracy": 0.5629,
+    "brier_mean": 0.5251,
+    "ece": 0.0796,
     "strict_valid_rate": 1.0,
-    "p50_ms": 38.82,
-    "p95_ms": 100.72,
-    "price_per_1000_decisions_usd": 0.00604,
+    "p50_ms": 37.62,
+    "p95_ms": 103.23,
+    "price_per_1000_decisions_usd": 0.02416,
     "public_axes_v13": {
-      "intelligence": 41.66,
-      "calibration": 68.02,
-      "speed": 90.97,
-      "cost": 76.57
+      "intelligence": 41.1,
+      "calibration": 67.92,
+      "speed": 90.95,
+      "cost": 58.51
     },
-    "public_jevbench_v13_geometric": 46.27,
-    "public_jevbench_v14_harmonic": 44.25,
+    "public_jevbench_v13_geometric": 41.95,
+    "public_jevbench_v14_harmonic": 40.26,
     "per_family_accuracy": {
       "adequacy": 0.5833,
       "adversarial": 0.6667,
@@ -52,7 +52,7 @@
       "fact": 1.0,
       "intent": 0.9167,
       "judge_hard": 0.4706,
-      "long_policy": 0.3684,
+      "long_policy": 0.3158,
       "multi_hop": 0.1111,
       "ordinal": 0.9167,
       "policy": 0.5833,
@@ -72,8 +72,8 @@
         "strict_valid_rate": 1.0,
         "brier": 0.5021,
         "ece": 0.1598,
-        "p50_ms": 37.96,
-        "p95_ms": 45.56
+        "p50_ms": 36.75,
+        "p95_ms": 38.12
       },
       "easy": {
         "n": 48,
@@ -82,20 +82,121 @@
         "strict_valid_rate": 1.0,
         "brier": 0.0749,
         "ece": 0.1982,
-        "p50_ms": 37.76,
-        "p95_ms": 38.4
+        "p50_ms": 36.74,
+        "p95_ms": 38.0
       },
       "hard": {
         "n": 111,
-        "correct": 40,
-        "accuracy": 0.3604,
+        "correct": 39,
+        "accuracy": 0.3514,
         "strict_valid_rate": 1.0,
-        "brier": 0.7341,
-        "ece": 0.1599,
-        "p50_ms": 41.0,
-        "p95_ms": 125.43
+        "brier": 0.7347,
+        "ece": 0.1604,
+        "p50_ms": 39.85,
+        "p95_ms": 126.78
       }
-    }
+    },
+    "public_v16": {
+      "protocol": "jevbench::v1.6.1-O1S-local",
+      "n_items": 231,
+      "intelligence": {
+        "I_open": 12.823326767814537,
+        "I_sealed": null,
+        "base": 12.823326767814537,
+        "gap": 0.0,
+        "g_med": 2.573387642438244,
+        "excess": 0.0,
+        "penalty": 1.0,
+        "score": 12.823326767814537,
+        "per_type_split": {
+          "open|choice": {
+            "tiers": {
+              "easy": 100.0,
+              "standard": 58.04195804195804,
+              "hard": 4.255319148936181
+            },
+            "counts": {
+              "easy": 36,
+              "standard": 36,
+              "hard": 67
+            },
+            "cc": 33.30074181138011
+          },
+          "open|noul": {
+            "tiers": {
+              "easy": 83.33333333333333,
+              "standard": -83.33333333333334,
+              "hard": -57.89473684210527
+            },
+            "counts": {
+              "easy": 12,
+              "standard": 24,
+              "hard": 38
+            },
+            "cc": 0.0
+          },
+          "open|score": {
+            "tiers": {
+              "standard": 49.886658333333344,
+              "hard": -17.189471428571412
+            },
+            "counts": {
+              "standard": 12,
+              "hard": 6
+            },
+            "cc": 5.169238492063507
+          }
+        }
+      },
+      "calibration": {
+        "score": 71.15461089174299,
+        "parts": {
+          "choice": {
+            "ece_hard": 0.09932946268656716,
+            "ece_score": 80.13410746268657,
+            "mean_tvd": null,
+            "score": 80.13410746268657
+          },
+          "noul": {
+            "ece": 0.20442621621621623,
+            "abstention_rate": 0.6081081081081081,
+            "brier": 0.2604666853342162,
+            "score": 59.11475675675675
+          },
+          "score": {
+            "nrps": 0.1029311864398426,
+            "top_ece": 0.20638472222222226,
+            "score": 74.21496845578565
+          }
+        }
+      },
+      "speed": {
+        "p50_s_raw": 0.036752430500001765,
+        "p95_s_raw": 0.038123129500007735,
+        "p50_s_adjusted": 0.22350486100000352,
+        "p95_s_adjusted": 0.22624625900001546,
+        "score": 92.96131620130045
+      },
+      "cost": {
+        "usd_per_1000": 0.0241634632034632,
+        "usd_per_1m_in": 0.04,
+        "usd_per_1m_out": 0.0,
+        "score": 58.50522462342443
+      },
+      "capability": {
+        "eligible": true,
+        "capability": 41.98896882977876,
+        "usd_per_1000": 0.0241634632034632,
+        "p50_adjusted_s": 0.22350486100000352
+      },
+      "composite_option_a": 2.194579596814554,
+      "per_tier_accuracy": {
+        "easy": 0.9791666666666666,
+        "standard": 0.4722222222222222,
+        "hard": 0.2702702702702703
+      }
+    },
+    "hardware": "NVIDIA L4"
   },
   "squad_v2": {
     "dataset": "rajpurkar/squad_v2",

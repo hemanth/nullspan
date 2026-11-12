@@ -7,6 +7,7 @@
 #   MODE=eval           : Runs `bench/eval_public_benchmarks.py --suite ${SUITE}`
 #                         Requires SUITE={typed_decisions,jevbench,squad_v2}
 #                         Requires LEDGER_ENTRY=<id> when SUITE=typed_decisions
+{
 set -euo pipefail
 
 export CLOUDSDK_METRICS_ENVIRONMENT="${CLOUDSDK_METRICS_ENVIRONMENT:+$CLOUDSDK_METRICS_ENVIRONMENT }datacloud.antigravity"
@@ -19,6 +20,7 @@ LEDGER_ENTRY="${LEDGER_ENTRY:-}"
 N_EVAL="${N_EVAL:-500}"
 CONFIG_FILE="${CONFIG_FILE:-}"
 EXTRA_PATHS="${EXTRA_PATHS:-}"
+TRAIN_EXTRA_ARGS="${TRAIN_EXTRA_ARGS:-}"
 SKIP_WEIGHTS_DOWNLOAD="${SKIP_WEIGHTS_DOWNLOAD:-0}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -63,6 +65,8 @@ wait_for_ssh() {
     if gcloud compute ssh "${INSTANCE_NAME}" \
         --project="${PROJECT_ID}" \
         --zone="${ACTIVE_ZONE}" \
+        --tunnel-through-iap \
+        --ssh-flag="-o ConnectTimeout=10" \
         --command="echo SSH_READY" \
         --quiet 2>/dev/null; then
       return 0
@@ -80,11 +84,15 @@ TAR_ITEMS=(
   training/train_systemone.py
   bench/eval_public_benchmarks.py
   bench/compare_oof.py
+  bench/score_v16.py
   bench/TEST_LEDGER.md
   data/train.jsonl
   data/cal_dev.jsonl
   data/val.jsonl
 )
+if [[ -f "${ROOT_DIR}/bench/public_benchmarks_results.json" ]]; then
+  TAR_ITEMS+=(bench/public_benchmarks_results.json)
+fi
 if [[ -n "${CONFIG_FILE}" ]]; then
   TAR_ITEMS+=("${CONFIG_FILE}")
 fi
@@ -98,23 +106,46 @@ COPYFILE_DISABLE=1 tar -czf "${BUNDLE_TAR}" -C "${ROOT_DIR}" "${TAR_ITEMS[@]}"
 ls -lh "${BUNDLE_TAR}"
 
 echo "[2/5] Provisioning ephemeral GPU VM on Google Cloud (${PROJECT_ID})..."
-for z in us-central1-a us-central1-b us-central1-c us-east4-a us-west1-a; do
+for z in \
+  europe-west1-c europe-west2-a europe-west2-b europe-west3-a europe-west3-b europe-west4-c europe-west6-b europe-west6-c \
+  me-central2-a me-central2-c \
+  asia-northeast1-a asia-northeast1-b asia-northeast1-c asia-northeast3-a asia-northeast3-b \
+  asia-east1-a asia-east1-b asia-east1-c asia-southeast1-a asia-southeast1-b asia-southeast1-c \
+  asia-south1-a asia-south1-b asia-south1-c \
+  us-central1-a us-central1-b us-central1-c us-west4-c us-west4-a us-west1-b us-west1-a us-west1-c \
+  us-east4-c us-east4-a us-east1-b us-east1-c us-east1-d \
+  northamerica-northeast2-a northamerica-northeast2-b northamerica-northeast1-b northamerica-northeast1-c \
+  europe-west4-a europe-west4-b europe-west1-b; do
   echo "  Trying NVIDIA L4 (g2-standard-8) in ${z}..."
-  if gcloud compute instances create "${INSTANCE_NAME}" \
-      --project="${PROJECT_ID}" \
-      --zone="${z}" \
-      --machine-type="g2-standard-8" \
-      --maintenance-policy=TERMINATE \
-      --image-project="deeplearning-platform-release" \
-      --image-family="pytorch-2-9-cu129-ubuntu-2204-nvidia-580" \
-      --boot-disk-size=100GB \
-      --boot-disk-type=pd-ssd \
-      --labels="goog-packaged-solution=antigravity,component=nullspan-bench" \
-      --quiet 2>/dev/null; then
-    ACTIVE_ZONE="${z}"
-    GPU_MODE="l4_dlvm"
-    break
+  DISK_FLAG="--boot-disk-type=pd-balanced"
+  DISK_SIZE="150GB"
+  if [[ "${z}" == us-central1-* || "${z}" == northamerica-northeast2-* ]]; then
+    DISK_FLAG="--boot-disk-type=pd-standard"
+    DISK_SIZE="150GB"
   fi
+  for q_try in 1 2; do
+    if CREATE_ERR="$(gcloud compute instances create "${INSTANCE_NAME}" \
+        --project="${PROJECT_ID}" \
+        --zone="${z}" \
+        --machine-type="g2-standard-8" \
+        --maintenance-policy=TERMINATE \
+        --image-project="deeplearning-platform-release" \
+        --image-family="pytorch-2-9-cu129-ubuntu-2204-nvidia-580" \
+        --boot-disk-size="${DISK_SIZE}" \
+        "${DISK_FLAG}" \
+        --labels="goog-packaged-solution=antigravity,component=nullspan-bench" \
+        --quiet 2>&1)"; then
+      ACTIVE_ZONE="${z}"
+      GPU_MODE="l4_dlvm"
+      break 2
+    fi
+    if [[ "${CREATE_ERR}" == *"GPUS_ALL_REGIONS"* && "${q_try}" == "1" ]]; then
+      sleep 12
+      continue
+    fi
+    sleep 4
+    break
+  done
 done
 
 if [[ -z "${ACTIVE_ZONE}" ]]; then
@@ -152,6 +183,7 @@ if [[ "${GPU_MODE}" == "v100_ubuntu" ]]; then
   gcloud compute ssh "${INSTANCE_NAME}" \
     --project="${PROJECT_ID}" \
     --zone="${ACTIVE_ZONE}" \
+    --tunnel-through-iap \
     --quiet \
     --command='
       set -euo pipefail
@@ -167,6 +199,7 @@ if [[ "${GPU_MODE}" == "v100_ubuntu" ]]; then
   gcloud compute ssh "${INSTANCE_NAME}" \
     --project="${PROJECT_ID}" \
     --zone="${ACTIVE_ZONE}" \
+    --tunnel-through-iap \
     --quiet \
     --command="sudo reboot" 2>/dev/null || true
   sleep 10
@@ -177,6 +210,7 @@ echo "[3/5] Uploading bundle to ${INSTANCE_NAME}..."
 gcloud compute scp "${BUNDLE_TAR}" "${INSTANCE_NAME}:~/nullspan_bench_bundle.tar.gz" \
   --project="${PROJECT_ID}" \
   --zone="${ACTIVE_ZONE}" \
+  --tunnel-through-iap \
   --quiet
 
 # Optional local System One checkpoint upload for MODE=eval before HF upload
@@ -189,6 +223,7 @@ if [[ "${MODE}" == "eval" && -f "${ROOT_DIR}/artifacts/nullspan/systemone_decisi
   gcloud compute scp "${LOCAL_S1_TAR}" "${INSTANCE_NAME}:~/local_systemone.tar.gz" \
     --project="${PROJECT_ID}" \
     --zone="${ACTIVE_ZONE}" \
+    --tunnel-through-iap \
     --quiet
 fi
 
@@ -199,14 +234,31 @@ REMOTE_SCRIPT="
   mkdir -p ~/work && cd ~/work
   tar -xzf ~/nullspan_bench_bundle.tar.gz
   if [[ '${GPU_MODE}' == 'l4_dlvm' ]]; then
-    PY_BIN='/opt/conda/bin/python'
-    [[ -x \"\${PY_BIN}\" ]] || PY_BIN='python3'
-    \"\${PY_BIN}\" -m pip install -q --no-warn-script-location 'transformers>=4.44.0,<5.0.0' safetensors datasets huggingface_hub scipy
+    sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq || true
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq git python3-venv python3-pip || true
+    BASE_PY=''
+    for cand in \"\$HOME/work_venv/bin/python\" /opt/pytorch/bin/python /opt/dlami/nvme/conda/bin/python \$(ls /opt/*/bin/python /opt/*/*/bin/python 2>/dev/null || true) /usr/local/bin/python3 /usr/bin/python3; do
+      if [[ -x \"\${cand}\" ]] && \"\${cand}\" -c 'import torch; assert torch.cuda.is_available()' 2>/dev/null; then
+        BASE_PY=\"\${cand}\"
+        break
+      fi
+    done
+    if [[ -n \"\${BASE_PY}\" ]]; then
+      \"\${BASE_PY}\" -m venv --system-site-packages \"\$HOME/work_venv\"
+    else
+      python3 -m venv \"\$HOME/work_venv\"
+      \"\$HOME/work_venv/bin/pip\" install -q --upgrade pip
+      \"\$HOME/work_venv/bin/pip\" install -q torch --index-url https://download.pytorch.org/whl/cu126
+    fi
+    PY_BIN=\"\$HOME/work_venv/bin/python\"
+    \"\${PY_BIN}\" -m pip install -q --upgrade pip
+    \"\${PY_BIN}\" -m pip install -q --ignore-installed --no-warn-script-location 'jinja2>=3.1.5' markupsafe
+    \"\${PY_BIN}\" -m pip install -q --no-warn-script-location 'transformers>=4.48.0,<5.0.0' 'jinja2>=3.1.5' safetensors datasets huggingface_hub scipy accelerate sentencepiece protobuf tiktoken
   else
     python3 -m venv ~/venv
     ~/venv/bin/pip install -q --upgrade pip
     ~/venv/bin/pip install -q torch --index-url https://download.pytorch.org/whl/cu126
-    ~/venv/bin/pip install -q 'transformers>=4.44.0,<5.0.0' safetensors datasets huggingface_hub scipy
+    ~/venv/bin/pip install -q 'transformers>=4.48.0,<5.0.0' 'jinja2>=3.1.5' safetensors datasets huggingface_hub scipy accelerate sentencepiece protobuf tiktoken
     PY_BIN=\"\$HOME/venv/bin/python\"
   fi
 
@@ -216,7 +268,10 @@ REMOTE_SCRIPT="
     if [[ -n '${CONFIG_FILE}' ]]; then
       CFG_ARGS+=(--config '${CONFIG_FILE}')
     fi
-    \"\${PY_BIN}\" -u training/train_systemone.py --out artifacts/nullspan \"\${CFG_ARGS[@]}\"
+    if [[ '${SKIP_WEIGHTS_DOWNLOAD}' == '1' ]]; then
+      CFG_ARGS+=(--skip-final-student)
+    fi
+    \"\${PY_BIN}\" -u training/train_systemone.py --out artifacts/nullspan \"\${CFG_ARGS[@]}\" ${TRAIN_EXTRA_ARGS}
     if [[ '${SKIP_WEIGHTS_DOWNLOAD}' == '1' ]]; then
       tar -czf ~/nullspan_bench_results.tar.gz artifacts/nullspan/oof_report.json
     else
@@ -243,6 +298,7 @@ REMOTE_SCRIPT="
 gcloud compute ssh "${INSTANCE_NAME}" \
   --project="${PROJECT_ID}" \
   --zone="${ACTIVE_ZONE}" \
+  --tunnel-through-iap \
   --quiet \
   --command="${REMOTE_SCRIPT}"
 
@@ -250,7 +306,10 @@ echo "[5/5] Downloading results back to ${ROOT_DIR}..."
 gcloud compute scp "${INSTANCE_NAME}:~/nullspan_bench_results.tar.gz" "${RESULTS_TAR}" \
   --project="${PROJECT_ID}" \
   --zone="${ACTIVE_ZONE}" \
+  --tunnel-through-iap \
   --quiet
 
 tar -xzf "${RESULTS_TAR}" -C "${ROOT_DIR}"
 echo "[GCP] MODE=${MODE} complete!"
+exit 0
+}

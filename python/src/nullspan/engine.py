@@ -964,21 +964,25 @@ def decide(
     questions: dict[str, dict[str, Any]],
     *,
     model_id: str = DEFAULT_HF_REPO,
+    revision: str | None = None,
     device: str | None = None,
 ) -> dict[str, Any]:
     """Evaluate typed System One decisions (`noul`, `choice`, `score`) in one bidirectional encoder pass (`output_tokens = 0`)."""
     from .systemone import NullspanSystemOneEngine
 
-    cache_key = f"{model_id}:{device or 'auto'}"
+    cache_key = f"{model_id}@{revision or 'main'}:{device or 'auto'}"
     if cache_key not in _S1_CACHE:
         if os.path.isdir(model_id):
             local_dir = model_id
         else:
             from huggingface_hub import snapshot_download
 
-            local_dir = snapshot_download(
-                repo_id=model_id,
-                allow_patterns=["systemone/*", "systemone_decision.pt"],
-            )
+            dl_kwargs: dict[str, Any] = {
+                "repo_id": model_id,
+                "allow_patterns": ["systemone/*", "systemone_decision.pt"],
+            }
+            if revision is not None:
+                dl_kwargs["revision"] = revision
+            local_dir = snapshot_download(**dl_kwargs)
         _S1_CACHE[cache_key] = NullspanSystemOneEngine.load_from_dir(local_dir, device=device)
     return _S1_CACHE[cache_key].decide(state=state, questions=questions)

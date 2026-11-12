@@ -676,6 +676,126 @@ class ParallelSpanDecisionHead(nn.Module):
         return logits, flat_q_meta
 
 
+_CLAUSE_STOPWORDS = frozenset({
+    "the", "and", "for", "that", "this", "with", "from", "are", "was", "were",
+    "has", "have", "had", "not", "but", "what", "which", "when", "where", "who",
+    "does", "did", "can", "should", "would", "could", "under", "into", "over",
+    "yes", "true", "false", "option", "score", "level", "select", "choose",
+})
+
+
+def _truncate_state_preserving_clauses(
+    tokenizer: Any,
+    state_str: str,
+    questions: dict[str, dict[str, Any]],
+    eff_max_state: int,
+    full_state_toks: list[int],
+) -> list[int]:
+    """Select head + question-relevant middle clauses + tail in original document order."""
+    raw_blocks = [b for b in state_str.split("\n\n") if b.strip()]
+    if len(raw_blocks) < 4:
+        lines = [ln for ln in state_str.splitlines() if ln.strip()]
+        raw_blocks = ["\n".join(lines[i : i + 6]) for i in range(0, len(lines), 6)]
+    if len(raw_blocks) < 3:
+        half_h = int(eff_max_state * 0.55)
+        half_t = eff_max_state - half_h
+        return full_state_toks[:half_h] + (full_state_toks[-half_t:] if half_t > 0 else [])
+
+    # Order-invariant query term set across all questions and options
+    q_parts: list[str] = []
+    for qid, qspec in questions.items():
+        q_parts.append(str(qid))
+        q_parts.append(str(qspec.get("instructions") or ""))
+        for ok_s, orub in canonical_options(qspec):
+            q_parts.append(str(ok_s))
+            q_parts.append(str(orub))
+    q_terms = {
+        tok
+        for tok in re.findall(r"[a-z0-9_]{2,}", " ".join(q_parts).lower())
+        if tok not in _CLAUSE_STOPWORDS
+    }
+
+    prefix_toks = tokenizer.encode("State:\n", add_special_tokens=False)
+    sep_nl_toks = tokenizer.encode("\n", add_special_tokens=False)
+    rem_budget = max(8, eff_max_state - len(prefix_toks))
+
+    block_toks: list[list[int]] = []
+    block_term_sets: list[set[str]] = []
+    df_counts: dict[str, int] = {}
+    for blk in raw_blocks:
+        bt = tokenizer.encode(blk, add_special_tokens=False) + sep_nl_toks
+        block_toks.append(bt)
+        b_terms = set(re.findall(r"[a-z0-9_]{2,}", blk.lower())) & q_terms
+        block_term_sets.append(b_terms)
+        for t in b_terms:
+            df_counts[t] = df_counts.get(t, 0) + 1
+
+    n_blk = len(raw_blocks)
+    idf = {t: math.log((n_blk + 1.0) / (df_counts.get(t, 0) + 0.5)) + 1.0 for t in q_terms}
+
+    selected: set[int] = set()
+    used = 0
+    head_cap = max(16, int(rem_budget * 0.25))
+    tail_cap = max(16, int(rem_budget * 0.20))
+
+    # 1. Always anchor opening block(s) (derived checks + Section 0)
+    h_used = 0
+    for idx in range(n_blk):
+        blen = len(block_toks[idx])
+        if idx == 0 and blen > head_cap:
+            block_toks[0] = block_toks[0][:head_cap]
+            blen = len(block_toks[0])
+        if h_used + blen <= head_cap or idx == 0:
+            selected.add(idx)
+            h_used += blen
+            used += blen
+        else:
+            break
+
+    # 2. Always anchor closing block(s) (final overrides / late exceptions)
+    t_used = 0
+    for idx in range(n_blk - 1, -1, -1):
+        if idx in selected:
+            break
+        blen = len(block_toks[idx])
+        if idx == n_blk - 1 and blen > tail_cap:
+            block_toks[idx] = block_toks[idx][-tail_cap:]
+            blen = len(block_toks[idx])
+        if t_used + blen <= tail_cap or idx == n_blk - 1:
+            selected.add(idx)
+            t_used += blen
+            used += blen
+        else:
+            break
+
+    # 3. Greedily pick highest IDF-overlap middle clauses within remaining budget
+    scored_mid = []
+    for idx in range(n_blk):
+        if idx in selected:
+            continue
+        ov_score = sum(idf[t] for t in block_term_sets[idx])
+        scored_mid.append((ov_score, -idx, idx))
+    scored_mid.sort(reverse=True)
+
+    for ov_score, _, idx in scored_mid:
+        if used >= rem_budget:
+            break
+        blen = len(block_toks[idx])
+        if used + blen <= rem_budget:
+            selected.add(idx)
+            used += blen
+        elif ov_score > 0 and (rem_budget - used) >= 16:
+            block_toks[idx] = block_toks[idx][: rem_budget - used]
+            selected.add(idx)
+            used = rem_budget
+            break
+
+    out_toks = list(prefix_toks)
+    for idx in sorted(selected):
+        out_toks.extend(block_toks[idx])
+    return out_toks[:eff_max_state]
+
+
 def encode_case_parallel(
     tokenizer: Any,
     state: Any,
@@ -683,59 +803,43 @@ def encode_case_parallel(
     max_state_tokens: int = 3072,
     case_id: int = 0,
     precomputed_state_str: str | None = None,
+    max_total_tokens: int | None = None,
 ) -> dict[str, Any]:
     """Pack State + ALL questions + ALL candidate options into ONE parallel-positioned token sequence."""
     state_str = precomputed_state_str if precomputed_state_str is not None else compact_state_text(state)
     cls_id = tokenizer.cls_token_id if tokenizer.cls_token_id is not None else (tokenizer.bos_token_id or 0)
     sep_id = tokenizer.sep_token_id if tokenizer.sep_token_id is not None else (tokenizer.eos_token_id or 0)
 
-    state_toks = tokenizer.encode("State:\n" + state_str, add_special_tokens=False)
-    if len(state_toks) > max_state_tokens:
-        # Preserve head (derived checks + intro) + tail (late overriding exceptions / final turns)
-        half_h = int(max_state_tokens * 0.55)
-        half_t = max_state_tokens - half_h
-        state_toks = state_toks[:half_h] + state_toks[-half_t:]
+    hdr_cap = 192
+    opt_cap = 159
+    if max_total_tokens is not None:
+        n_q = max(1, len(questions))
+        n_opts_tot = max(1, sum(len(canonical_options(q)) for q in questions.values()))
+        qo_budget = max(32, int(max_total_tokens * 0.65))
+        per_slot = max(4, qo_budget // (n_q + n_opts_tot))
+        hdr_cap = min(hdr_cap, max(6, per_slot))
+        opt_cap = min(opt_cap, max(4, per_slot - 1))
 
-    input_ids: list[int] = [cls_id, *state_toks, sep_id]
-    pos_ids: list[int] = list(range(len(input_ids)))
-    q_owner_ids: list[int] = [0] * len(input_ids)
-    opt_branch_ids: list[int] = [0] * len(input_ids)
-    state_span = (1, 1 + len(state_toks))
-    cur_pos = len(input_ids)
-
-    q_records: list[dict[str, Any]] = []
-    for q_idx, (qid, question) in enumerate(questions.items(), start=1):
+    # Pre-tokenize question headers & options so we know exact token count when `max_total_tokens` is set
+    prepared_qs: list[tuple[str, dict[str, Any], list[int], list[tuple[str, list[int], list[float]]]]] = []
+    qo_tok_total = 0
+    for qid, question in questions.items():
         qtype = question["type"]
-        qtype_id = QTYPE_TO_ID.get(qtype, 1)
         opts = canonical_options(question)
         K = len(opts)
         instr = str(question.get("instructions") or "").strip()
 
         hdr_txt = f"\nQuestion [{qid} | {qtype}]: {instr}\nOptions:"
-        hdr_toks = tokenizer.encode(hdr_txt, add_special_tokens=False)[:192]
+        hdr_toks = tokenizer.encode(hdr_txt, add_special_tokens=False)[:hdr_cap]
         if not hdr_toks:
             hdr_toks = [sep_id]
-        hdr_start = len(input_ids)
-        input_ids.extend(hdr_toks)
-        pos_ids.extend(range(cur_pos, cur_pos + len(hdr_toks)))
-        q_owner_ids.extend([q_idx] * len(hdr_toks))
-        opt_branch_ids.extend([0] * len(hdr_toks))
-        hdr_end = len(input_ids)
-        cur_pos += len(hdr_toks)
-
-        # CRITICAL: All options of Question `qid` start at the exact same `opt_base_pos`
-        # AND are isolated in a parallel tree mask (`opt_branch_ids == k_i + 1`) so sibling options
-        # never bleed across identical RoPE coordinates while remaining 100% option-order invariant!
-        opt_base_pos = cur_pos
-        opt_spans: list[tuple[int, int]] = []
-        opt_meta: list[list[float]] = []
-        max_o_len = 1
 
         is_noul = 1.0 if qtype == "noul" else 0.0
         is_choice = 1.0 if qtype == "choice" else 0.0
         is_score = 1.0 if qtype == "score" else 0.0
         inv_k = 1.0 / max(1, K)
 
+        opt_items: list[tuple[str, list[int], list[float]]] = []
         for k_i, (key, rubric) in enumerate(opts):
             if qtype == "noul":
                 is_yes = key.lower() in ("true", "yes")
@@ -754,7 +858,68 @@ def encode_case_parallel(
                     opt_txt = f" [OPTION: {rubric}]"
                 ord_pos = 0.5  # Exact symmetry across all unordered `choice` options!
 
-            o_toks = tokenizer.encode(opt_txt, add_special_tokens=False)[:159] + [sep_id]
+            o_toks = tokenizer.encode(opt_txt, add_special_tokens=False)[:opt_cap] + [sep_id]
+            meta_row = [ord_pos, ord_pos * ord_pos, is_noul, is_choice, is_score, inv_k]
+            opt_items.append((key, o_toks, meta_row))
+        qo_tok_total += len(hdr_toks) + sum(len(ot) for _, ot, _ in opt_items)
+        prepared_qs.append((qid, question, hdr_toks, opt_items))
+
+    if max_total_tokens is not None and (qo_tok_total + 10) > max_total_tokens:
+        # Emergency squeeze so total sequence strictly respects `max_total_tokens`
+        avail_qo = max(len(prepared_qs) * 4, max_total_tokens - 10)
+        scale = avail_qo / max(1, qo_tok_total)
+        rebuilt: list[tuple[str, dict[str, Any], list[int], list[tuple[str, list[int], list[float]]]]] = []
+        qo_tok_total = 0
+        for qid, question, hdr_toks, opt_items in prepared_qs:
+            nh = max(2, int(len(hdr_toks) * scale))
+            hdr_s = hdr_toks[:nh]
+            new_opts = []
+            for key, o_toks, meta_row in opt_items:
+                no = max(2, int(len(o_toks) * scale))
+                ot_s = o_toks[: max(1, no - 1)] + [sep_id]
+                new_opts.append((key, ot_s, meta_row))
+            qo_tok_total += len(hdr_s) + sum(len(ot) for _, ot, _ in new_opts)
+            rebuilt.append((qid, question, hdr_s, new_opts))
+        prepared_qs = rebuilt
+
+    eff_max_state = max_state_tokens
+    if max_total_tokens is not None:
+        eff_max_state = min(eff_max_state, max(4, max_total_tokens - qo_tok_total - 2))
+
+    state_toks = tokenizer.encode("State:\n" + state_str, add_special_tokens=False)
+    if len(state_toks) > eff_max_state:
+        state_toks = _truncate_state_preserving_clauses(
+            tokenizer, state_str, questions, eff_max_state, state_toks
+        )
+
+    input_ids: list[int] = [cls_id, *state_toks, sep_id]
+    pos_ids: list[int] = list(range(len(input_ids)))
+    q_owner_ids: list[int] = [0] * len(input_ids)
+    opt_branch_ids: list[int] = [0] * len(input_ids)
+    state_span = (1, 1 + len(state_toks))
+    cur_pos = len(input_ids)
+
+    q_records: list[dict[str, Any]] = []
+    for q_idx, (qid, question, hdr_toks, opt_items) in enumerate(prepared_qs, start=1):
+        qtype = question["type"]
+        qtype_id = QTYPE_TO_ID.get(qtype, 1)
+        hdr_start = len(input_ids)
+        input_ids.extend(hdr_toks)
+        pos_ids.extend(range(cur_pos, cur_pos + len(hdr_toks)))
+        q_owner_ids.extend([q_idx] * len(hdr_toks))
+        opt_branch_ids.extend([0] * len(hdr_toks))
+        hdr_end = len(input_ids)
+        cur_pos += len(hdr_toks)
+
+        # CRITICAL: All options of Question `qid` start at the exact same `opt_base_pos`
+        # AND are isolated in a parallel tree mask (`opt_branch_ids == k_i + 1`) so sibling options
+        # never bleed across identical RoPE coordinates while remaining 100% option-order invariant!
+        opt_base_pos = cur_pos
+        opt_spans: list[tuple[int, int]] = []
+        opt_meta: list[list[float]] = []
+        max_o_len = 1
+
+        for k_i, (key, o_toks, meta_row) in enumerate(opt_items):
             o_start = len(input_ids)
             input_ids.extend(o_toks)
             pos_ids.extend(range(opt_base_pos, opt_base_pos + len(o_toks)))
@@ -763,14 +928,15 @@ def encode_case_parallel(
             o_end = len(input_ids)
             opt_spans.append((o_start, o_end))
             max_o_len = max(max_o_len, len(o_toks))
-            opt_meta.append([ord_pos, ord_pos * ord_pos, is_noul, is_choice, is_score, inv_k])
+            opt_meta.append(meta_row)
+        cur_pos += max_o_len
 
         q_records.append({
             "qid": qid,
             "qsig": question_signature(qid, question),
             "qtype": qtype,
             "qtype_id": qtype_id,
-            "option_keys": [k for k, _ in opts],
+            "option_keys": [k for k, _, _ in opt_items],
             "hdr_span": (hdr_start, hdr_end),
             "opt_spans": opt_spans,
             "opt_meta": opt_meta,
@@ -814,16 +980,22 @@ def build_parallel_tree_mask(
     o_t: torch.Tensor,
     dtype: torch.dtype,
     return_bool: bool = False,
+    header_attends_options: bool = False,
 ) -> torch.Tensor:
     """Build exact `[B, 1, L, L]` parallel-option tree mask:
-      - State & Question Headers (`o_t == 0`) attend freely to State & Question Headers (`o_t == 0`), never options.
+      - State (`q_t == 0, o_t == 0`) attends freely to State & Question Headers (`o_t == 0`), never options.
+      - Question Header `q` (`q_t == q > 0, o_t == 0`) attends to State & Question Headers (`o_t == 0`),
+        plus its own question's options (`same_q`) when `header_attends_options=True` (100% option-order invariant!).
       - Each Option `(q, k)` (`o_t > 0`) attends to State (`q_t == 0`), its own Question Header `q` (`q_t == q, o_t == 0`),
         and ITSELF (`q_t == q, o_t == k`), strictly eliminating cross-option RoPE collision!
     """
     valid = q_t >= 0
     is_opt_q = o_t[:, :, None] > 0
-    allow_non_opt = o_t[:, None, :] == 0
     same_q = q_t[:, None, :] == q_t[:, :, None]
+    if header_attends_options:
+        allow_non_opt = (o_t[:, None, :] == 0) | ((q_t[:, :, None] > 0) & same_q)
+    else:
+        allow_non_opt = o_t[:, None, :] == 0
     allow_opt = (q_t[:, None, :] == 0) | (same_q & ((o_t[:, None, :] == 0) | (o_t[:, None, :] == o_t[:, :, None])))
     allow = valid[:, :, None] & valid[:, None, :] & torch.where(is_opt_q, allow_opt, allow_non_opt)
     if return_bool:
@@ -839,10 +1011,14 @@ def forward_parallel_backbone(
     pad_id: int,
     device: str,
     amp_dtype: torch.dtype = torch.float32,
+    header_attends_options: bool = False,
+    max_seq_pad: int | None = None,
 ) -> tuple[torch.Tensor, Any]:
-    """Run ONE batched forward pass of ModernBERT across `B` packed multi-question cases with exact parallel tree isolation."""
+    """Run ONE batched forward pass across `B` packed multi-question cases with exact parallel tree isolation."""
     raw_max_L = max(len(pc["input_ids"]) for pc in packed_cases)
     pad_L = max(32, ((raw_max_L + 31) // 32) * 32)
+    if max_seq_pad is not None and raw_max_L <= max_seq_pad:
+        pad_L = min(pad_L, max_seq_pad)
 
     ids_cpu = [pc["input_ids"] + [pad_id] * (pad_L - len(pc["input_ids"])) for pc in packed_cases]
     pos_cpu = [pc["position_ids"] + [0] * (pad_L - len(pc["position_ids"])) for pc in packed_cases]
@@ -859,7 +1035,13 @@ def forward_parallel_backbone(
     if hasattr(backbone, "model"):
         m = backbone.model
         is_hf4 = "sliding_window_mask" in inspect.signature(m.forward).parameters
-        tree_mask = build_parallel_tree_mask(qow_t, obr_t, dtype=mask_dt, return_bool=not is_hf4)
+        tree_mask = build_parallel_tree_mask(
+            qow_t,
+            obr_t,
+            dtype=mask_dt,
+            return_bool=not is_hf4,
+            header_attends_options=header_attends_options,
+        )
         with torch.amp.autocast("cuda", dtype=amp_dtype, enabled=use_amp):
             if is_hf4:
                 hidden_states = m.embeddings(input_ids=ids_t)
@@ -886,6 +1068,21 @@ def forward_parallel_backbone(
                 return backbone.classifier(backbone.head(h_tensor.to(in_dt))).float()
 
         return seq_f, zs_fn
+
+    if hasattr(backbone, "deberta"):
+        att_2d = (qow_t >= 0).long()
+        tree_3d = build_parallel_tree_mask(
+            qow_t,
+            obr_t,
+            dtype=mask_dt,
+            return_bool=True,
+            header_attends_options=header_attends_options,
+        ).squeeze(1).long()
+        with torch.amp.autocast("cuda", dtype=amp_dtype, enabled=use_amp):
+            emb = backbone.deberta.embeddings(input_ids=ids_t, mask=att_2d, position_ids=pos_t)
+            enc_out = backbone.deberta.encoder(emb, tree_3d, output_hidden_states=False, return_dict=True)
+            seq_f = enc_out.last_hidden_state.float()
+        return seq_f, None
 
     # Generic fallback for non-ModernBERT encoders
     att_t = (qow_t >= 0).long()
@@ -1000,6 +1197,8 @@ class NullspanSystemOneEngine:
         self.device = device
         self.max_length = max_length
         self.arch_version = arch_version
+        self.header_attends_options: bool = False
+        self.max_total_tokens: int | None = None
         self.schema_calib: dict[str, dict[str, Any]] = {}
         if arch_version >= 3:
             configure_modernbert_full_bidir(self.nli_backbone, self.tokenizer)
@@ -1109,6 +1308,8 @@ class NullspanSystemOneEngine:
             max_length=max_len,
             arch_version=arch_version,
         )
+        eng.header_attends_options = bool(ckpt.get("header_attends_options", False))
+        eng.max_total_tokens = int(ckpt["max_total_tokens"]) if ckpt.get("max_total_tokens") is not None else None
         eng.schema_calib = dict(ckpt.get("schema_calib") or {})
         return eng
 
@@ -1123,6 +1324,7 @@ class NullspanSystemOneEngine:
             max_state_tokens=max_state_toks,
             case_id=0,
             precomputed_state_str=state_str,
+            max_total_tokens=self.max_total_tokens,
         )
         pad_id = self.tokenizer.pad_token_id or 0
         seq_f, zs_fn = forward_parallel_backbone(
@@ -1131,6 +1333,8 @@ class NullspanSystemOneEngine:
             pad_id=pad_id,
             device=self.device,
             amp_dtype=self.amp_dtype,
+            header_attends_options=self.header_attends_options,
+            max_seq_pad=self.max_total_tokens,
         )
         assert isinstance(self.head, ParallelSpanDecisionHead)
         raw_logits, flat_q_meta = self.head.forward_packed_cases(seq_f, [pc], zs_head_fn=zs_fn, apply_temp=False)

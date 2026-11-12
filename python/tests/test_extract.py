@@ -354,6 +354,34 @@ class TestNullspan(unittest.TestCase):
         self.assertAlmostEqual(p1["B"], p2["B"], delta=2e-3)
         self.assertAlmostEqual(p1["C"], p2["A"], delta=2e-3)
 
+    def test_decide_forwards_revision_and_exports_v131(self) -> None:
+        from unittest.mock import MagicMock, patch
+        import nullspan
+        from nullspan.systemone import _truncate_state_preserving_clauses
+
+        self.assertEqual(nullspan.__version__, "1.3.1")
+        self.assertTrue(callable(_truncate_state_preserving_clauses))
+
+        fake_engine = MagicMock()
+        fake_engine.decide.return_value = {"answers": {"q": {"noul": 0.9}}, "usage": {"input_tokens": 12, "output_tokens": 0}}
+        with (
+            patch("huggingface_hub.snapshot_download", return_value="/tmp/fake_nullspan_rev") as mock_dl,
+            patch("nullspan.systemone.NullspanSystemOneEngine.load_from_dir", return_value=fake_engine),
+        ):
+            res = nullspan.decide(
+                state="hello",
+                questions={"q": {"type": "noul", "instructions": "Ok?"}},
+                model_id="gnumanth/nullspan",
+                revision="51acf9e097ade3fb1068b3511490ef2756485927",
+                device="cpu",
+            )
+            self.assertEqual(res["usage"]["output_tokens"], 0)
+            mock_dl.assert_called_once_with(
+                repo_id="gnumanth/nullspan",
+                revision="51acf9e097ade3fb1068b3511490ef2756485927",
+                allow_patterns=["systemone/*", "systemone_decision.pt"],
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

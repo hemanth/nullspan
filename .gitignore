@@ -14,3 +14,7 @@ node_modules/
 .gcp_session.env
 artifacts/nullspan/onnx/
 artifacts/nullspan/systemone/
+artifacts/nullspan/oof_report.json
+data/td_synth/*.jsonl
+data/jev_dev/candidates_pool.jsonl
+data/jev_train/

@@ -203,6 +203,27 @@ def _ece_val(x: Any) -> float:
     return float(x or 0.0)
 
 
+def compute_public_v16_from_records(
+    public_dir: str | Path,
+    records: list[dict[str, Any]],
+    usd_per_1m_in: float = 0.04,
+    endpoint_kind: str = "gpu",
+) -> dict[str, Any]:
+    if os.path.join(ROOT, "bench") not in sys.path:
+        sys.path.insert(0, os.path.join(ROOT, "bench"))
+    from score_v16 import load_public_jevbench_items, score_items_v16
+
+    items = load_public_jevbench_items(public_dir)
+    preds_by_id = {str(r.get("task_id") or r.get("id")): r for r in records}
+    return score_items_v16(
+        items,
+        preds_by_id,
+        usd_per_1m_in=usd_per_1m_in,
+        usd_per_1m_out=0.0,
+        endpoint_kind=endpoint_kind,
+    )
+
+
 def eval_jevbench_public(model_dir: str, jevbench_dir: str, device: str) -> dict[str, Any]:
     print("=== Evaluating on fstandhartinger/jevbench (Public Suite) ===", flush=True)
     sys.path.insert(0, jevbench_dir)
@@ -272,6 +293,7 @@ def eval_jevbench_public(model_dir: str, jevbench_dir: str, device: str) -> dict
                     else {"valid": False, "strict_valid": False, "correct": False, "probs": None}
                 )
                 in_toks = (dr.usage or {}).get("input_tokens", 250)
+                out_toks = (dr.usage or {}).get("output_tokens", 0)
                 records.append(
                     {
                         "task_id": t.id,
@@ -285,7 +307,9 @@ def eval_jevbench_public(model_dir: str, jevbench_dir: str, device: str) -> dict
                         "probs_source": "native",
                         "model": "gnumanth/nullspan",
                         "latency_s": dr.latency_s,
-                        "cost_usd": in_toks * 0.01 / 1e6,
+                        "input_tokens": in_toks,
+                        "output_tokens": out_toks,
+                        "cost_usd": in_toks * 0.04 / 1e6,
                         "cost_basis": "encoder_classifier_<=0.6B",
                     }
                 )
@@ -347,14 +371,17 @@ def eval_jevbench_public(model_dir: str, jevbench_dir: str, device: str) -> dict
             },
             "tiers": tier_summaries,
         }
-        # Also attach v1.6 scorer readout if present in the JevBench clone
-        try:
-            from jevbench import score_v16  # type: ignore
-
-            if hasattr(score_v16, "score_public_records"):
-                overall["public_v16"] = score_v16.score_public_records(all_tasks, all_records)
-        except Exception:
-            pass
+        # Attach exact JevBench v1.6.1 O1S readout via bench/score_v16.py
+        overall["public_v16"] = compute_public_v16_from_records(
+            os.path.join(jevbench_dir, "datasets", "public"),
+            all_records,
+            usd_per_1m_in=0.04,
+            endpoint_kind="gpu",
+        )
+        preds_out_path = os.path.join(model_dir, "predictions_jevbench_public.jsonl")
+        with open(preds_out_path, "w", encoding="utf-8") as pf:
+            for r in all_records:
+                pf.write(json.dumps(r) + "\n")
         print("JevBench Public Suite Summary:", json.dumps(overall, indent=2), flush=True)
         return overall
     finally:

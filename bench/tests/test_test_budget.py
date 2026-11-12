@@ -187,7 +187,11 @@ class TestBudgetAndOofGate(unittest.TestCase):
         self.assertIn("training/train_systemone.py", script)
         self.assertIn("bench/TEST_LEDGER.md", script)
         self.assertIn("bench/compare_oof.py", script)
+        self.assertIn("bench/score_v16.py", script)
         self.assertIn('MODE="${MODE:-train}"', script)
+        self.assertIn("--tunnel-through-iap", script)
+        self.assertIn("--boot-disk-type=pd-balanced", script)
+        self.assertIn("work_venv", script)
 
 
 if __name__ == "__main__":
