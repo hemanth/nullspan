@@ -815,7 +815,7 @@ class TestSynthJevCases(unittest.TestCase):
         self.assertEqual(len(captured_prompts), 1)
         self.assertNotIn("3-6 chronological events", captured_prompts[0])
         self.assertNotIn("2-3 explicit policy rules", captured_prompts[0])
-        self.assertIn("single explicit fact", captured_prompts[0].lower())
+        self.assertIn("present-tense fact", captured_prompts[0].lower())
 
 
 if __name__ == "__main__":
