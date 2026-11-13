@@ -1,0 +1,11 @@
+{
+  "max_state_train": 2560,
+  "candidate_specs": [
+    {
+      "key": "modernbert_zs",
+      "backbone_id": "MoritzLaurer/ModernBERT-large-zeroshot-v2.0",
+      "seed_offset": 0
+    }
+  ],
+  "header_attends_options": true
+}
