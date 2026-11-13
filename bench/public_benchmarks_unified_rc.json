@@ -1,0 +1,232 @@
+{
+  "hardware": "NVIDIA L4",
+  "typed_decisions": {
+    "model": "gnumanth/nullspan",
+    "backbone": "MoritzLaurer/ModernBERT-large-zeroshot-v2.0",
+    "arch_version": 3,
+    "mode": "specialist",
+    "n_cases": 400,
+    "n_decisions": 2000,
+    "accuracy": 0.79,
+    "kl_from_gold": 0.076,
+    "brier": 0.042,
+    "ece": 0.1665,
+    "latency_ms_per_case": 47.82,
+    "latency_ms_per_decision": 9.56,
+    "by_workflow_accuracy": {
+      "agent_trace_observability": 0.74,
+      "customer_service": 0.814,
+      "invoice_processing": 0.844,
+      "security_incidents": 0.762
+    },
+    "by_type_accuracy": {
+      "choice": 0.7683,
+      "noul": 0.8417,
+      "score": 0.7675
+    }
+  },
+  "jevbench_public": {
+    "total_public_items": 231,
+    "total_correct": 137,
+    "overall_accuracy": 0.5931,
+    "macro_accuracy": 0.5901,
+    "brier_mean": 0.4967,
+    "ece": 0.0528,
+    "strict_valid_rate": 1.0,
+    "p50_ms": 39.79,
+    "p95_ms": 101.73,
+    "price_per_1000_decisions_usd": 0.02416,
+    "public_axes_v13": {
+      "intelligence": 44.11,
+      "calibration": 62.46,
+      "speed": 90.91,
+      "cost": 58.51
+    },
+    "public_jevbench_v13_geometric": 48.15,
+    "public_jevbench_v14_harmonic": 46.62,
+    "per_family_accuracy": {
+      "adequacy": 0.5,
+      "adversarial": 0.6667,
+      "ambiguous": 0.2857,
+      "extraction": 0.9167,
+      "fact": 1.0,
+      "intent": 0.9167,
+      "judge_hard": 0.2941,
+      "long_policy": 0.2105,
+      "multi_hop": 0.0556,
+      "ordinal": 0.75,
+      "policy": 0.75,
+      "probability": 0.6,
+      "routing": 0.8333,
+      "routing_hard": 0.6,
+      "temporal_numeric": 0.2,
+      "tool_selection": 1.0,
+      "tradeoff": 0.6667,
+      "trap": 0.375
+    },
+    "tiers": {
+      "original": {
+        "n": 72,
+        "correct": 54,
+        "accuracy": 0.75,
+        "strict_valid_rate": 1.0,
+        "brier": 0.4686,
+        "ece": 0.2272,
+        "p50_ms": 39.11,
+        "p95_ms": 42.48
+      },
+      "easy": {
+        "n": 48,
+        "correct": 48,
+        "accuracy": 1.0,
+        "strict_valid_rate": 1.0,
+        "brier": 0.0672,
+        "ece": 0.1844,
+        "p50_ms": 39.07,
+        "p95_ms": 43.47
+      },
+      "hard": {
+        "n": 111,
+        "correct": 35,
+        "accuracy": 0.3153,
+        "strict_valid_rate": 1.0,
+        "brier": 0.7007,
+        "ece": 0.1877,
+        "p50_ms": 42.65,
+        "p95_ms": 126.78
+      }
+    },
+    "public_v16": {
+      "protocol": "jevbench::v1.6.1-O1S-local",
+      "n_items": 231,
+      "intelligence": {
+        "I_open": 13.756184341072638,
+        "I_sealed": null,
+        "base": 13.756184341072638,
+        "gap": 0.0,
+        "g_med": 2.573387642438244,
+        "excess": 0.0,
+        "penalty": 1.0,
+        "score": 13.756184341072638,
+        "per_type_split": {
+          "open|choice": {
+            "tiers": {
+              "easy": 100.0,
+              "standard": 79.02097902097904,
+              "hard": 0.26595744680852573
+            },
+            "counts": {
+              "easy": 36,
+              "standard": 36,
+              "hard": 67
+            },
+            "cc": 37.01511254702745
+          },
+          "open|noul": {
+            "tiers": {
+              "easy": 83.33333333333333,
+              "standard": -58.33333333333333,
+              "hard": -84.21052631578947
+            },
+            "counts": {
+              "easy": 12,
+              "standard": 24,
+              "hard": 38
+            },
+            "cc": 0.0
+          },
+          "open|score": {
+            "tiers": {
+              "standard": 41.47694999999999,
+              "hard": -14.358314285714302
+            },
+            "counts": {
+              "standard": 12,
+              "hard": 6
+            },
+            "cc": 4.253440476190461
+          }
+        }
+      },
+      "calibration": {
+        "score": 69.51069737382501,
+        "parts": {
+          "choice": {
+            "ece_hard": 0.1972377462686567,
+            "ece_score": 60.55245074626866,
+            "mean_tvd": null,
+            "score": 60.55245074626866
+          },
+          "noul": {
+            "ece": 0.16963164864864866,
+            "abstention_rate": 0.6621621621621622,
+            "brier": 0.24910684511689188,
+            "score": 66.07367027027027
+          },
+          "score": {
+            "nrps": 0.1165429112346111,
+            "top_ece": 0.12266883333333334,
+            "score": 81.90597110493611
+          }
+        }
+      },
+      "speed": {
+        "p50_s_raw": 0.03911351049828227,
+        "p95_s_raw": 0.04247798325341137,
+        "p50_s_adjusted": 0.22822702099656453,
+        "p95_s_adjusted": 0.23495596650682274,
+        "score": 92.70646460429589
+      },
+      "cost": {
+        "usd_per_1000": 0.0241634632034632,
+        "usd_per_1m_in": 0.04,
+        "usd_per_1m_out": 0.0,
+        "score": 58.50522462342443
+      },
+      "capability": {
+        "eligible": true,
+        "capability": 41.633440857448825,
+        "usd_per_1000": 0.0241634632034632,
+        "p50_adjusted_s": 0.22822702099656453
+      },
+      "composite_option_a": 2.6337158180570994,
+      "per_tier_accuracy": {
+        "easy": 0.9791666666666666,
+        "standard": 0.5694444444444444,
+        "hard": 0.2072072072072072
+      }
+    },
+    "hardware": "NVIDIA L4"
+  },
+  "squad_v2": {
+    "dataset": "rajpurkar/squad_v2",
+    "n_evaluated": 500,
+    "exact": 87.0,
+    "f1": 89.36,
+    "HasAns_exact": 86.8,
+    "HasAns_f1": 91.52,
+    "NoAns_exact": 87.2,
+    "NoAns_f1": 87.2,
+    "hardware": "mps"
+  },
+  "squad_v2_full": {
+    "dataset": "rajpurkar/squad_v2",
+    "n_evaluated": 11873,
+    "exact": 87.09,
+    "f1": 90.0,
+    "HasAns_exact": 84.53,
+    "HasAns_f1": 90.36,
+    "NoAns_exact": 89.64,
+    "NoAns_f1": 89.64,
+    "zero_overlap_subset": {
+      "n_evaluated": 9198,
+      "exact": 87.01,
+      "f1": 89.88,
+      "HasAns_exact": 84.44,
+      "HasAns_f1": 90.17,
+      "NoAns_exact": 89.58,
+      "NoAns_f1": 89.58
+    },
+    "hardware": "mps"
+  }
+}

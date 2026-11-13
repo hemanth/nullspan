@@ -1,0 +1,10 @@
+{
+  "n_items": 30000,
+  "author_and_teacher_family_c": "Qwen/Qwen3-8B-FP8",
+  "dual_run_temperature": 0.7,
+  "dropped_teacher_disagreements": 6188,
+  "rejected_shingle_overlaps": 2046,
+  "public_items_checked": 231,
+  "dev_items_checked": 400,
+  "sha256": "fed21269a5e4379cc42941f9f853f4987ea487a8660d49feb91691102d87c54c"
+}

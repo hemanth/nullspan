@@ -1,0 +1,169 @@
+{
+  "n_items": 400,
+  "overall_accuracy": 0.565,
+  "tier_accuracy": {
+    "easy": 0.9464,
+    "hard": 0.4167,
+    "judge": 0.5446,
+    "standard": 0.5536
+  },
+  "hard_ece_10bin": 0.0783,
+  "per_family_accuracy": {
+    "adequacy": 0.4872,
+    "adversarial": 0.4667,
+    "ambiguous": 0.1667,
+    "intent": 0.6522,
+    "judge_hard": 0.6,
+    "lead_qualification": 0.7857,
+    "long_policy": 0.2857,
+    "multi_hop": 0.4,
+    "ordinal": 0.9167,
+    "policy": 0.5778,
+    "probability": 0.1667,
+    "routing": 0.6667,
+    "routing_hard": 0.5,
+    "state_tracking": 0.5679,
+    "temporal_numeric": 0.6,
+    "tool_call_guardrail": 0.75,
+    "tradeoff": 0.2727,
+    "trap": 0.5333
+  },
+  "long_policy_latency_ms": {
+    "n": 21,
+    "p50_ms": 160.36,
+    "p95_ms": 168.32
+  },
+  "v16": {
+    "protocol": "jevbench::v1.6.1-O1S-local",
+    "n_items": 400,
+    "intelligence": {
+      "I_open": 17.62019001246753,
+      "I_sealed": null,
+      "base": 17.62019001246753,
+      "gap": 0.0,
+      "g_med": 2.573387642438244,
+      "excess": 0.0,
+      "penalty": 1.0,
+      "score": 17.62019001246753,
+      "per_type_split": {
+        "open|choice": {
+          "tiers": {
+            "easy": 85.65737051792829,
+            "standard": 27.23004694835682,
+            "judge": 41.107184923439355,
+            "hard": 13.51351351351352
+          },
+          "counts": {
+            "easy": 28,
+            "standard": 56,
+            "judge": 56,
+            "hard": 60
+          },
+          "cc": 31.749307323901405
+        },
+        "open|noul": {
+          "tiers": {
+            "easy": 14.28571428571428,
+            "standard": -50.0,
+            "judge": -85.71428571428572,
+            "hard": -100.0
+          },
+          "counts": {
+            "easy": 14,
+            "standard": 28,
+            "judge": 28,
+            "hard": 30
+          },
+          "cc": 0.0
+        },
+        "open|score": {
+          "tiers": {
+            "easy": 68.89219285714287,
+            "standard": 26.039002597402614,
+            "judge": 23.947953398058242,
+            "hard": 4.574642222222247
+          },
+          "counts": {
+            "easy": 14,
+            "standard": 28,
+            "judge": 28,
+            "hard": 30
+          },
+          "cc": 21.111262713501183
+        }
+      }
+    },
+    "calibration": {
+      "score": 78.21909081359175,
+      "parts": {
+        "choice": {
+          "ece_hard": 0.07663695000000002,
+          "ece_score": 84.67260999999999,
+          "mean_tvd": null,
+          "score": 84.67260999999999
+        },
+        "noul": {
+          "ece": 0.10723347,
+          "abstention_rate": 0.82,
+          "brier": 0.21555020749867,
+          "score": 78.553306
+        },
+        "score": {
+          "nrps": 0.121006311184495,
+          "top_ece": 0.22518328,
+          "score": 71.43135644077526
+        }
+      }
+    },
+    "speed": {
+      "p50_s_raw": 0.04022788949805545,
+      "p95_s_raw": 0.04509625859973312,
+      "p50_s_adjusted": 0.2304557789961109,
+      "p95_s_adjusted": 0.24019251719946622,
+      "score": 92.56852923319056
+    },
+    "cost": {
+      "usd_per_1000": 0.028693200000000002,
+      "usd_per_1m_in": 0.04,
+      "usd_per_1m_out": 0.0,
+      "score": 56.266630434972164
+    },
+    "capability": {
+      "eligible": true,
+      "capability": 47.91964041302964,
+      "usd_per_1000": 0.028693200000000002,
+      "p50_adjusted_s": 0.2304557789961109
+    },
+    "composite_option_a": 5.063077276461784,
+    "per_tier_accuracy": {
+      "easy": 0.8035714285714286,
+      "standard": 0.4375,
+      "judge": 0.39285714285714285,
+      "hard": 0.275
+    }
+  },
+  "alignment_vs_v130_public": {
+    "usable": false,
+    "tolerance": 0.1,
+    "tiers": {
+      "easy": {
+        "dev_accuracy": 0.9464,
+        "public_ref_accuracy": 1.0,
+        "abs_gap": 0.0536,
+        "within_tolerance": true
+      },
+      "standard": {
+        "dev_accuracy": 0.5536,
+        "public_ref_accuracy": 0.6806,
+        "abs_gap": 0.127,
+        "within_tolerance": false
+      },
+      "hard": {
+        "dev_accuracy": 0.4167,
+        "public_ref_accuracy": 0.3604,
+        "abs_gap": 0.0563,
+        "within_tolerance": true
+      }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "max_state_train": 2560,
+  "candidate_specs": [
+    {
+      "key": "ettin_400m_s2",
+      "backbone_id": "jhu-clsp/ettin-encoder-400m",
+      "seed_offset": 68
+    },
+    {
+      "key": "modernbert_zs",
+      "backbone_id": "MoritzLaurer/ModernBERT-large-zeroshot-v2.0",
+      "seed_offset": 0
+    }
+  ],
+  "header_attends_options": false,
+  "sweep_student_holdout": false,
+  "eval_student_oof": true,
+  "student_seeds": [
+    303
+  ],
+  "max_state_infer": 3072,
+  "stage1_batch_cases": 8,
+  "stage1_grad_accum": 2,
+  "beta_oof": 0.16,
+  "alpha_wise": 0.0
+}
